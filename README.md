@@ -1,7 +1,5 @@
 # immu
 
-
-An proposal for implementation of Forth using extended indirect thread code.
-All dictionary made up of machine independent vocabularies. 
-Only vocabularies those related to systems, drives and primitives depends on the machine.
-
+An implementation of Forth with inner interpreter using extended indirect thread code and a dictionary made up of machine independent vocabularies. 
+  
+_Only the inner interpreter and vocabularies related to systems, drives and primitives are machine dependent._
