@@ -45,7 +45,7 @@ defword:  ; a NEST and a UNNEST in all compound words
 | LINK | 6 | D | O | U | B | L | E | 0 | NEST | DUP  | PLUS  | UNNEST |
 +------+---+---+---+---+---+---+---+---+------+------+-------+--------+
 
-defcode:  ; a self reference and a EXIT (macro NEXT) in all primitives                                              
+defcode:  ; a self reference and a EXIT (macro NEXT) in all primitives
 +------+---+---+---+---+---------+-self--+-------+-------+------+
 | LINK | 3 | D | U | P | to self | code  | code  | code  | EXIT |
 ------+---+---+---+---+----------+-------+-------+-------+------+
