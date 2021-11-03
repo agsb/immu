@@ -208,7 +208,6 @@ _next:
 _nest:  
     addi s5, s5, -4
     sw s4, 0(s5)
-    add s4, zero, s9
 _link:    
     jal zero, _next
 _jump:  
