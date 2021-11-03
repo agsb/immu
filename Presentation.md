@@ -1,9 +1,9 @@
 
 # An immutable Forth
 
-  An implementation of Forth with a dictionary made up of machine-independent vocabularies. 
+  An implementation of Forth with a extended inner interpreter and a dictionary made up of machine independent vocabularies. 
   
-  Only those relating to bios, system, drives and primitives depend on the machine.
+  Only the inner interpreter and vocabularies related to systems, drives and primitives are machine dependent. 
   
 ## the inner interpreter
   
