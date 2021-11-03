@@ -1,2 +1,5 @@
 # immu
-An implementation of Forth with a dictionary made up of machine-independent vocabularies. Only those relating to bios, system, drives and primitives depend on the machine. 
+
+An proposta de implementation of Forth with a extended indirect thread code.
+All dictionary made up of machine independent vocabularies. Only vocabularies those related to systems, drives and primitives depends on the machine
+
