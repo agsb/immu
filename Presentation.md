@@ -71,9 +71,11 @@ UNNEST: (aka SEMMIS, at end of words)
 EXIT: ( at end of code )
   Execute NEXT
 ```
-Note that all compound words, does two jumps and a call with return, and primitive words does three jumps.
+All compound words, does two jumps and a call with return.
 
-Also NEXT is executed two times, because in optmized codes, it is placed just bellow NEST and used by UNNEST.
+All primitive words does three jumps.
+
+Also in optimized codes, NEXT is executed two times, and is placed between UNNEST and NEST.
 
 ## A proposal for extended indirect thread code   
 
@@ -180,7 +182,44 @@ And it can grow, incorporating these recipes and maybe, pherhaps, creating other
 The proposed small change allows these compiled recipes to be shared as executables.
 
 *and that could be an immu table Forth.*
-      
+
+
+## basic RISCV, inner interpreter 
+
+```
+/* 
+Extended Indirect Thread Code
+
+s4, next reference, aka instruction pointer
+s5, return stack, grows downwards
+s9, Wrk, temporary, not preserve
+zero, is always zero
+
+s4 must always points to a reference to be used by _next,
+   and could be intentionally changed
+*/
+
+_inner:
+    .word 0x0
+_unnest: 
+    lw s4, 0(s5)
+    addi s5, s5, 4
+_next: 
+    lw s9, 0 (s4)
+    addi s4, s4, 4
+    beq s9, zero, _jump
+_nest:  
+    addi s5, s5, -4
+    sw s4, 0(s5)
+    add s4, zero, s9
+_link:    
+    jal zero, _next
+_jump:  
+    add s9, zero, s4
+    addi s4, s4, 4
+    jalr zero, s9, 0
+
+```   
 ## bibliography 
       
 “http://worrydream.com/refs/Moore - Forth - The Early Years.pdf”
@@ -201,6 +240,30 @@ The proposed small change allows these compiled recipes to be shared as executab
 
 ## Disclaimer
 
+/*
+ *  DISCLAIMER"
+ *
+ *  Copyright © 2020, Alvaro Gomes Sobral Barcellos,
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining
+ *  a copy of this software and associated documentation files (the
+ *  "Software"), to deal in the Software without restriction, including
+ *  without limitation the rights to use, copy, modify, merge, publish,
+ *  distribute, sublicense, and/or sell copies of the Software, and to
+ *  permit persons to whom the Software is furnished to do so, subject to
+ *  the following conditions"
+ *
+ *  The above copyright notice and this permission notice shall be
+ *  included in all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ *  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ *  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ *
+ */
 
       
 
