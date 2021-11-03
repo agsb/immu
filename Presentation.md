@@ -71,6 +71,9 @@ UNNEST: (aka SEMMIS, at end of words)
 EXIT: ( at end of code )
   Execute NEXT
 ```
+Note that all compound words, does two jumps and a call with return, and primitive words does three jumps.
+
+Also NEXT is executed two times, because in optmized codes, it is placed just bellow NEST and used by UNNEST.
 
 ## A proposal for extended indirect thread code   
 
