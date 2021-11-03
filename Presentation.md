@@ -8,10 +8,16 @@
 ## the inner interpreter
   
   _“ : NEXT IP )+ W MOV W )+ ) JMP ; Now Forth was complete. And I knew it.”, Charles H. Moore, “Forth - The Early Years”_
+  
+The inner interpreter is Forth's heartbeat.
+
+It makes virtual machine magic happen by translating coded sequences into algorithms that transform information.
+
+These sequences are preserved in a dictionary as words and code.
 
 ## the dictionary
 
-The dictionary is a linked list of vocabularies, with linked lists of words, where any word is formed by
+The dictionary is a table, with a linked list of vocabularies, with linked lists of words, where words are made up of 
 
   - a Word header, [link][size+flags][name][pad?]
 
@@ -34,15 +40,15 @@ parameters: could be a list of references or code
 ```
 classic format
 
-defword:  ; NEST and UNNEST in all, compound words with references (ptr)
+defword:  ; a NEST and a UNNEST in all compound words
 +------+---+---+---+---+---+---+---+---+------+------+-------+--------+
 | LINK | 6 | D | O | U | B | L | E | 0 | NEST | DUP  | PLUS  | UNNEST |
 +------+---+---+---+---+---+---+---+---+------+------+-------+--------+
 
-defcode:  ; a self reference and macro NEXT in all, primitives with codes                                              
-+------+---+---+---+---+-------------+-self---+-------+-------+----------+
-| LINK | 3 | D | U | P | ptr to self | code0  | code  | code  | EXIT     |
-+------+---+---+---+---+-------------+--------+-------+-------+----------+
+defcode:  ; a self reference and a EXIT (macro NEXT) in all primitives                                              
++------+---+---+---+---+---------+-self--+-------+-------+------+
+| LINK | 3 | D | U | P | to self | code  | code  | code  | EXIT |
+------+---+---+---+---+----------+-------+-------+-------+------+
 ```
 
 The operations of a classic indirect thread code inner interpreter, in non optimized pseudo code, are :
@@ -71,12 +77,12 @@ EXIT: ( at end of code )
 ```
 proposed format
 
-defword:  ; only a reference to UNNEST, (where did NEST go ?)
+defword:  ; only a UNNEST, (where did NEST go ?)
 +-------+---+---+---+---+---+---+---+---+-----+------+---------+
 | LINK  | 6 | D | O | U | B | L | E | 0 | DUP | PLUS | UNNEST  |    
 +-------+---+---+---+---+---+---+---+---+-----+------+---------+
        
-defcode:  ; with NULL, (where did self reference go ?)
+defcode:  ; a NULL and a jump, (where did self reference go ?)
 +-------+---+---+---+---+------+------+------+------+-----------+
 | LINK  | 3 | D | U | P | NULL | code | code | code | jump link |
 +-------+---+---+---+---+------+------+-------+-----+-----------+
@@ -124,7 +130,7 @@ and just make one more comparison.
 
 ## More with less 
 
-Also, could be extended, with use of pseudo op-codes for more “inner functions”, eg.
+Also, could JUMP be extended, with use of pseudo op-codes for more “inner functions” as a inline lookup table:
 
 ```
 if WR greather than LAST_VM_CODE, then Execute NEST
@@ -134,16 +140,17 @@ case WR of
 0x01    jump to IP+(IP), aka (do_does, or tail recursion)
 0x02    push IP onto data stack, aka (do_variable)
 0x03    push (IP) onto data stack, aka (do_constant)
-etc.    Executes as "inline"
+etc.    All Executes as "inline", no calls
+Execute Link
 ```
 
 ## the New Dictionary
 
-A Dictionary with vocabularies that :
+A Dictionary with vocabularies that could be:
   
-  processor independent (all, with compounds words)
+  processor independent (for all with compounds words)
   
-  processor dependent (bios, system, drivers, primitives) 
+  processor dependent (for systems, drivers, primitives) 
   
 In _independent vocabularies_ :
     
@@ -151,7 +158,7 @@ In _independent vocabularies_ :
     
     full (hex) portable and relocatable and extensible,
     
-    interchange of pre-compiled vocabularies,
+    allow sharing of pre-compiled vocabularies,
 
 In _dependent vocabularies_ :
     
@@ -161,11 +168,11 @@ In _dependent vocabularies_ :
 
 ## Conclusion
 
-I see Forth as a model of the RNA-DNA type. The inner interpreter acts as RNA and dictionaries act as DNA. It consumes information and produces transformations. The primitives words act as the ACGT proteines.
+I see Forth as a model of the RNA-DNA type. The inner interpreter acts as RNA and dictionaries act as DNA. It consumes information and produces transformations. The primitives words act as the AGCT proteines.
 
-Some information produces recipes, sequences of algorithms encoded by references to routines, that change the information. As well as protein sequences.
+Some information produces recipes, sequences of algorithms encoded by references to routines, that change the information. Like real protein sequences.
 
-And it can grow, incorporating these recipes and perhaps creating others as well.
+And it can grow, incorporating these recipes and maybe, pherhaps, creating others as well.
 
 The proposed small change allows these compiled recipes to be shared as executables.
 
