@@ -125,7 +125,7 @@ LINK: (aka EXIT )
 
 _"Explain all that", said the Mock Turtle. “Alice's Adventures in Wonderland”, Lewis Carrol*_
 
-The code above executes only references to primitives words.
+The code above only executes jumps when references to primitives words.
 
 All composite word references are directly placed and removed, onto the return stack.
 
