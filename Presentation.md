@@ -29,9 +29,9 @@ Ideally, there are only two types of words,
 
   - Primitives, _that contains only machine code without calls_ .
 
-_code-word_ : DOCOLON for compound or DOCODE for primitives
+_code-word_ : NEST (DOCOLON) for compound or DOCODE for primitives
     
-_last-word_ : SEMIS for compound or EXIT for primitives
+_last-word_ : UNNEST (SEMIS) for compound or EXIT for primitives
 
 parameters: could be a list of references or code
 
@@ -48,7 +48,7 @@ defword:  ; a NEST and a UNNEST in all compound words
 defcode:  ; a self reference and a EXIT (macro NEXT) in all primitives
 +------+---+---+---+---+---------+-self--+-------+-------+------+
 | LINK | 3 | D | U | P | to self | code  | code  | code  | EXIT |
-------+---+---+---+---+----------+-------+-------+-------+------+
++------+---+---+---+---+---------+-------+-------+-------+------+
 ```
 
 The operations of a classic indirect thread code inner interpreter, in non optimized pseudo code, are :
@@ -57,6 +57,7 @@ The operations of a classic indirect thread code inner interpreter, in non optim
 NEXT: 
   Fetch the address pointed by IP onto WR
   Increment IP by address size
+  
   Jump to WR
 
 NEST: (aka DOCOLON, at start of words)
@@ -131,7 +132,7 @@ All composite word references are directly placed and removed, onto the return s
 
 Uses jump and link, as call model,
 
-and just make one more comparison.
+and just make one more comparison per compound word.
 
 ## More with less 
 
