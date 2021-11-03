@@ -181,15 +181,12 @@ And it can grow, incorporating these recipes and maybe, pherhaps, creating other
 
 The proposed small change allows these compiled recipes to be shared as executables.
 
-*and that could be an immu table Forth.*
-
-
-## basic RISCV, inner interpreter 
+## *and that could be an immu table Forth.*
 
 ```
 /* 
+basic RISCV, Using R32I, 32 bits cell
 Extended Indirect Thread Code
-Using R32I, 32 bits cell
 s4, next reference, aka instruction pointer
 s5, return stack, grows downwards
 s9, Wrk, temporary, not preserve
