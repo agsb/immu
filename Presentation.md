@@ -189,7 +189,7 @@ The proposed small change allows these compiled recipes to be shared as executab
 ```
 /* 
 Extended Indirect Thread Code
-
+Using R32I, 32 bits cell
 s4, next reference, aka instruction pointer
 s5, return stack, grows downwards
 s9, Wrk, temporary, not preserve
@@ -219,7 +219,8 @@ _jump:
     addi s4, s4, 4
     jalr zero, s9, 0
 
-```   
+```  
+
 ## bibliography 
       
 “http://worrydream.com/refs/Moore - Forth - The Early Years.pdf”
