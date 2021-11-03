@@ -185,34 +185,35 @@ The proposed small change allows these compiled recipes to be shared as executab
 
 ```
 /* 
-basic RISCV, Using R32I, 32 bits cell
+basic RISCV, Using R32I, 32 bits cell,
 Extended Indirect Thread Code
-s4, next reference, aka instruction pointer
 s5, return stack, grows downwards
+s6, next reference, aka instruction pointer
 s9, Wrk, temporary, not preserve
 zero, is always zero
 
-s4 must always points to a reference to be used by _next,
+s6 must always points to a reference to be used by _next,
    and could be intentionally changed
 */
 
 _inner:
     .word 0x0
 _unnest: 
-    lw s4, 0(s5)
+    lw s6, 0(s5)
     addi s5, s5, 4
 _next: 
-    lw s9, 0 (s4)
-    addi s4, s4, 4
+    lw s9, 0 (s6)
+    addi s6, s6, 4
     beq s9, zero, _jump
 _nest:  
     addi s5, s5, -4
-    sw s4, 0(s5)
+    sw s6, 0(s5)
+    add s6, s9, zero
 _link:    
     jal zero, _next
 _jump:  
-    add s9, zero, s4
-    addi s4, s4, 4
+    add s9, s6, zero
+    addi s6, s6, 4
     jalr zero, s9, 0
 
 ```  
