@@ -7,7 +7,7 @@ An list of atomic's was done by  Mikael Patel as { S@ R@  @ ! nand plus 0= exit 
 
 # A case of SWAPD
 
-For use onto parameter stack, there are five { DROP DUP SWAP >R R> } atomics and some that could be derived from those ones.
+For use onto parameter stack, there are five { DROP DUP SWAP >R R> R@ } atomics and some that could be derived from those ones.
 
 Lets make a list, for change 3 cells at top :
 (O= is the number of atomic operations)
@@ -46,3 +46,5 @@ PS.
 - The permutation of 3 is 6, as { 1 2 3 is initial } , { 1 3 2 is swap }, (2 1 3 is swapd }, { 2 3 1 is rot }, { 3 1 2 is -rot }, { 3 2 1 is flip }
 
 # About OVER
+
+OVER is overrated word, is used in loops to copy arguments
