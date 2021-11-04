@@ -11,6 +11,8 @@ For use onto parameter stack, there are five { DROP DUP SWAP >R R> R@ } atomics 
 
 Lets make a list, for change 3 cells at top :
 (O= is the number of atomic operations)
+
+![alt text for screen readers](/path/to/image.png "Text to show on mouseover")
 ```
 ( to create a copy of a cell)
 : DUP ( 1 2 -- 1 2 2 ) ; (O=1)
