@@ -1,0 +1,17 @@
+
+export PATH=/opt/riscv/bin:$PATH
+
+riscv64-unknown-elf-gcc -O0 -march=rv32i -mabi=ilp32 \
+    -c -I. -x assembler-with-cpp -Wa,-adhlns=main.lst main.S -o main.o
+
+riscv64-unknown-elf-gcc -O0 -march=rv32i -mabi=ilp32 \
+    -fverbose-asm -fshort-enums -Wall -Wstrict-prototypes \
+    -Wa,-adhlns=main.o  -std=gnu99 -nostartfiles -nostdlib -nostartfiles \
+    -Wp,-M,-MP,-MT,main.o,-MF,.dep/main.elf.d main.o --output main.elf -Wl,-Map=main.map,--cref
+
+riscv64-unknown-elf-objcopy -O ihex main.elf main.hex
+
+riscv64-unknown-elf-objdump --disassemble-all -Wa,-noaliases  main.elf > main.lot
+
+
+exit

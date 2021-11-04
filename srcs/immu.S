@@ -21,6 +21,7 @@
  *  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  *
+ *  //-\--/\-//-\/-/\\\\/-\--\\\-///\-/-/\/--/\\\\/-\-//-/\//-/\//--//-///--\\\-///\-/-/\/
  */
 
 /*
@@ -96,7 +97,11 @@ The following example shows how to load an absolute address:
     jalr zero, \address, 0
 .endm
 
+//----------------------------------------------------------------------
+
+.text
 .global _forth_
+_forth_:
 
 //----------------------------------------------------------------------
 //
@@ -116,7 +121,6 @@ The following example shows how to load an absolute address:
 // set start reverse linked list
 //
 // adapted from amforth-6.9
-.text
 99:
 .word 0
 //97: # riscv-wordlist
@@ -134,7 +138,7 @@ is_\label:
     .byte \flags
     .byte (3f - 2f) 
 2:
-    .string "\name"
+    .ascii "\name"
 3:
     .p2align 1, 0x20	
 \label:
@@ -170,6 +174,8 @@ _jump:
     add Wrk, Ipt, zero
     addi Ipt, Ipt, CELL
     jalr zero, Wrk, 0
+
+//----------------------------------------------------------------------
 
 /***********************************************************************
 
@@ -637,3 +643,7 @@ HEADER "BMOVE", "bmove"
     
 //----------------------------------------------------------------------
 HEADER "_EOF_", "_eof_"
+
+#include "table.S"
+
+
