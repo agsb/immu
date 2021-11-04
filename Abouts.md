@@ -50,3 +50,14 @@ PS.
 OVER is overrated word, is used in loops to copy arguments and also a good choice to be atomic.
 
 
+# Minimal core set
+
+https://github.com/uho/minimal, Ulrich Hoffmann points:
+
+Minimal Forth Workbench: 48 primitives, 69 words
+ ok
+words ALIGNED CELL+ CHAR+ ROT 2/ LSHIFT XOR OR > = 0= TRUE FALSE MOD 2* / * + VARIABLE 
+CONSTANT DUP primitive WORDS INCLUDE bye \ .S ( CR KEY? EMIT KEY DOES> ; CREATE : 
+EXECUTE J LOOP UNTIL AGAIN BEGIN ELSE ' I DO REPEAT WHILE THEN IF R> OVER DROP R@ >R 
+SWAP RSHIFT INVERT AND < - */MOD CHARS CALIGNED CALIGN C@ C, C! CELLS ALIGN @ , ! 
+48 primitives, 69 words ok
