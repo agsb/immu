@@ -14,7 +14,7 @@ Lets make a list, for change 3 cells at top :
 ```
 ( to create a copy of a cell)
 : DUP ( 1 2 -- 1 2 2 ) ; (O=1)
-: OVER ( 1 2 -- 1 2 1 ) SWAP DUP >R SWAP R> ; (O=4)
+: OVER ( 1 2 -- 1 2 1 ) SWAP DUP >R SWAP R> ; (O=5)
 : TUCK ( 1 2 -- 2 1 2 ) DUP >R SWAP R> ; (O=4)
 
 ( to destroy a cell)
@@ -42,9 +42,11 @@ As showed, SWAPD as atomic is a good choice for design of primitive words
 
 
 PS. 
-- Could be done as { : OVER >R DUP R> SWAP ; } and { : TUCK SWAP R> DUP R> SWAP ; } but { R> DUP R> SWAP } does not appear elsewhere.
+- Could be done as { : OVER >R DUP R> SWAP ; } and { : TUCK SWAP OVER ; } but { R> DUP R> SWAP } does not appear elsewhere.
 - The permutation of 3 is 6, as { 1 2 3 is initial } , { 1 3 2 is swap }, (2 1 3 is swapd }, { 2 3 1 is rot }, { 3 1 2 is -rot }, { 3 2 1 is flip }
 
 # About OVER
 
-OVER is overrated word, is used in loops to copy arguments
+OVER is overrated word, is used in loops to copy arguments and also a good choice to be atomic.
+
+
