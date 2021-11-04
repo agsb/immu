@@ -1,10 +1,11 @@
 # About stacks
 
-# A case of SWAPD
-
 When think about words in Forth, some are atomic, and must be a primitive, and some could be a compound. 
 
 An list of atomic's was done by  Mikael Patel as { S@ R@  @ ! nand plus 0= exit }.
+
+
+# A case of SWAPD
 
 For use onto parameter stack, there are five { DROP DUP SWAP >R R> } atomics and some that could be derived from those ones.
 
