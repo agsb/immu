@@ -226,6 +226,7 @@ _unnest: // pull
 _next: // cast
     lw s9, 0 (s6)
     addi s6, s6, 4
+ _void:
     beq s9, zero, _jump
 _nest: // push  
     addi s5, s5, -4
@@ -254,6 +255,13 @@ zero, is always zero
 this is a trampoline jump table
 Wrk could be within 0 to MAX, no safety checks.
 
+change this 
+    _void:
+        beq s9, zero, _jump
+to this:
+    _void:
+        addi s8, zero, MAX_OPS
+        blt s9, s8, _trampoline
 */
 
 .equ FALSE, 0
@@ -273,10 +281,12 @@ Wrk could be within 0 to MAX, no safety checks.
     addi \ptr, \ptr, CELL
 .endm
 
-# any order, does not matter
- _table:
-     .word t_link
-     .word t_zeru
+# any order, does not matter, but never change the order later !!!
+# functions id's within 1 to MAX_OP, zero is a safe trap to _jump for non inner primitives
+
+.p2align 2
+_table:
+     .word t_jump
      .word t_zequ
      .word t_zlts
      .word t_to
@@ -286,8 +296,9 @@ Wrk could be within 0 to MAX, no safety checks.
      .word t_nand
      .word t_plus
      .word t_false
-     .word t_true
-     
+     .word t_true     
+
+.p2align 2     
  _trampoline:
      la Nos, _table
      sll Wrk, Wrk, 2
@@ -296,6 +307,8 @@ Wrk could be within 0 to MAX, no safety checks.
      jalr zero, Wrk
      
 //----------------------------------------------------------------------
+.p2align 2
+
  t_false:
      addi Top, zero, FALSE
      jal zero, _link
@@ -308,37 +321,33 @@ t_zequ:
 t_zlts:
      blt Top, zero, t_true
      jal zero, t_false
- t_at:
+t_at:
      lw Top, 0 (Top)
      jal zero, _link
- t_to:
+t_to:
      spull Psp, Nos
      sw Top, 0 (Nos)
      jal zero, _link
- t_rsat:
-     spush Psp, Top
-     add Top, Rsp, zero
-     jal zero, _link
- t_psat:
-     spush Psp, Top
-     add Top, Psp, zero
-     jal zero, _link
- t_nand:
+t_nand:
      spull Psp, Nos
      and Nos, Top, Nos
      neg Top, Nos
      jal zero, _link
- t_plus:
+t_plus:
      spull Psp, Nos
      add Top, Top, Nos
      jal zero, _link
- t_zeru:
+t_rsat:
      spush Psp, Top
-     add Top, zero, zero 
+     add Top, Rsp, zero
      jal zero, _link
-
-
-
+t_psat:
+     spush Psp, Top
+     add Top, Psp, zero
+     jal zero, _link
+     
+# and more wold come
+```
 
 ## bibliography 
       
