@@ -123,7 +123,6 @@ LINK:
   Execute NEXT
 
 ```
-## Explain 
 
 _"Explain all that", said the Mock Turtle. “Alice's Adventures in Wonderland”, Lewis Carrol*_
 
@@ -133,7 +132,7 @@ All composite word references are directly, placed and removed, onto the return 
 
 Uses jump and link, as call model, as modern RISC-V processors does.
 
-And just make one more comparison per compound word.
+And just costs "one compare" per compound word.
 
 ## More with less 
 
