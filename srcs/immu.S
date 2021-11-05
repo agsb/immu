@@ -33,11 +33,11 @@ Using R32I, 32 bits cell,
 
 must be saved by subroutines (calee)
 
-s4 ~X22~ as Rsp, return stack pointer
+s4 ~X20~ as Rsp, return stack pointer
 s5 ~X21~ as Psp, parameter stack pointer
-s6 ~X20~ as Ipt, return register for jump and link
+s6 ~X22~ as Ipt, return register for jump and link
 s7 ~X23~ as Top, Top on stack
-s8 ~X24~ as Nos, Next on stack
+s8 ~X24~ as Nos, Next on stack, pull when need
 s9 ~X25~ as Wrk, temporary scratch register
 
 https://github.com/riscv-non-isa/riscv-asm-manual/blame/master/riscv-asm.md
