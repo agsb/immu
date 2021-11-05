@@ -134,7 +134,7 @@ Uses jump and link, as call model, as modern processors does.
 and just make one more comparison per compound word.
 
 ## More with less 
-_"An interpreter can be reduced to a switch-case structure contained within a loop._
+_"An interpreter can be reduced to a switch-case structure contained within a loop."_ , Ken Boak, 11/2021, https://github.com/monsonite/MINT
 
 Also, JUMP could be extended, with pseudo op-codes for more “inner functions”, as a inline lookup table:
 
