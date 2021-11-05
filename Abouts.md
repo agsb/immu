@@ -7,9 +7,9 @@ An list of atomic's was done by  Mikael Patel as { S@ R@  @ ! nand plus 0= exit 
 
 # A case of SWAPD
 
-For use onto parameter stack, there are five { DROP DUP SWAP >R R> R@ } atomics and some that could be derived from those ones.
+For use onto stacks, there are six { DROP DUP SWAP >R R> R@ } atomics and some that could be derived from those ones.
 
-Lets make a list, for change 3 cells at top (O= is the number of atomic operations) :
+Lets make a list, to change 3 cells at top (O= is the number of atomic operations) :
 
 ![Three Balls](https://github.com/agsb/immu/blob/main/180px-Permutations_RGB.svg.png "Text to show on mouseover")
 
@@ -42,24 +42,25 @@ Note the sequence { >R SWAP R> } aka SWAPD, occurs in { OVER TUCK ROT -ROT FLIP 
 ```
 As showed, SWAPD as atomic is a good choice for design of primitive words
 
-
 PS. 
 - Could be done as { : OVER >R DUP R> SWAP ; } and { : TUCK SWAP OVER ; } but { R> DUP R> SWAP } does not appear elsewhere.
 - The permutation of 3 is 6, as { 1 2 3 is initial } , { 1 3 2 is swap }, (2 1 3 is swapd }, { 2 3 1 is rot }, { 3 1 2 is -rot }, { 3 2 1 is flip }
 
 # About OVER
 
-OVER is overrated word, is used in loops to copy arguments and also a good choice to be atomic.
+OVER is overrated word, is often used to copy arguments and is also a good choice to be atomic.
+
+# About minimal core set
 
 
-# Minimal core set
 
 https://github.com/uho/minimal, Ulrich Hoffmann points:
 
-Minimal Forth Workbench: 48 primitives, 69 words
- ok
-words ALIGNED CELL+ CHAR+ ROT 2/ LSHIFT XOR OR > = 0= TRUE FALSE MOD 2* / * + VARIABLE 
-CONSTANT DUP primitive WORDS INCLUDE bye \ .S ( CR KEY? EMIT KEY DOES> ; CREATE : 
-EXECUTE J LOOP UNTIL AGAIN BEGIN ELSE ' I DO REPEAT WHILE THEN IF R> OVER DROP R@ >R 
-SWAP RSHIFT INVERT AND < - */MOD CHARS CALIGNED CALIGN C@ C, C! CELLS ALIGN @ , ! 
+Minimal Forth Workbench: 
+
+    words ALIGNED CELL+ CHAR+ ROT 2/ LSHIFT XOR OR > = 0= TRUE FALSE MOD 2* / * + VARIABLE 
+    CONSTANT DUP primitive WORDS INCLUDE bye \ .S ( CR KEY? EMIT KEY DOES> ; CREATE : 
+    EXECUTE J LOOP UNTIL AGAIN BEGIN ELSE ' I DO REPEAT WHILE THEN IF R> OVER DROP R@ >R 
+    SWAP RSHIFT INVERT AND < - */MOD CHARS CALIGNED CALIGN C@ C, C! CELLS ALIGN @ , ! 
+
 48 primitives, 69 words ok
