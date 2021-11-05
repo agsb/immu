@@ -1,6 +1,6 @@
 # An immutable Forth
 
- An implementation of Forth with inner interpreter using extended indirect thread code and a dictionary made up of machine independent vocabularies. 
+ An implementation of Forth with inner interpreter using extended indirect thread code and a dictionary made of machine independent vocabularies. 
   
  Only the inner interpreter and vocabularies related to systems, drives and primitives are machine dependent. 
   
@@ -10,29 +10,31 @@
   
 The inner interpreter is Forth's heartbeat.
 
-It makes virtual machine magic happen by translating coded sequences into algorithms that transform information.
+It casts virtual machine magic happen by translating coded sequences into algorithms that transform the information.
 
-These sequences are preserved in a dictionary as words and code.
+These sequences are preserved in a dictionary as tuples of words and code.
 
 ## the dictionary
 
 The dictionary is a table, with a linked list of vocabularies, with linked lists of words, where words are tuples, made up of 
 
-  - a Word header, [link][size+flags][name][pad?]
+  - a word header, [link][size+flags][name][pad?]
 
-  - a Word definition, [ _code-word_ ][parameters][ _last-word_ ]
+  - a word definition, [ _code-word_ ][parameters][ _last-word_ ]
 
 Ideally, there are only two types of words,
 
-  - Compounds, _that contains only* references of words_ , and
+  - Compounds, _that contains only references of words_ , and
 
   - Primitives, _that contains only machine code without calls_ .
 
-_code-word_ : NEST (DOCOLON) for compound or DOCODE for primitives
-    
-_last-word_ : UNNEST (SEMIS) for compound or EXIT for primitives
+Usually
 
-parameters: could be a list of references or code
+  - _code-word_ : NEST (DOCOLON) for compound or DOCODE for primitives
+    
+  - _last-word_ : UNNEST (SEMIS) for compound or EXIT for primitives
+
+  - parameters : could be a list of references or code
 
 ## the classic indirect thread code
 
@@ -127,11 +129,11 @@ _"Explain all that", said the Mock Turtle. “Alice's Adventures in Wonderland�
 
 The code above only executes jumps when references to primitives words.
 
-All composite word references are directly placed and removed, onto the return stack, no jumps.
+All composite word references are directly, placed and removed, onto the return stack, do not executing any jump.
 
-Uses jump and link, as call model, as modern processors does.
+Uses jump and link, as call model, as modern RISC-V processors does.
 
-and just make one more comparison per compound word.
+And just make one more comparison per compound word.
 
 ## More with less 
 
@@ -194,7 +196,7 @@ Some information produces recipes, sequences of algorithms encoded by references
 
 And it can grow, incorporating these recipes and maybe, pherhaps, creating others as well.
 
-The proposed small change allows these compiled recipes to be shared as executables.
+The proposed small change allows these compiled recipes to be shared as executables inside Forth virtual machines.
 
 ## *and that could be an immu( )table Forth.*
 
@@ -212,9 +214,9 @@ s6 must always points to a reference to be used by _next,
 
 header is a macro, does the Forth dictionary header
 
-EXIT reference, ends all compound words;
+EXIT reference, ends all compound words, also is a primitive word;
 
-jump _link, ends all primitive words, also is a "hook" for debug before jump _next;
+jump (jal zero,) _link, ends all primitive words, also is a "hook" for debug before jump _next;
 
 */
 
@@ -253,6 +255,8 @@ _jump:  // jump
 “http://www.forth.org/KittPeakForthPrimer.pdf”
 
 “http://www.forth.org/fig-forth/fig-forth_PDP-11.pdf”
+
+"http://forth.org/OffeteStore/1013_eForthAndZen.pdf"
 
 “https://muforth.nimblemachines.com/threaded-code/”
 
