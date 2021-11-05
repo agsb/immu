@@ -103,12 +103,12 @@ NEXT:
   if WR is NULL, then Execute JUMP
   else Execute NEST
 
-NEST: (aka DOCOLON)
+NEST: 
   Push IP onto call stack
   Copy WR to IP
   Execute NEXT
 
-UNNEST: (aka SEMMIS)
+UNNEST: 
   Pull IP from call stack
   Execute NEXT
 
@@ -117,7 +117,7 @@ JUMP:
   Increment IP by address size
   Jump to fetched address in WR
 
-LINK: (aka EXIT )
+LINK: 
   Execute NEXT
 
 ```
@@ -134,7 +134,8 @@ Uses jump and link, as call model, as modern processors does.
 and just make one more comparison per compound word.
 
 ## More with less 
-_"An interpreter can be reduced to a switch-case structure contained within a loop."_ , Ken Boak, 11/2021, https://github.com/monsonite/MINT
+
+_"An interpreter can be reduced to a switch-case structure contained within a loop."_ , Ken Boak, <https://github.com/monsonite/MINT>, 05/11/2021
 
 Also, JUMP could be extended, with pseudo op-codes for more “inner functions”, as a inline lookup table:
 
@@ -208,29 +209,136 @@ zero, is always zero
 
 s6 must always points to a reference to be used by _next,
    and could be intentionally changed
+
+header is a macro, does the Forth dictionary header
+
+EXIT reference, ends all compound words;
+
+jump _link, ends all primitive words, also is a "hook" for debug before jump _next;
+
 */
 
-_inner:
+header "EXIT","EXIT"
     .word 0x0
-_unnest: 
+_unnest: // pull
     lw s6, 0(s5)
     addi s5, s5, 4
-_next: 
+_next: // cast
     lw s9, 0 (s6)
     addi s6, s6, 4
     beq s9, zero, _jump
-_nest:  
+_nest: // push  
     addi s5, s5, -4
     sw s6, 0(s5)
     add s6, s9, zero
-_link:    
+_link:  // link  
     jal zero, _next
-_jump:  
+_jump:  // jump
     add s9, s6, zero
     addi s6, s6, 4
     jalr zero, s9, 0
 
 ```  
+And a trampoline table,
+```
+ /*
+trampoline table of jumps, aka GCC
+s4, Psp, parameter stack, grows downwards
+s5, Rsp, return stack, grows downwards
+s6, Nxt, reference, aka instruction pointer
+s7, Top, Top onto parameter stack
+s8, Nos, Next temporary, not preserve
+s9, Wrk, Work temporary, not preserve
+zero, is always zero
+
+this is a trampoline jump table
+Wrk could be within 0 to MAX, no safety checks.
+
+*/
+
+.equ FALSE, 0
+.equ TRUE, -1
+
+.macro slook ptr, val, offset
+    lw \val, \offset (\ptr)
+.endm
+
+.macro spull ptr, val
+    lw \val, 0(\ptr)
+    addi \ptr, \ptr, -1*CELL
+.endm
+
+.macro spush ptr, val
+    sw \val, 0(\ptr)
+    addi \ptr, \ptr, CELL
+.endm
+
+# any order, does not matter
+ _table:
+     .word t_link
+     .word t_zeru
+     .word t_zequ
+     .word t_zlts
+     .word t_to
+     .word t_at
+     .word t_rsat
+     .word t_psat
+     .word t_nand
+     .word t_plus
+     .word t_false
+     .word t_true
+     
+ _trampoline:
+     la Nos, _table
+     sll Wrk, Wrk, 2
+     add Wrk, Nos, Wrk
+     lw  Wrk, 0(Wrk)
+     jalr zero, Wrk
+     
+//----------------------------------------------------------------------
+ t_false:
+     addi Top, zero, FALSE
+     jal zero, _link
+ t_true:
+     addi Top, zero, TRUE
+     jal zero, _link
+t_zequ:
+     beq Top, zero, t_true
+     jal zero, t_false
+t_zlts:
+     blt Top, zero, t_true
+     jal zero, t_false
+ t_at:
+     lw Top, 0 (Top)
+     jal zero, _link
+ t_to:
+     spull Psp, Nos
+     sw Top, 0 (Nos)
+     jal zero, _link
+ t_rsat:
+     spush Psp, Top
+     add Top, Rsp, zero
+     jal zero, _link
+ t_psat:
+     spush Psp, Top
+     add Top, Psp, zero
+     jal zero, _link
+ t_nand:
+     spull Psp, Nos
+     and Nos, Top, Nos
+     neg Top, Nos
+     jal zero, _link
+ t_plus:
+     spull Psp, Nos
+     add Top, Top, Nos
+     jal zero, _link
+ t_zeru:
+     spush Psp, Top
+     add Top, zero, zero 
+     jal zero, _link
+
+
+
 
 ## bibliography 
       
