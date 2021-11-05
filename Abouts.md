@@ -52,7 +52,7 @@ OVER is overrated word, is often used to copy arguments and is also a good choic
 
 # About minimal core set
 
-
+An list of atomic's was done by Mikael Patel as { S@ R@ @ ! nand plus 0= exit }.
 
 https://github.com/uho/minimal, Ulrich Hoffmann points:
 
@@ -63,4 +63,4 @@ Minimal Forth Workbench:
     EXECUTE J LOOP UNTIL AGAIN BEGIN ELSE ' I DO REPEAT WHILE THEN IF R> OVER DROP R@ >R 
     SWAP RSHIFT INVERT AND < - */MOD CHARS CALIGNED CALIGN C@ C, C! CELLS ALIGN @ , ! 
 
-48 primitives, 69 words ok
+    48 primitives, 69 words ok
