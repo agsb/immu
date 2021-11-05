@@ -9,10 +9,10 @@ An list of atomic's was done by  Mikael Patel as { S@ R@  @ ! nand plus 0= exit 
 
 For use onto parameter stack, there are five { DROP DUP SWAP >R R> R@ } atomics and some that could be derived from those ones.
 
-Lets make a list, for change 3 cells at top :
-(O= is the number of atomic operations)
+Lets make a list, for change 3 cells at top (O= is the number of atomic operations) :
 
-![alt text for screen readers](/path/to/image.png "Text to show on mouseover")
+![Three Balls](https://github.com/agsb/immu/blob/main/180px-Permutations_RGB.svg.png "Text to show on mouseover")
+
 ```
 ( to create a copy of a cell)
 : DUP ( 1 2 -- 1 2 2 ) ; (O=1)
