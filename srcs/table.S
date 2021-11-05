@@ -42,9 +42,9 @@ _table:
     .word t_plus
 
 _trampoline:
-    la T0, _table
+    la Nos, _table
     sll Wrk, Wrk, 2
-    add Wrk, T0, Wrk
+    add Wrk, Nos, Wrk
     lw  Wrk, 0(Wrk)
     jalr zero, Wrk
  
