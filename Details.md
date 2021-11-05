@@ -162,7 +162,7 @@ In _independent vocabularies_ :
     
     only headers and references, no code inside,
     
-    full (hex) portable and relocatable and extensible,
+    full (ihex) portable and relocatable and extensible,
     
     allow sharing of pre-compiled vocabularies,
 
@@ -171,6 +171,18 @@ In _dependent vocabularies_ :
     just routines coded for specific environments,
     
     adaptable development for diverse situations.    
+    
+## What more ?
+
+    How to manage linked vocabularies ?
+    
+    How to import and export compiled vocabularies ?
+    
+    How to Check the Integrity of Shared Vocabularies ?
+
+    How to verify the authenticity of shared vocabularies ?
+
+    How to relocate references within vocabularies ?
 
 ## Conclusion
 
