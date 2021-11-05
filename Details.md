@@ -16,7 +16,7 @@ These sequences are preserved in a dictionary as words and code.
 
 ## the dictionary
 
-The dictionary is a table, with a linked list of vocabularies, with linked lists of words, where words are made up of 
+The dictionary is a table, with a linked list of vocabularies, with linked lists of words, where words are tuples, made up of 
 
   - a Word header, [link][size+flags][name][pad?]
 
