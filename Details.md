@@ -1,4 +1,3 @@
-
 # An immutable Forth
 
  An implementation of Forth with inner interpreter using extended indirect thread code and a dictionary made up of machine independent vocabularies. 
@@ -17,7 +16,7 @@ These sequences are preserved in a dictionary as words and code.
 
 ## the dictionary
 
-The dictionary is a table, with a linked list of vocabularies, with linked lists of words, where words are made up of 
+The dictionary is a table, with a linked list of vocabularies, with linked lists of words, where words are tuples, made up of 
 
   - a Word header, [link][size+flags][name][pad?]
 
@@ -128,25 +127,26 @@ _"Explain all that", said the Mock Turtle. “Alice's Adventures in Wonderland�
 
 The code above only executes jumps when references to primitives words.
 
-All composite word references are directly placed and removed, onto the return stack.
+All composite word references are directly placed and removed, onto the return stack, no jumps.
 
-Uses jump and link, as call model,
+Uses jump and link, as call model, as modern processors does.
 
 and just make one more comparison per compound word.
 
 ## More with less 
 
-Also, could JUMP be extended, with use of pseudo op-codes for more “inner functions” as a inline lookup table:
+Also, JUMP could be extended, with use of pseudo op-codes for more “inner functions” as a inline lookup table:
 
 ```
-if WR greather than LAST_VM_CODE, then Execute NEST
-else Increment IP by address size, 
+if WR greater than LAST_VM_CODE, then Execute NEST
+else 
+Increment IP by address size, 
 case WR of
-0x00    jump to IP, 
-0x01    jump to IP+(IP), aka (do_does, or tail recursion)
-0x02    push IP onto data stack, aka (do_variable)
-0x03    push (IP) onto data stack, aka (do_constant)
-etc.    All Executes as "inline", no calls
+  0x00    jump to IP, 
+  0x01    jump to IP+(IP), aka (do_does, or tail recursion)
+  0x02    push IP onto data stack, aka (do_variable)
+  0x03    push (IP) onto data stack, aka (do_constant)
+  etc.    All Executes as "inline", no calls
 Execute Link
 ```
 
@@ -154,15 +154,15 @@ Execute Link
 
 A Dictionary with vocabularies that could be:
   
-  processor independent (for all with compounds words)
+    processor independent (for all with compounds words)
   
-  processor dependent (for systems, drivers, primitives) 
+    processor dependent (for systems, drivers, primitives) 
   
 In _independent vocabularies_ :
     
     only headers and references, no code inside,
     
-    full (hex) portable and relocatable and extensible,
+    full (ihex) portable and relocatable and extensible,
     
     allow sharing of pre-compiled vocabularies,
 
@@ -171,6 +171,18 @@ In _dependent vocabularies_ :
     just routines coded for specific environments,
     
     adaptable development for diverse situations.    
+    
+## What more ?
+
+    How to relocate the references within vocabularies ?
+    
+    How to manage the linked vocabularies ?
+    
+    How to import and export compiled vocabularies ?
+    
+    How to verify the integrity of shared vocabularies ?
+    
+    How to verify the authenticity of shared vocabularies ?
 
 ## Conclusion
 
@@ -182,7 +194,7 @@ And it can grow, incorporating these recipes and maybe, pherhaps, creating other
 
 The proposed small change allows these compiled recipes to be shared as executables.
 
-## *and that could be an immu table Forth.*
+## *and that could be an immu( )table Forth.*
 
 ```
 /* 
