@@ -132,7 +132,7 @@ All composite word references are directly, placed and removed, onto the return 
 
 Uses jump and link, as call model, as modern RISC-V processors does.
 
-And just costs "one compare" per compound word.
+Does just a compare per Forth word, to decide if executes a NEST or a JUMP.
 
 ## More with less 
 
@@ -189,7 +189,9 @@ In _dependent vocabularies_ :
 
 ## Conclusion
 
-I see Forth as a model of the RNA-DNA type. The inner interpreter acts as RNA and dictionaries act as DNA. It consumes information and produces transformations. The primitives words act as the AGCT proteines.
+I see Forth as a model of the RNA-DNA type. The inner interpreter acts as RNA and dictionaries act as DNA. 
+
+It consumes information and produces transformations. The primitives words act as the ACTG proteines.
 
 Some information produces recipes, sequences of algorithms encoded by references to routines, that change the information. Like real protein sequences.
 
