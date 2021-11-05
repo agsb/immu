@@ -61,12 +61,12 @@ NEXT:
   
   Jump to WR
 
-NEST: (aka DOCOLON, at start of words)
+NEST: (aka ENTER, DOCOLON, at start of words)
   Push IP onto call stack
   Set IP to point to the first address of the called routine
   Execute NEXT
 
-UNNEST: (aka SEMMIS, at end of words)
+UNNEST: (aka EXIT, SEMIS, at end of words)
   Pull IP from call stack
   Execute NEXT
 
@@ -138,7 +138,7 @@ Does just a compare per Forth word, to decide if executes a NEST or a JUMP.
 
 _"An interpreter can be reduced to a switch-case structure contained within a loop."_ , Ken Boak, <https://github.com/monsonite/MINT>, 05/11/2021
 
-Also, JUMP could be extended, with pseudo op-codes for more “inner functions”, as a inline lookup table:
+Also, JUMP could be extended, with pseudo op-codes as Token Threaded Code (TTC), for more “inner functions”, as a inline lookup table:
 
 ```
 if WR greater than LAST_VM_CODE, then Execute NEST
@@ -260,6 +260,8 @@ _jump:  // jump
 “http://www.forth.org/fig-forth/fig-forth_PDP-11.pdf”
 
 "http://forth.org/OffeteStore/1013_eForthAndZen.pdf"
+
+"https://www.bradrodriguez.com/papers/moving1.htm"
 
 “https://muforth.nimblemachines.com/threaded-code/”
 
