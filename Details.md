@@ -174,15 +174,15 @@ In _dependent vocabularies_ :
     
 ## What more ?
 
-      How to manage linked vocabularies ?
+    How to relocate the references within vocabularies ?
     
-      How to import and export compiled vocabularies ?
+    How to manage the linked vocabularies ?
     
-      How to verify the integrity of shared vocabularies ?
-
-      How to verify the authenticity of shared vocabularies ?
-
-      How to relocate references within vocabularies ?
+    How to import and export compiled vocabularies ?
+    
+    How to verify the integrity of shared vocabularies ?
+    
+    How to verify the authenticity of shared vocabularies ?
 
 ## Conclusion
 
