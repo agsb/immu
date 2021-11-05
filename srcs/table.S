@@ -30,13 +30,8 @@
 // this is a trampoline jump table
 // Wrk could be 0 to MAX, no safe check.
 
-_trampoline:
-    ldi T0, _table
-    sll Wrk, Wrk, 2
-    addi Wrk, T0
-    lw  Wrk, 0(Wrk)
-    jalr zero, Wrk
 _table:
+    jal zero, _trampoline
     .word t_zeru 
     .word t_zequ    
     .word t_to 
@@ -45,6 +40,13 @@ _table:
     .word t_psat
     .word t_nand
     .word t_plus
+
+_trampoline:
+    la T0, _table
+    sll Wrk, Wrk, 2
+    add Wrk, T0, Wrk
+    lw  Wrk, 0(Wrk)
+    jalr zero, Wrk
  
 //----------------------------------------------------------------------
 // ( -- 0 )

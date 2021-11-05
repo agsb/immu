@@ -130,6 +130,9 @@ _forth_:
 .set _link_, 0x0
 
 // riscV are byte oriented, but address must be even :)
+// compiler only puts address at elf
+// exclusive bytes for size and flags, easy way
+// numeric labels only 0-99
 .macro header name, label, flags=0x0
 is_\label:
     .p2align 1, 0x00
@@ -165,7 +168,7 @@ _next:
 
 _nest: 
     rspush Ipt
-    add Ipt, zero, Wrk
+    add Ipt, Wrk, zero
 
 _link:    
     jal zero, _next
@@ -182,14 +185,6 @@ _jump:
   basic primitives
 
 ***********************************************************************/
-//----------------------------------------------------------------------
-// ( -- 0 )
-header "0", "zeru", 
-    .word 0x0
-    pspush Top 
-    add Top, zero, zero  // li Top, 0
-    jal zero, _link
-
 //----------------------------------------------------------------------
 // ( w -- FALSE | TRUE)
 header "0=", "zequ"    
@@ -365,6 +360,14 @@ header "<>", "neq",
     beq Top, Nos, _isfalse
 
 //----------------------------------------------------------------------
+// ( -- 0 )
+header "0", "nil", 
+    .word 0x0
+    pspush Top 
+    add Top, zero, zero  // li Top, 0
+    jal zero, _link
+
+//----------------------------------------------------------------------
 header "1", "one", 
     .word 0x0
     pspush Top 
@@ -421,7 +424,7 @@ header "R>", "rto",
     jal zero, _link
 
 //----------------------------------------------------------------------
-header "@R", "atr", 
+header "R@", "rat", 
     .word 0x0
     pspush Top 
     lw Top, 0 (Rsp)
@@ -431,29 +434,29 @@ header "@R", "atr",
 //   ( rs -- )
 header "R!", "rsto", 
     .word 0x0
-    add Rsp, zero, Top 
-    jal zero, _pull
+    add Rsp, Top, Top 
+    jal zero, _drop
     
 //----------------------------------------------------------------------
 //   ( ps -- )
 header "P!", "psto", 
     .word 0x0
-    add Psp, zero, Top 
-    jal zero, _pull
+    add Psp, Top, zero
+    jal zero, _drop
 
 //----------------------------------------------------------------------
 //   ( w -- )
 header "DROP", "drop", 
     .word 0x0
-_pull:
-    pspull Top 
+_drop:
+    addi Psp, Psp, -1*CELL
     jal zero, _link
 
 //----------------------------------------------------------------------
 //   ( w -- w w )
 header "DUP", "dup", 
     .word 0x0
-_push:
+_dup:
     pspush Top 
     jal zero, _link
 
@@ -461,34 +464,47 @@ _push:
 //   ( w v -- v w )
 header "SWAP", "swap", 
     .word 0x0
-    pspull Nos
-_swap:    
-    pspush Top 
-    mv Top, Nos
+    lw Nos, 0 (Psp)
+    sw Top, 0 (Psp)
+    add Top, Nos, zero
+    jal zero, _link
+
+//----------------------------------------------------------------------
+//   ( w v u -- v w u)
+header "SWAPD", "swapd", 
+    .word 0x0
+    lw Nos, 0 (Psp)
+    lw Wrk, CELL (Psp)
+    sw Nos, CELL (Psp)
+    sw Wrk, 0 (Psp)
     jal zero, _link
 
 //----------------------------------------------------------------------
 //   (w v -- w v w)
 header "OVER", "over", 
     .word 0x0
-    lw Nos, CELL (Psp)
-    jal zero, _swap
+    lw Nos, 0 (Psp)
+    pspush Top
+    add Top, Nos, zero
+    jal zero, _link
     
 //----------------------------------------------------------------------
 //   (w u v -- u v w)
 header "ROT", "rot", 
     .word 0x0
-    pspull Wrk
-    pspull Nos
-    pspush Wrk
-    jal zero, _swap
+    lw Nos, 0 (Psp)
+    lw Wrk, CELL (Psp)
+    sw Nos, CELL (Psp)
+    sw Top, 0 (Psp)
+    add Top, Wrk, zero
+    jal zero, _link
     
 //----------------------------------------------------------------------
 //   ( 0 -- 0 ) (w -- w w)
 header "?DUP", "zdup", 
     .word 0x0
     beq Top, zero, 1f
-    pspush Top 
+    jar zero, _dup
 1:    
     jal zero, _link
 
@@ -499,7 +515,8 @@ header "DOCON", "DOCON",
     .word 0x0
     pspush Top 
     lw Top, 0(Ipt)
-    jal zero, _skip
+    addi Ipt, Ipt, CELL
+    jal zero, _link
 
 //----------------------------------------------------------------------
 // trick, load Top <- IP
@@ -508,7 +525,8 @@ header "DOVAR", "DOVAR",
     .word 0x0
     pspush Top 
     add Top, zero, Ipt
-    jal zero, _skip
+    addi Ipt, Ipt, CELL
+    jal zero, _link
 
 //----------------------------------------------------------------------
 // trick, if Top not zero skip next reference, drop Top
@@ -517,7 +535,6 @@ header "?BRANCH", "zbranch",
     add Wrk, zero, Top 
     pspull Top 
     beq Wrk, zero, _branch
-_skip:
     addi Ipt, Ipt, CELL
     jal zero, _link
     
@@ -536,7 +553,7 @@ header "EXECUTE", "execute",
     .word 0x0
     rspush Top 
     pspull Top
-    jal zero, _pull
+    jal zero, _link
     
 //  ZZZZ >< ABS ALLIGN 
 
@@ -547,7 +564,8 @@ header "C!", "cto",
     .word 0x0
     pspull Nos
     sb Nos, 0 (Top)
-    jal zero, _pull
+    pspull Top
+    jal zero, _link
 
 //----------------------------------------------------------------------
 //   ( a -- b )
@@ -566,7 +584,8 @@ header "+!", "plusto",
     lw Wrk, 0 (Top)
     add Wrk, Wrk, Nos
     sw Wrk, 0 (Top)
-    jal zero, _pull
+    pspull Top
+    jal zero, _link
 
 //----------------------------------------------------------------------
 //   ( a1 a2 u --- FALSE | TRUE )

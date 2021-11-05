@@ -11,7 +11,7 @@ riscv64-unknown-elf-gcc -O0 -march=rv32i -mabi=ilp32 \
 
 riscv64-unknown-elf-objcopy -O ihex main.elf main.hex
 
-riscv64-unknown-elf-objdump --disassemble-all -Wa,-noaliases  main.elf > main.lot
+riscv64-unknown-elf-objdump --disassemble-all main.elf > main.lot
 
 
 exit
