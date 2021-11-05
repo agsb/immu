@@ -183,7 +183,7 @@ And it can grow, incorporating these recipes and maybe, pherhaps, creating other
 
 The proposed small change allows these compiled recipes to be shared as executables.
 
-## *and that could be an immu table Forth.*
+## *and that could be an immu( )table Forth.*
 
 ```
 /* 
