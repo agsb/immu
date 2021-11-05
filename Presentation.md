@@ -128,25 +128,26 @@ _"Explain all that", said the Mock Turtle. “Alice's Adventures in Wonderland�
 
 The code above only executes jumps when references to primitives words.
 
-All composite word references are directly placed and removed, onto the return stack.
+All composite word references are directly placed and removed, onto the return stack, no jumps.
 
-Uses jump and link, as call model,
+Uses jump and link, as call model, as modern processors does.
 
 and just make one more comparison per compound word.
 
 ## More with less 
 
-Also, could JUMP be extended, with use of pseudo op-codes for more “inner functions” as a inline lookup table:
+Also, JUMP could be extended, with use of pseudo op-codes for more “inner functions” as a inline lookup table:
 
 ```
-if WR greather than LAST_VM_CODE, then Execute NEST
-else Increment IP by address size, 
+if WR greater than LAST_VM_CODE, then Execute NEST
+else 
+Increment IP by address size, 
 case WR of
-0x00    jump to IP, 
-0x01    jump to IP+(IP), aka (do_does, or tail recursion)
-0x02    push IP onto data stack, aka (do_variable)
-0x03    push (IP) onto data stack, aka (do_constant)
-etc.    All Executes as "inline", no calls
+  0x00    jump to IP, 
+  0x01    jump to IP+(IP), aka (do_does, or tail recursion)
+  0x02    push IP onto data stack, aka (do_variable)
+  0x03    push (IP) onto data stack, aka (do_constant)
+  etc.    All Executes as "inline", no calls
 Execute Link
 ```
 
