@@ -155,9 +155,9 @@ Execute Link
 
 A Dictionary with vocabularies that could be:
   
-  processor independent (for all with compounds words)
+    processor independent (for all with compounds words)
   
-  processor dependent (for systems, drivers, primitives) 
+    processor dependent (for systems, drivers, primitives) 
   
 In _independent vocabularies_ :
     
