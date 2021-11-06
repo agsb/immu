@@ -179,13 +179,13 @@ In _dependent vocabularies_ :
 
     How to:
         
-        Import and export compiled vocabularies ? text well know format, ihex.
+        Import and export compiled vocabularies ? Text well know format, ihex.
         
-        Verify the integrity of shared vocabularies ? complex hashs, sha256. 
+        Verify the integrity of shared vocabularies ? Complex hashs, SHA256. 
         
-        Verify the authenticity of shared vocabularies ? signatures, PGP keys.
+        Verify the authenticity of shared vocabularies ? Digital signatures, PGP keys.
   
-        Relocate the references within vocabularies ? position independent code ?
+        Relocate the references within vocabularies ? Position independent code
         
         Manage the linked vocabularies ?
 
@@ -193,7 +193,7 @@ In _dependent vocabularies_ :
 
 I see Forth as a model of the RNA-DNA type. The inner interpreter acts as RNA and dictionaries act as DNA. 
 
-It consumes information and produces transformations. The primitives words act as the ACTGU proteines.
+It consumes information and produces transformations. The primitives words act as the ACTUG proteines.
 
 Some information produces recipes, sequences of algorithms encoded by references to routines, that change the information. Like real protein sequences.
 
@@ -229,21 +229,21 @@ header "EXIT","EXIT"
     .word 0x0
 _unnest: // pull
     lw s6, 0(s5)
-    addi s5, s5, 4
+    addi s5, s5, CELL
 _next: // cast
     lw s9, 0 (s6)
-    addi s6, s6, 4
+    addi s6, s6, CELL
  _void:
     beq s9, zero, _jump
 _nest: // push  
-    addi s5, s5, -4
+    addi s5, s5, -1*CELL
     sw s6, 0(s5)
     add s6, s9, zero
 _link:  // link  
     jal zero, _next
 _jump:  // jump
     add s9, s6, zero
-    addi s6, s6, 4
+    addi s6, s6, CELL
     jalr zero, s9, 0
 
 ```  
