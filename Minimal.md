@@ -4,9 +4,10 @@ Looking for a graal ? That's one.
 
 (incomplete)
 
-From http://www.euroforth.org/ef15/papers/knaggs.pdf
+From http://www.euroforth.org/ef15/papers/knaggs.pdf, indexes from https://forth-standard.org/ 11/2021
 
 1 Memory Access
+
         6.1.0010 ! store
         6.1.0150 , comma
         6.1.0650 @ fetch
@@ -21,7 +22,9 @@ From http://www.euroforth.org/ef15/papers/knaggs.pdf
             CALIGNED c-alligned
         6.1.0897 CHAR+ char-plus
         6.1.0898 CHARS chars
+        
 2 Arithmetic
+
         6.1.0120 + plus
         6.1.0090 * star
         6.1.0320 2* two-star
@@ -30,7 +33,9 @@ From http://www.euroforth.org/ef15/papers/knaggs.pdf
         6.1.0230 / slash
         6.1.0330 2/ two-slash
         6.1.1890 MOD
+        
 3 Logic
+
         6.1.0270 0= zero-equals
         6.1.0480 < less-than
         6.1.0720 AND
@@ -43,7 +48,9 @@ From http://www.euroforth.org/ef15/papers/knaggs.pdf
         6.1.2490 XOR x-or
         6.2.1485 FALSE
         6.1.2162 RSHIFT r-shift
+        
 4 Stack
+
         6.1.1290 DUP dupe
         6.1.2260 SWAP
         6.1.0580 >R to-r
@@ -52,7 +59,9 @@ From http://www.euroforth.org/ef15/papers/knaggs.pdf
         6.1.1990 OVER
         6.1.2060 R> r-from
         6.1.2160 ROT rote
+        
 5 Flow Control
+
         6.1.1700 IF
         6.1.2270 THEN
         6.1.2430 WHILE
@@ -67,20 +76,27 @@ From http://www.euroforth.org/ef15/papers/knaggs.pdf
         6.1.1800 LOOP
         6.1.1730 J
         6.1.1370 EXECUTE
+        
 6 Definitions
+
         6.1.0450 : colon
         6.1.0950 CONSTANT
         6.1.1000 CREATE
         6.1.0460 ; semicolon
         6.1.2410 VARIABLE
         6.1.1250 DOES> does
+        
 7 Device
+
         6.1.1750 KEY
         6.1.1320 EMIT
         10.6.1.1755 KEY? key-question
         6.1.0990 CR c-r
+        
 8 Tools
+
         6.1.0080 ( paren
         15.6.1.0220 .S dot-s
         6.2.2535 \ backslash
+        
         
