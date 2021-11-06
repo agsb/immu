@@ -12,7 +12,7 @@ The inner interpreter is Forth's heartbeat.
 
 It casts virtual machine magic by translating coded sequences into algorithms that transform the information.
 
-These sequences are preserved in a dictionary as tuples of word and code.
+These encoded sequences are preserved in a dictionary as words, made up of name and code tuples.
 
 ## the dictionary
 
@@ -34,7 +34,7 @@ Usually
     
   - _last-word_ : is UNNEST (SEMIS) for compound or EXIT for primitives
 
-  - parameters : could be a list of references or code
+  - parameters : is a list of references or a sequence of machine code
 
 ## the classic indirect thread code
 
@@ -89,9 +89,9 @@ defword:  ; only a UNNEST, (where did NEST go ?)
 | LINK  | 6 | D | O | U | B | L | E | 0 | DUP | PLUS | UNNEST  |    
 +-------+---+---+---+---+---+---+---+---+-----+------+---------+
        
-defcode:  ; a NULL and a _jump, (where did self reference go ?)
+defcode:  ; a NULL and a jump, (where did self reference go ?)
 +-------+---+---+---+---+------+------+------+------+-----------+
-| LINK  | 3 | D | U | P | NULL | code | code | code | jump _link |
+| LINK  | 3 | D | U | P | NULL | code | code | code | jump link |
 +-------+---+---+---+---+------+------+-------+-----+-----------+
 ```
 
@@ -146,10 +146,9 @@ else
 Increment IP by address size, 
 case WR of
   0x00    jump to IP, 
-  0x01    jump to IP+(IP), aka (branch, do_does, or tail recursion)
+  0x01    jump to IP+(IP), aka (do_does, or tail recursion)
   0x02    push IP onto data stack, aka (do_variable)
   0x03    push (IP) onto data stack, aka (do_constant)
-  0x04    does a NAND between Top and Nos
   etc.    All Executes as "inline", no calls
 Execute Link
 ```
@@ -176,20 +175,20 @@ In _dependent vocabularies_ :
     
     adaptable development for diverse situations.    
     
-## What more ?
+## What more ? 
 
-    How to :
-       
-    Import and export compiled vocabularies ? Text Well Format, ihex.
-    
-    Verify the integrity of shared vocabularies ? Complex Hashs, SHA256.
-    
-    Verify the authenticity of shared vocabularies ? Public Signatures, PGP keys.
+    How to:
+        
+        Import and export compiled vocabularies ? text well know format, ihex.
+        
+        Verify the integrity of shared vocabularies ? complex hashs, sha256. 
+        
+        Verify the authenticity of shared vocabularies ? signatures, PGP keys.
+  
+        Relocate the references within vocabularies ? position independent code ?
+        
+        Manage the linked vocabularies ?
 
-    Relocate the references within vocabularies ? 
-    
-    Manage the linked vocabularies ?
-    
 ## Conclusion
 
 I see Forth as a model of the RNA-DNA type. The inner interpreter acts as RNA and dictionaries act as DNA. 
@@ -198,11 +197,13 @@ It consumes information and produces transformations. The primitives words act a
 
 Some information produces recipes, sequences of algorithms encoded by references to routines, that change the information. Like real protein sequences.
 
-And it can grow, incorporating these recipes and maybe, pherhaps, creating others as well.
+And it can grow, incorporating these recipes and maybe, perhaps, creating recipes as well.
 
 The proposed small change allows these compiled recipes to be shared as executables inside Forth virtual machines.
 
-## *And this could be an immu( )table Forth.*
+
+
+## *and that could be an immu( )table Forth.*
 
 ```
 /* 
@@ -221,11 +222,6 @@ header is a macro, does the Forth dictionary header
 EXIT reference, ends all compound words, also is a primitive word;
 
 jump (jal zero,) _link, ends all primitive words, also is a "hook" for debug before jump _next;
-
-PS:
-
-reference to _link could stay fixed in a register
-jump could be: beq zero, zero, _link
 
 */
 

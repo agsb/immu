@@ -1,7 +1,7 @@
 /*
  *  DISCLAIMER
  *
- *  Copyright © 2020, Alvaro Gomes Sobral Barcellos,
+ *  Copyright © 2021, Alvaro Gomes Sobral Barcellos,
  *
  *  Permission is hereby granted, free of charge, to any person obtaining
  *  a copy of this software and associated documentation files (the
@@ -68,27 +68,26 @@ The following example shows how to load an absolute address:
 
 //----------------------------------------------------------------------
 // stack macros
+// could have hooks for check over/under
 //
-.macro rspull reg
-    lw \reg, 0(Rsp)
-    addi Rsp, Rsp, -1*CELL
+.macro spull stack, register
+    lw \register, 0 (\stack)
+    addi \stack, \stack, -1*CELL
 .endm
 
-.macro rspush reg
-    sw \reg, 0(Rsp)
-    addi Rsp, Rsp, CELL
+.macro spush stack, register
+    sw \register, 0 (\stack)
+    addi \stack, \stack, CELL
 .endm
 
-.macro pspull reg
-    lw \reg, 0(Psp)
-    addi Psp, Psp, -1*CELL
+.macro scopy stack, register, offset
+    lw \register, \offset (\stack)
 .endm
 
-.macro pspush reg
-    sw \reg, 0(Psp)
-    addi Psp, Psp, CELL
-.endm
-
+//----------------------------------------------------------------------
+// goto macros
+// could have hooks for debugs
+//
 .macro link address
     jal zero, \address
 .endm
@@ -98,10 +97,6 @@ The following example shows how to load an absolute address:
 .endm
 
 //----------------------------------------------------------------------
-
-.text
-.global _forth_
-_forth_:
 
 //----------------------------------------------------------------------
 //
@@ -120,14 +115,9 @@ _forth_:
 //
 // set start reverse linked list
 //
-// adapted from amforth-6.9
+// trick adapted from amforth-6.9
 99:
 .word 0
-//97: # riscv-wordlist
-//98: # environment
-//99: # forth-wordlist
-
-.set _link_, 0x0
 
 // riscV are byte oriented, but address must be even :)
 // compiler only puts address at elf
@@ -152,14 +142,22 @@ is_\label:
     forth inner interpreter
 
 ***********************************************************************/
+.text
+.global _forth_
+_forth_:
+
+// trick adapted from amforth-6.9
+99:
+.word 0
+
 //----------------------------------------------------------------------
 //
-header "ENDS", "inner"
+header "EXIT", "EXIT"
 _inner: 
     .word 0x0
 
 _unnest:
-    rspull Ipt
+    spull Rsp, Ipt
 
 _next: 
     lw Wrk, 0 (Ipt)
@@ -167,7 +165,7 @@ _next:
     beq Wrk, zero, _jump
 
 _nest: 
-    rspush Ipt
+    spush Rsp, Ipt
     add Ipt, Wrk, zero
 
 _link:    
@@ -186,23 +184,51 @@ _jump:
 
 ***********************************************************************/
 //----------------------------------------------------------------------
+//   ( -- FALSE)
+header "NOOP", "noop", 
+    .word 0x0
+_noop: 
+    jal zero, _link
+
+//----------------------------------------------------------------------
+//   ( -- FALSE)
+header "FALSE", "false", 
+    .word 0x0
+    spush Psp, Top 
+_isfalse:
+    addi Top, zero, FALSE  
+    jal zero, _link
+
+//----------------------------------------------------------------------
+//   ( -- TRUE)
+header "TRUE", "true", 
+    .word 0x0
+    spush Psp, Top 
+_istrue:
+    addi Top, zero, TRUE   
+    jal zero, _link
+
+//----------------------------------------------------------------------
 // ( w -- FALSE | TRUE)
 header "0=", "zequ"    
     .word 0x0
-    beq Top, zero, _ftrue
-_ffalse:
-    addi Top, zero, FALSE  // li Top, FALSE
-    jal zero, _link
-_ftrue:
-    addi Top, zero, TRUE   // li Top, TRUE
-    jal zero, _link
+    beq Top, zero, _isftrue
+    bne Top, zero, _isfalse
+
+//----------------------------------------------------------------------
+// ( w -- FALSE | TRUE)
+header "0>", "zequ"    
+    .word 0x0
+    blt Top, zero, _ftrue
+    bge Top, zero, _ffalse 
 
 //----------------------------------------------------------------------
 // ( w a -- )
 header "!", "to", 
     .word 0x0
-    pspull Nos
+    spull Psp, Nos
     sw Top, 0 (Nos)
+    spull Psp, Tos
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -216,40 +242,42 @@ header "@", "at",
 // ( -- rsp )
 header "RS@", "rsat",
     .word 0x0
-    pspush Top 
-    add Top, zero, Rsp
+    spush Psp, Top 
+    add Top, Rsp, zero
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( -- psp )
 header "PS@", "psat",
     .word 0x0
-    pspush Top 
-    add Top, zero, Psp
+    spush Psp, Top 
+    add Top, Psp, zero
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u v -- w )
 header "NAND", "nand",
     .word 0x0
-    pspull Nos
+    spull Psp, Nos
     and Nos, Top, Nos
     neg Top, Nos
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u v -- w )
-header "PLUS", "plus",
+header "+", "plus",
     .word 0x0
-    pspull Nos
+    spull Psp, Nos
     add Top, Top, Nos
     jal zero, _link
 
-/***********************************************************************
-
-  more primitives
-
-***********************************************************************/
+//----------------------------------------------------------------------
+// ( u v -- w )
+header "-", "minus",
+    .word 0x0
+    spull Psp, Nos
+    add Top, Top, Nos
+    jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u -- w )
@@ -267,17 +295,9 @@ header "NEGATE", "negate"
 
 //----------------------------------------------------------------------
 // ( u v -- w )
-header "MINUS", "minus",
-    .word 0x0
-    pspull Nos
-    sub Top, Top, Nos
-    jal zero, _link
-
-//----------------------------------------------------------------------
-// ( u v -- w )
 header "SHR", "shr"
     .word 0x0
-    pspull Nos
+    spull Psp, Nos
     srl Top, Top, Nos
     jal zero, _link
 
@@ -285,7 +305,7 @@ header "SHR", "shr"
 // ( u v -- w )
 header "SHL", "shl"
     .word 0x0
-    pspull Nos
+    spull Psp, Nos
     sll Top, Top, Nos
     jal zero, _link
 
@@ -293,7 +313,7 @@ header "SHL", "shl"
 // ( u v -- w )
 header "AND", "and"
     .word 0x0
-    pspull Nos
+    spull Psp, Nos
     and Top, Top, Nos
     jal zero, _link
 
@@ -301,7 +321,7 @@ header "AND", "and"
 // ( u v -- w )
 header "OR", "or"
     .word 0x0
-    pspull Nos
+    spull Psp, Nos
     or Top, Top, Nos
     jal zero, _link
 
@@ -309,82 +329,57 @@ header "OR", "or"
 // ( u v -- w )
 header "XOR", "xor"
     .word 0x0
-    pspull Nos
+    spull Psp, Nos
     xor Top, Top, Nos
-    jal zero, _link
-
-//----------------------------------------------------------------------
-//   ( -- FALSE)
-header "FALSE", "false", 
-    .word 0x0
-    pspush Top 
-_isfalse:
-    addi Top, zero, FALSE  // li Top, FALSE
-    jal zero, _link
-
-//----------------------------------------------------------------------
-//   ( -- TRUE)
-header "TRUE", "true", 
-    .word 0x0
-    pspush Top 
-_istrue:
-    addi Top, zero, TRUE   // li Top, TRUE
     jal zero, _link
 
 //----------------------------------------------------------------------
 header "<", "lt", 
     .word 0x0
-    pspull Nos
+    spull Psp, Nos
     blt Top, Nos, _istrue
     bge Top, Nos, _isfalse
     
 //----------------------------------------------------------------------
 header ">", "gt", 
     .word 0x0
-    pspull Nos
+    spull Psp, Nos
     blt Nos, Top, _istrue
     bge Nos, Top, _isfalse
     
 //----------------------------------------------------------------------
 header "=", "eq", 
     .word 0x0
-    pspull Nos
+    spull Psp, Nos
     beq Top, Nos, _istrue
     bne Top, Nos, _isfalse
-
-//----------------------------------------------------------------------
-header "<>", "neq", 
-    .word 0x0
-    pspull Nos
-    bne Top, Nos, _istrue
-    beq Top, Nos, _isfalse
 
 //----------------------------------------------------------------------
 // ( -- 0 )
 header "0", "nil", 
     .word 0x0
-    pspush Top 
+    spush Psp, Top 
     add Top, zero, zero  // li Top, 0
     jal zero, _link
 
 //----------------------------------------------------------------------
 header "1", "one", 
     .word 0x0
-    pspush Top 
+    spush Psp, Top 
     addi Top, zero, 1  // li Top, 1
     jal zero, _link
 
 //----------------------------------------------------------------------
 header "2", "two", 
     .word 0x0
-    pspush Top 
+    spush Psp, Top 
     addi Top, zero, 2  // li Top, 2
     jal zero, _link
 
 //----------------------------------------------------------------------
 header "CELL", "cell", 
     .word 0x0
-    pspush Top 
+    spush Psp, Top 
     addi Top, zero, CELL   // li Top, CELL
     jal zero, _link
 
@@ -412,21 +407,21 @@ header "CELL-", "cellm",
 //----------------------------------------------------------------------
 header ">R", "tor", 
     .word 0x0
-    rspush Top 
-    pspull Top 
+    spush Rsp, Top 
+    spull Psp, Top 
     jal zero, _link
 
 //----------------------------------------------------------------------
 header "R>", "rto", 
     .word 0x0
-    pspush Top 
-    rspull Top 
+    spush Psp, Top 
+    spull Rsp, Top 
     jal zero, _link
 
 //----------------------------------------------------------------------
 header "R@", "rat", 
     .word 0x0
-    pspush Top 
+    spush Psp, Top 
     lw Top, 0 (Rsp)
     jal zero, _link
 
@@ -434,7 +429,7 @@ header "R@", "rat",
 //   ( rs -- )
 header "R!", "rsto", 
     .word 0x0
-    add Rsp, Top, Top 
+    add Rsp, Top, zero 
     jal zero, _drop
     
 //----------------------------------------------------------------------
@@ -445,33 +440,77 @@ header "P!", "psto",
     jal zero, _drop
 
 //----------------------------------------------------------------------
-//   ( w -- )
+//   ( u w -- u )
 header "DROP", "drop", 
     .word 0x0
 _drop:
-    addi Psp, Psp, -1*CELL
+    spull Psp, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
-//   ( w -- w w )
+//   ( u w -- w )
+header "NIP", "nip", 
+    .word 0x0
+    spull Psp, Nos
+    jal zero, _link
+
+//----------------------------------------------------------------------
+//   ( 0 -- 0 ) (w -- w w)
+header "?DUP", "zdup", 
+    .word 0x0
+    bne Top, zero, _dup  
+    jal zero, _link
+
+//----------------------------------------------------------------------
+//   ( u w -- u w w )
 header "DUP", "dup", 
     .word 0x0
 _dup:
-    pspush Top 
+    spush Psp, Top 
     jal zero, _link
 
 //----------------------------------------------------------------------
-//   ( w v -- v w )
+//   ( u w -- u u w )
+header "DIP", "dip", 
+    .word 0x0
+    lw Nos, 0 (Psp)
+_dip:
+    spush Psp, Nos
+    jal zero, _link
+
+//----------------------------------------------------------------------
+//   ( u w -- u w u )
+header "OVER", "over", 
+    .word 0x0
+    lw Nos, 0 (Psp)
+    spush Psp, Top
+_n2t:
+    add Top, Nos, zero
+    jal zero, _link
+    
+//----------------------------------------------------------------------
+//   ( u w -- w u w )
+header "TUCK", "tuck", 
+    .word 0x0
+    spull Psp, Nos
+    spush Psp, Top
+//  beq zero, zero, _dip
+    spush Psp, Nos
+    jal zero, _link
+
+//----------------------------------------------------------------------
+//   ( v u w -- v w u )
 header "SWAP", "swap", 
     .word 0x0
     lw Nos, 0 (Psp)
     sw Top, 0 (Psp)
+//  beq zero, zero, _n2t
     add Top, Nos, zero
     jal zero, _link
 
 //----------------------------------------------------------------------
-//   ( w v u -- v w u)
-header "SWAPD", "swapd", 
+//   ( v u w -- u v w )
+header "SWIP", "swip", 
     .word 0x0
     lw Nos, 0 (Psp)
     lw Wrk, CELL (Psp)
@@ -480,32 +519,55 @@ header "SWAPD", "swapd",
     jal zero, _link
 
 //----------------------------------------------------------------------
-//   (w v -- w v w)
-header "OVER", "over", 
+//   (v u w -- u w v)
+header "ROT", "rot", 
     .word 0x0
-    lw Nos, 0 (Psp)
-    pspush Top
+    lw Wrk, 0 (Psp)
+    lw Nos, CELL (Psp)
+    sw Wrk, CELL (Psp)
+    sw Top, 0 (Psp)
+//  beq zero, zero, _n2t
     add Top, Nos, zero
     jal zero, _link
     
 //----------------------------------------------------------------------
-//   (w u v -- u v w)
-header "ROT", "rot", 
+//   (v u w -- w v u)
+header "-ROT", "nrot", 
     .word 0x0
     lw Nos, 0 (Psp)
     lw Wrk, CELL (Psp)
-    sw Nos, CELL (Psp)
-    sw Top, 0 (Psp)
-    add Top, Wrk, zero
+    sw Top, CELL (Psp)
+    sw Wrk, 0 (Psp)
+//  beq zero, zero, _n2t
+    add Top, Nos, zero
     jal zero, _link
     
 //----------------------------------------------------------------------
-//   ( 0 -- 0 ) (w -- w w)
-header "?DUP", "zdup", 
+//   (v u w -- w u v)
+header "FLIP", "flip", 
     .word 0x0
-    beq Top, zero, 1f
-    jar zero, _dup
-1:    
+    lw Nos, CELL (Psp)
+    sw Top, CELL (Psp)
+//  beq zero, zero, _n2t
+    add Tos, Nos, zero
+    jal zero, _link
+    
+//----------------------------------------------------------------------
+header "MIN", "min", 
+    .word 0x0
+    spull Psp, Nos
+    blt Top, Nos, _noop 
+//  beq zero, zero, _n2t
+    add Top, Nos, zero
+    jal zero, _link
+
+//----------------------------------------------------------------------
+header "MAX", "max", 
+    .word 0x0
+    spull Psp, Nos
+    blt Nos, Top, _noop 
+//  beq zero, zero, _n2t
+    add Top, Nos, zero
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -513,8 +575,9 @@ header "?DUP", "zdup",
 // used by constant, leaves a value onto Top, also know as doLit
 header "DOCON", "DOCON", 
     .word 0x0
-    pspush Top 
-    lw Top, 0(Ipt)
+    spush Psp, Top 
+    lw Top, 0 (Ipt)
+_iic:
     addi Ipt, Ipt, CELL
     jal zero, _link
 
@@ -523,8 +586,9 @@ header "DOCON", "DOCON",
 // used by variable, leaves a reference onto Top,  
 header "DOVAR", "DOVAR", 
     .word 0x0
-    pspush Top 
-    add Top, zero, Ipt
+    spush Psp, Top 
+    add Top, Ips, zero
+//  beq zero, zero, _iic
     addi Ipt, Ipt, CELL
     jal zero, _link
 
@@ -533,8 +597,9 @@ header "DOVAR", "DOVAR",
 header "?BRANCH", "zbranch", 
     .word 0x0
     add Wrk, zero, Top 
-    pspull Top 
+    spull Psp, Top 
     beq Wrk, zero, _branch
+//  beq zero, zero, _iic
     addi Ipt, Ipt, CELL
     jal zero, _link
     
@@ -552,7 +617,7 @@ _branch:
 header "EXECUTE", "execute", 
     .word 0x0
     rspush Top 
-    pspull Top
+    spull Psp, Top
     jal zero, _link
     
 //  ZZZZ >< ABS ALLIGN 
@@ -562,9 +627,9 @@ header "EXECUTE", "execute",
 // writes one byte at address, unsigned
 header "C!", "cto", 
     .word 0x0
-    pspull Nos
+    spull Psp, Nos
     sb Nos, 0 (Top)
-    pspull Top
+    spull Psp, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -580,11 +645,11 @@ header "C@", "cat",
 // reads one byte from address
 header "+!", "plusto", 
     .word 0x0
-    pspull Nos
+    spull Psp, Nos
     lw Wrk, 0 (Top)
     add Wrk, Wrk, Nos
     sw Wrk, 0 (Top)
-    pspull Top
+    spull Psp, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -593,26 +658,27 @@ header "+!", "plusto",
 // returns 0 if equal (no differ)
 // used most to compare names with less than 16 of length
 // 
-HEADER "CSAME", "csame"
+header "CSAME", "csame"
     .word 0x0
-    pspull Nos
-    pspull Wrk
+    spull Psp, Nos
+    spull Psp, Wrk
 
     add T0, zero, zero
 1:
     beq Top, zero, 2f
     lb T0, 0 (Wrk)
     lb T1, 0 (Nos)
-    xor T0, T1, T0
+    or T0, T1, T0
     bne T0, zero, 2f
 
     addi Wrk, Wrk, 1
     addi Nos, Nos, 1
+
     addi Top, Top, -1
     jal zero, 1b
 2:
     // results
-    add Top, zero, T0
+    add Top, T0, zero
     jal zero, _link
     
 //----------------------------------------------------------------------
@@ -622,8 +688,8 @@ HEADER "CSAME", "csame"
 //
 HEADER "CMOVE", "cmove"
     .word 0x0
-    pspull Nos
-    pspull Wrk
+    spull Psp, Nos
+    spull Psp, Wrk
 1:
     beq Top, zero, 2f
     lb T0, 0(Wrk)
@@ -643,8 +709,8 @@ HEADER "CMOVE", "cmove"
 //
 HEADER "BMOVE", "bmove"
     .word 0x0
-    pspull Nos
-    pspull Wrk
+    spull Psp, Nos
+    spull Psp, Wrk
 
 // do offsets    
     add Nos, Nos, Top 
