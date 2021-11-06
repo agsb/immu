@@ -56,6 +56,8 @@ The following example shows how to load an absolute address:
  #define  FALSE 0
  #define  TRUE -1
  #define  CELL  4
+ #define  STACK 18
+ #define  BUFFER 80
 
  #define  Psp s4    //   parameter stack
  #define  Rsp s5    //   return stack 
@@ -80,8 +82,8 @@ The following example shows how to load an absolute address:
     addi \stack, \stack, CELL
 .endm
 
-.macro scopy stack, register, offset
-    lw \register, \offset (\stack)
+.macro scopy stack, register, index
+    lw \register, \index * CELL (\stack)
 .endm
 
 //----------------------------------------------------------------------
@@ -97,6 +99,13 @@ The following example shows how to load an absolute address:
 .endm
 
 //----------------------------------------------------------------------
+.data
+
+.equ TIB, .
+.equ BASE, .
+.equ STATE, .
+.equ DP, .
+.equ UP, .
 
 //----------------------------------------------------------------------
 //
@@ -112,14 +121,8 @@ The following example shows how to load an absolute address:
 //   primitives	[ link,size+flags,name,pad?, 0x0, code, (jal zero, link) ]
 //
 //----------------------------------------------------------------------
-//
-// set start reverse linked list
-//
-// trick adapted from amforth-6.9
-99:
-.word 0
 
-// riscV are byte oriented, but address must be even :)
+// riscV are byte oriented, but address must be even, and word bounds for branch :)
 // compiler only puts address at elf
 // exclusive bytes for size and flags, easy way
 // numeric labels only 0-99
@@ -133,7 +136,7 @@ is_\label:
 2:
     .ascii "\name"
 3:
-    .p2align 1, 0x20	
+    .p2align 2, 0x20	
 \label:
 .endm
 
@@ -141,11 +144,17 @@ is_\label:
 
     forth inner interpreter
 
+    note: The conditional branch range is ±4 KiB.
+          near jump could be beq zero, zero, _this
+
+
 ***********************************************************************/
 .text
 .global _forth_
 _forth_:
 
+// set start reverse linked list
+//
 // trick adapted from amforth-6.9
 99:
 .word 0
@@ -184,7 +193,7 @@ _jump:
 
 ***********************************************************************/
 //----------------------------------------------------------------------
-//   ( -- FALSE)
+//   ( -- )
 header "NOOP", "noop", 
     .word 0x0
 _noop: 
@@ -223,6 +232,27 @@ header "0>", "zequ"
     bge Top, zero, _ffalse 
 
 //----------------------------------------------------------------------
+header "=", "eq", 
+    .word 0x0
+    spull Psp, Nos
+    beq Top, Nos, _istrue
+    bne Top, Nos, _isfalse
+
+//----------------------------------------------------------------------
+header "<", "lt", 
+    .word 0x0
+    spull Psp, Nos
+    blt Top, Nos, _istrue
+    bge Top, Nos, _isfalse
+    
+//----------------------------------------------------------------------
+header ">", "gt", 
+    .word 0x0
+    spull Psp, Nos
+    blt Nos, Top, _istrue
+    bge Nos, Top, _isfalse
+    
+//----------------------------------------------------------------------
 // ( w a -- )
 header "!", "to", 
     .word 0x0
@@ -256,15 +286,6 @@ header "PS@", "psat",
 
 //----------------------------------------------------------------------
 // ( u v -- w )
-header "NAND", "nand",
-    .word 0x0
-    spull Psp, Nos
-    and Nos, Top, Nos
-    neg Top, Nos
-    jal zero, _link
-
-//----------------------------------------------------------------------
-// ( u v -- w )
 header "+", "plus",
     .word 0x0
     spull Psp, Nos
@@ -294,7 +315,7 @@ header "NEGATE", "negate"
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( u v -- w )
+// ( u v -- w >> )
 header "SHR", "shr"
     .word 0x0
     spull Psp, Nos
@@ -302,7 +323,7 @@ header "SHR", "shr"
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( u v -- w )
+// ( u v -- w <<  )
 header "SHL", "shl"
     .word 0x0
     spull Psp, Nos
@@ -334,25 +355,13 @@ header "XOR", "xor"
     jal zero, _link
 
 //----------------------------------------------------------------------
-header "<", "lt", 
+// ( u v -- w )
+header "NAND", "nand",
     .word 0x0
     spull Psp, Nos
-    blt Top, Nos, _istrue
-    bge Top, Nos, _isfalse
-    
-//----------------------------------------------------------------------
-header ">", "gt", 
-    .word 0x0
-    spull Psp, Nos
-    blt Nos, Top, _istrue
-    bge Nos, Top, _isfalse
-    
-//----------------------------------------------------------------------
-header "=", "eq", 
-    .word 0x0
-    spull Psp, Nos
-    beq Top, Nos, _istrue
-    bne Top, Nos, _isfalse
+    and Nos, Top, Nos
+    neg Top, Nos
+    jal zero, _link
 
 //----------------------------------------------------------------------
 // ( -- 0 )
@@ -479,16 +488,6 @@ _dip:
     jal zero, _link
 
 //----------------------------------------------------------------------
-//   ( u w -- u w u )
-header "OVER", "over", 
-    .word 0x0
-    lw Nos, 0 (Psp)
-    spush Psp, Top
-_n2t:
-    add Top, Nos, zero
-    jal zero, _link
-    
-//----------------------------------------------------------------------
 //   ( u w -- w u w )
 header "TUCK", "tuck", 
     .word 0x0
@@ -499,6 +498,16 @@ header "TUCK", "tuck",
     jal zero, _link
 
 //----------------------------------------------------------------------
+//   ( u w -- u w u )
+header "OVER", "over", 
+    .word 0x0
+    lw Nos, 0 (Psp)
+    spush Psp, Top
+_n2t:
+    add Top, Nos, zero
+    jal zero, _link
+    
+//----------------------------------------------------------------------
 //   ( v u w -- v w u )
 header "SWAP", "swap", 
     .word 0x0
@@ -506,16 +515,6 @@ header "SWAP", "swap",
     sw Top, 0 (Psp)
 //  beq zero, zero, _n2t
     add Top, Nos, zero
-    jal zero, _link
-
-//----------------------------------------------------------------------
-//   ( v u w -- u v w )
-header "SWIP", "swip", 
-    .word 0x0
-    lw Nos, 0 (Psp)
-    lw Wrk, CELL (Psp)
-    sw Nos, CELL (Psp)
-    sw Wrk, 0 (Psp)
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -571,6 +570,16 @@ header "MAX", "max",
     jal zero, _link
 
 //----------------------------------------------------------------------
+//   ( v u w -- u v w )
+header "SWIP", "swip", 
+    .word 0x0
+    lw Nos, 0 (Psp)
+    lw Wrk, CELL (Psp)
+    sw Nos, CELL (Psp)
+    sw Wrk, 0 (Psp)
+    jal zero, _link
+
+//----------------------------------------------------------------------
 // trick, load Top <- (IP)
 // used by constant, leaves a value onto Top, also know as doLit
 header "DOCON", "DOCON", 
@@ -617,6 +626,7 @@ _branch:
 header "EXECUTE", "execute", 
     .word 0x0
     rspush Top 
+//  beq zero, zero, _drop    
     spull Psp, Top
     jal zero, _link
     
@@ -629,6 +639,7 @@ header "C!", "cto",
     .word 0x0
     spull Psp, Nos
     sb Nos, 0 (Top)
+//  beq zero, zero, _drop
     spull Psp, Top
     jal zero, _link
 
@@ -649,6 +660,7 @@ header "+!", "plusto",
     lw Wrk, 0 (Top)
     add Wrk, Wrk, Nos
     sw Wrk, 0 (Top)
+//  beq zero, zero, _drop
     spull Psp, Top
     jal zero, _link
 
