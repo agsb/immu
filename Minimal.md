@@ -7,6 +7,20 @@ _Looking for a graal ? That's one._
 
         S@ R@ @ ! nand plus 0= exit
 
+## <https://github.com/larsbrinkhoff/lbForth/blob/master/src/kernel.fth>, Lars Brinkhoff in 
+
+        \ At a minimum, these 16 primitives must be provided by the nucleus:
+        \
+        \ Definitions:		dodoes exit
+        \ Control flow:		0branch
+        \ Literals:		(literal)
+        \ Memory access:	! @ c! c@
+        \ Arithmetic/logic:	+ nand
+        \ Return stack:		>r r>
+        \ I/O:			emit open-file read-file close-file
+
+Note: { variable constant key } also defined
+
 ## https://github.com/uho/minimal, Ulrich Hoffmann points Minimal Forth Workbench: 
 
     words ALIGNED CELL+ CHAR+ ROT 2/ LSHIFT XOR OR > = 0= TRUE FALSE MOD 2* / * + VARIABLE 
