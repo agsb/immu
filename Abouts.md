@@ -14,6 +14,8 @@ Lets make a list, to change 3 cells at top (O= is the number of atomic operation
 ![Three Balls](https://github.com/agsb/immu/blob/main/180px-Permutations_RGB.svg.png "Text to show on mouseover")
 
 ```
+note: ( left is down, right is up -- result )
+
 ( to create a copy of a cell)
 : DUP  ( 1 2 -- 1 2 2 ) ; (O=1)
 : DIP  ( 1 2 -- 1 1 2 )  >R DUP >R ; (O=3) (aka DUPD, deprecated in Factor)
@@ -22,16 +24,15 @@ Lets make a list, to change 3 cells at top (O= is the number of atomic operation
 
 ( to destroy a cell)
 : DROP ( 1 2 3 -- 1 2 ) ; (O=1)
-: NIP  ( 1 2 3 -- 1 3 ) SWAP DROP; (O=2)
-: NIPD ( 1 2 3 -- 2 3 ) >R SWAP DROP R>; (O=4) 
+: NIP  ( 1 2 3 -- 1 3 ) SWAP DROP ; (O=2)
+: NIPD ( 1 2 3 -- 2 3 ) >R SWAP DROP R> ; (O=4) 
 
 ( to change the order)
-: SWAP ( 1 2 3 -- 1 3 2) ; (O=1)
-: SWIP ( 1 2 3 -- 2 1 3 ) >R SWAP R>; (O=3) (aka SWAPD, deprecated in Factor)
-: ROT ( 1 2 3 -- 2 3 1 ) >R SWAP R> SWAP; (O=4)
-: -ROT ( 1 2 3 -- 3 1 2 ) SWAP >R SWAP R>; (O=4)
-: FLIP ( 1 2 3 --  3 2 1 ) SWAP >R SWAP R> SWAP; (O=5)
-
+: SWAP ( 1 2 3 -- 1 3 2 ) ; (O=1)
+: SWIP ( 1 2 3 -- 2 1 3 ) >R SWAP R> ; (O=3) (aka SWAPD, deprecated in Factor)
+: ROT  ( 1 2 3 -- 2 3 1 ) >R SWAP R> SWAP ; (O=4)
+: -ROT ( 1 2 3 -- 3 1 2 ) SWAP >R SWAP R> ; (O=4)
+: FLIP ( 1 2 3 -- 3 2 1 ) SWAP >R SWAP R> SWAP ; (O=5)
 
 the sequence { >R DUP R> } or DIP, could be used to { : OVER DIP SWAP ; } and { : TUCK SWAP DIP SWAP ; } but DIP does not appear elsewhere.
 
@@ -44,7 +45,7 @@ the sequence { >R SWAP R> } or SWIP, occurs in { OVER TUCK ROT -ROT FLIP }, if i
 : FLIP SWAP SWIP SWAP ; (O=3)
 
 ```
-As showed, SWIP as atomic is a good choice for design of primitive words.
+As showed, SWIP as atomic is a good choice for design of a primitive words.
 
 PS. The permutation of 3 is 6, as { 1 2 3 is initial }, { 1 3 2 is swap }, (2 1 3 is swip }, { 2 3 1 is rot }, { 3 1 2 is -rot }, { 3 2 1 is flip }
 
