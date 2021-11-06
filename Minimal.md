@@ -1,10 +1,22 @@
-# minimal
 
-Looking for a graal ? That's one.
+# About minimal core set
 
-(incomplete)
+_Looking for a graal ? That's one._
 
-From http://www.euroforth.org/ef15/papers/knaggs.pdf, indexes from https://forth-standard.org/ 11/2021
+## An list of atomic's was done by Mikael Patel as 
+
+        S@ R@ @ ! nand plus 0= exit
+
+## https://github.com/uho/minimal, Ulrich Hoffmann points Minimal Forth Workbench: 
+
+    words ALIGNED CELL+ CHAR+ ROT 2/ LSHIFT XOR OR > = 0= TRUE FALSE MOD 2* / * + VARIABLE 
+    CONSTANT DUP primitive WORDS INCLUDE bye \ .S ( CR KEY? EMIT KEY DOES> ; CREATE : 
+    EXECUTE J LOOP UNTIL AGAIN BEGIN ELSE ' I DO REPEAT WHILE THEN IF R> OVER DROP R@ >R 
+    SWAP RSHIFT INVERT AND < - */MOD CHARS CALIGNED CALIGN C@ C, C! CELLS ALIGN @ , ! 
+
+    48 primitives, 69 words ok
+
+## http://www.euroforth.org/ef15/papers/knaggs.pdf, Peter Knaggs and Paul E. Bennett, proposed:
 
 1 Memory Access
 
