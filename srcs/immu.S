@@ -69,6 +69,23 @@ The following example shows how to load an absolute address:
  #define  T1 s11    //   temporary
 
 //----------------------------------------------------------------------
+section .data
+
+return_stack: resw STACK  
+params_stack: resw STACK 
+
+freef: resw 1
+framf: resw 1 
+
+tibf: resw BUFFER
+toin: resw 1
+
+latest: resw 1
+base: resw 1
+state: resw 1
+
+
+//----------------------------------------------------------------------
 // stack macros
 // could have hooks for check over/under
 //
@@ -97,15 +114,6 @@ The following example shows how to load an absolute address:
 .macro jump address
     jalr zero, \address, 0
 .endm
-
-//----------------------------------------------------------------------
-.data
-
-.equ TIB, .
-.equ BASE, .
-.equ STATE, .
-.equ DP, .
-.equ UP, .
 
 //----------------------------------------------------------------------
 //
@@ -149,7 +157,13 @@ is_\label:
 
 
 ***********************************************************************/
-.text
+norvc
+norelax
+
+section .text
+.global _start
+
+
 .global _forth_
 _forth_:
 
@@ -632,6 +646,17 @@ header "EXECUTE", "execute",
     
 //  ZZZZ >< ABS ALLIGN 
 
+//----------------------------------------------------------------------
+//   ( w -- w ) 
+// allign a value to a cell multiple
+header "ALLIGN", "allign", 
+    .word 0x0
+    spull Psp, Nos
+    sb Nos, 0 (Top)
+//  beq zero, zero, _drop
+    spull Psp, Top
+    jal zero, _link
+    
 //----------------------------------------------------------------------
 //   ( b a -- ) 
 // writes one byte at address, unsigned
