@@ -730,7 +730,25 @@ header "CSAME", "csame"
     // results
     add Top, T0, zero
     jal zero, _link
-    
+
+ //----------------------------------------------------------------------
+//   ( a u c --- )
+// copy  (c) byte to (a) destination++, decrease (u) count--
+//
+HEADER "CFILL", "cfill"
+    .word 0x0
+    spull Psp, Nos
+    spull Psp, Wrk
+1:
+    beq Nos, zero, 2f
+    sb Top, 0(Wrk)
+    addi Wrk, Wrk, 1
+    addi Nos, Nos, -1
+    jal zero, 1b
+2:
+    spull Psp, Top 
+    jal zero, drop
+   
 //----------------------------------------------------------------------
 //   ( a1 a2 u --- )
 // move bytes from source++ to destination++, decrease count--
@@ -780,6 +798,3 @@ HEADER "BMOVE", "bmove"
 HEADER "_EOF_", "_eof_"
 
 #include "table.S"
-
-
-
