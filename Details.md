@@ -129,7 +129,7 @@ LINK:
 
 _"Explain all that", said the Mock Turtle.“, Lewis Carol, "Alice's Adventures in Wonderland"_
 
-The code above only executes jumps when references to primitives words.
+The code above only executes jumps when references to primitives words, marked with a NULL reference.
 
 All composite word references are directly, placed and removed, onto the return stack, do not executing any jump.
 
