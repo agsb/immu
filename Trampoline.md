@@ -2,7 +2,7 @@
 
 Most compilers, as gcc, use a trampoline table for fast jump to routines, based on values of a entries onto a mapped relative functions.
 
-The inner interpreter could use same technics but will be slower than direct jumps.
+The inner interpreter could use same technics, but will be slower than direct jumps.
 
 ```
  /*
