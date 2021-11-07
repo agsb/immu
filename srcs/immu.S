@@ -70,8 +70,9 @@ The following example shows how to load an absolute address:
  #define  T1 s11    //   temporary
 
 //----------------------------------------------------------------------
-section .data
+.data
 
+/*
 return_stack: resw STACK  
 params_stack: resw STACK 
 
@@ -84,7 +85,7 @@ toin: resw 1
 latest: resw 1
 base: resw 1
 state: resw 1
-
+*/
 
 //----------------------------------------------------------------------
 // stack macros
@@ -156,12 +157,12 @@ is_\label:
     note: The conditional branch range is ±4 KiB.
           near jump could be beq zero, zero, _this
 
-
-***********************************************************************/
 norvc
 norelax
 
-section .text
+
+***********************************************************************/
+.text
 
 .global _start
 _start:
@@ -237,15 +238,15 @@ _istrue:
 // ( w -- FALSE | TRUE)
 header "0=", "zequ"    
     .word 0x0
-    beq Top, zero, _isftrue
+    beq Top, zero, _istrue
     bne Top, zero, _isfalse
 
 //----------------------------------------------------------------------
 // ( w -- FALSE | TRUE)
-header "0>", "zequ"    
+header "0>", "zgth"    
     .word 0x0
-    blt Top, zero, _ftrue
-    bge Top, zero, _ffalse 
+    blt Top, zero, _istrue
+    bge Top, zero, _isfalse 
 
 //----------------------------------------------------------------------
 header "=", "eq", 
@@ -274,7 +275,7 @@ header "!", "to",
     .word 0x0
     spull Psp, Nos
     sw Top, 0 (Nos)
-    spull Psp, Tos
+    spull Psp, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -564,7 +565,7 @@ header "FLIP", "flip",
     lw Nos, CELL (Psp)
     sw Top, CELL (Psp)
 //  beq zero, zero, _n2t
-    add Tos, Nos, zero
+    add Top, Nos, zero
     jal zero, _link
     
 //----------------------------------------------------------------------
@@ -612,7 +613,7 @@ _iic:
 header "DOVAR", "DOVAR", 
     .word 0x0
     spush Psp, Top 
-    add Top, Ips, zero
+    add Top, Ipt, zero
 //  beq zero, zero, _iic
     addi Ipt, Ipt, CELL
     jal zero, _link
@@ -699,7 +700,7 @@ header "ALIGN", "align",
     addi Wrk, Wrk, (CELL - 1)
     add Top, Top, Wrk
     xori Wrk, Wrk, -1 
-    and Top, Wrk
+    and Top, Top, Wrk
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -797,4 +798,4 @@ HEADER "BMOVE", "bmove"
 //----------------------------------------------------------------------
 HEADER "_EOF_", "_eof_"
 
-#include "table.S"
+// #include "table.S"
