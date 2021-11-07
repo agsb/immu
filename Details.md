@@ -194,17 +194,15 @@ In _dependent vocabularies_ :
 
 ## Conclusion
 
-I see Forth as a model of the RNA-DNA type. The inner interpreter acts as RNA and dictionaries act as DNA. 
+I see Forth as a model of the RNA-DNA type. The inner interpreter acts as RNA and vocabularies acts as DNA. 
 
-It consumes information and produces transformations. The primitives words act as the ACTUG proteines.
+It consumes information and produces transformations. The primitives words act as extended ACTUG proteines.
 
 Some information produces recipes, sequences of algorithms encoded by references to routines, that change the information. Like real protein sequences.
 
 And it can grow, incorporating these recipes and maybe, perhaps, creating recipes as well.
 
 The proposed small change allows these compiled recipes to be shared as executables inside Forth virtual machines.
-
-
 
 ## *and that could be an immu( )table Forth.*
 
