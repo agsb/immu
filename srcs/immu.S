@@ -162,8 +162,9 @@ norvc
 norelax
 
 section .text
-.global _start
 
+.global _start
+_start:
 
 .global _forth_
 _forth_:
@@ -640,7 +641,7 @@ _branch:
 // trick, a Top reference is pushed into return stack
 header "EXECUTE", "execute", 
     .word 0x0
-    rspush Top 
+    spush Rsp, Top 
 //  beq zero, zero, _drop    
     spull Psp, Top
     jal zero, _link
@@ -688,6 +689,17 @@ header "+!", "plusto",
     sw Wrk, 0 (Top)
 //  beq zero, zero, _drop
     spull Psp, Top
+    jal zero, _link
+
+//----------------------------------------------------------------------
+//   ( a -- b )
+// aligns a address to next CELL
+header "ALIGN", "align", 
+    .word 0x0
+    addi Wrk, Wrk, (CELL - 1)
+    add Top, Top, Wrk
+    xori Wrk, Wrk, -1 
+    and Top, Wrk
     jal zero, _link
 
 //----------------------------------------------------------------------
