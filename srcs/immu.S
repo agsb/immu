@@ -56,6 +56,7 @@ The following example shows how to load an absolute address:
 
  #define  FALSE 0
  #define  TRUE -1
+ #define  BYTE  1
  #define  CELL  4
  #define  STACK 18
  #define  BUFFER 80
@@ -68,24 +69,6 @@ The following example shows how to load an absolute address:
  #define  Wrk s9    //   hold for
  #define  T0 s10    //   temporary
  #define  T1 s11    //   temporary
-
-//----------------------------------------------------------------------
-.data
-
-/*
-return_stack: resw STACK  
-params_stack: resw STACK 
-
-freef: resw 1
-framf: resw 1 
-
-tibf: resw BUFFER
-toin: resw 1
-
-latest: resw 1
-base: resw 1
-state: resw 1
-*/
 
 //----------------------------------------------------------------------
 // stack macros
@@ -149,6 +132,57 @@ is_\label:
     .p2align 2, 0x20	
 \label:
 .endm
+
+//----------------------------------------------------------------------
+.data
+
+VOID:
+.word 0x0
+
+RSP0:
+.fill STACK, CELL, 0x0
+
+PSP0:
+.fill STACK, CELL, 0x0
+
+TIB0:
+.fill BUFFER, BYTE, 0x0
+
+FREEF:
+.word 0x0
+
+FRAMF:
+.word 0x0
+
+TIBF:
+.word 0x0
+
+TOIN:
+.word 0x0
+
+BASE:
+.word 0x0
+
+STATE:
+.word 0x0
+
+LATEST:
+.word 0x0
+
+FLAGS:
+.word 0x0
+
+SEED:
+.word 0x0
+
+TURN:
+.word 0x0
+
+REST:
+.word 0x0
+
+PAGE:
+.word 0x0
 
 /***********************************************************************
 
