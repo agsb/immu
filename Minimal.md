@@ -117,7 +117,7 @@ Note: { variable constant key } also defined. _It's a great learning course_
         15.6.1.0220 .S dot-s
         6.2.2535 \ backslash
         
-## https://github.com/uho/minimal, Ulrich Hoffmann points Minimal Forth Workbench: 
+## https://github.com/uho/minimal, Ulrich Hoffmann points it, in Minimal Forth Workbench: 
 
     words ALIGNED CELL+ CHAR+ ROT 2/ LSHIFT XOR OR > = 0= TRUE FALSE MOD 2* / * + VARIABLE 
     CONSTANT DUP primitive WORDS INCLUDE bye \ .S ( CR KEY? EMIT KEY DOES> ; CREATE : 
