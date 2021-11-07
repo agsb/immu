@@ -8,4 +8,6 @@ The extended indirect thread code (EITC) gives to Forth inner interpreter the de
 
 [Details](https://github.com/agsb/immu/blob/main/Details.md)
 
-I'm requesting for comments about immu, an extended indirect thread code for forth. I welcome your patience.
+I'm requesting for comments about immu, an extended indirect thread code for forth. 
+
+I welcome your patience.
