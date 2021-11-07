@@ -11,13 +11,13 @@ _Looking for a graal ? That's one._
 
         \ At a minimum, these 16 primitives must be provided by the nucleus:
         \
-        \ Definitions:		dodoes exit
-        \ Control flow:		0branch
-        \ Literals:		(literal)
-        \ Memory access:	! @ c! c@
-        \ Arithmetic/logic:	+ nand
-        \ Return stack:		>r r>
-        \ I/O:			emit open-file read-file close-file
+        \ Definitions: dodoes exit
+        \ Control flow:	0branch
+        \ Literals: (literal)
+        \ Memory access: ! @ c! c@
+        \ Arithmetic/logic: + nand
+        \ Return stack:	>r r>
+        \ I/O: emit open-file read-file close-file
 
 Note: { variable constant key } also defined. _It's a great learning course_
 
