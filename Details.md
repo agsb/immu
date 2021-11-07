@@ -79,7 +79,10 @@ All primitive words does three jumps.
 
 Also in optimized codes, NEXT is executed two times, and is placed between UNNEST and NEST.
 
+
 ## A proposal for extended indirect thread code   
+
+_"Forth is free to reinvent the wheel, and I think that is a marvelous concept. No one should ever be afraid to reinvent the wheel, and we do it every day.", Chuck Moore, https://www.youtube.com/watch?v=xoyDNIcnpgc&t=9051s_
 
 ```
 proposed format
@@ -124,7 +127,7 @@ LINK:
 
 ```
 
-_"Explain all that", said the Mock Turtle. “Alice's Adventures in Wonderland”, Lewis Carrol*_
+_"Explain all that", said the Mock Turtle.“, Lewis Carol, "Alice's Adventures in Wonderland"_
 
 The code above only executes jumps when references to primitives words.
 
@@ -136,7 +139,7 @@ Does just a compare per Forth word, to decide if executes a NEST or a JUMP.
 
 ## More with less 
 
-_"An interpreter can be reduced to a switch-case structure contained within a loop."_ , Ken Boak, <https://github.com/monsonite/MINT>, 05/11/2021
+_"An interpreter can be reduced to a switch-case structure contained within a loop.", Ken Boak, <https://github.com/monsonite/MINT>_
 
 Also, JUMP could be extended, with pseudo op-codes as Token Threaded Code (TTC), for more “inner functions”, as a inline lookup table:
 
