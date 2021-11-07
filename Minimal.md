@@ -19,16 +19,8 @@ _Looking for a graal ? That's one._
         \ Return stack:		>r r>
         \ I/O:			emit open-file read-file close-file
 
-Note: { variable constant key } also defined
+Note: { variable constant key } also defined. _It's a great learning course_
 
-## https://github.com/uho/minimal, Ulrich Hoffmann points Minimal Forth Workbench: 
-
-    words ALIGNED CELL+ CHAR+ ROT 2/ LSHIFT XOR OR > = 0= TRUE FALSE MOD 2* / * + VARIABLE 
-    CONSTANT DUP primitive WORDS INCLUDE bye \ .S ( CR KEY? EMIT KEY DOES> ; CREATE : 
-    EXECUTE J LOOP UNTIL AGAIN BEGIN ELSE ' I DO REPEAT WHILE THEN IF R> OVER DROP R@ >R 
-    SWAP RSHIFT INVERT AND < - */MOD CHARS CALIGNED CALIGN C@ C, C! CELLS ALIGN @ , ! 
-
-    48 primitives, 69 words ok
 
 ## http://www.euroforth.org/ef15/papers/knaggs.pdf, Peter Knaggs and Paul E. Bennett, proposed:
 
@@ -125,4 +117,12 @@ Note: { variable constant key } also defined
         15.6.1.0220 .S dot-s
         6.2.2535 \ backslash
         
+## https://github.com/uho/minimal, Ulrich Hoffmann points Minimal Forth Workbench: 
+
+    words ALIGNED CELL+ CHAR+ ROT 2/ LSHIFT XOR OR > = 0= TRUE FALSE MOD 2* / * + VARIABLE 
+    CONSTANT DUP primitive WORDS INCLUDE bye \ .S ( CR KEY? EMIT KEY DOES> ; CREATE : 
+    EXECUTE J LOOP UNTIL AGAIN BEGIN ELSE ' I DO REPEAT WHILE THEN IF R> OVER DROP R@ >R 
+    SWAP RSHIFT INVERT AND < - */MOD CHARS CALIGNED CALIGN C@ C, C! CELLS ALIGN @ , ! 
+
+    48 primitives, 69 words 
         
