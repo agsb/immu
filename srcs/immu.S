@@ -136,6 +136,8 @@ is_\label:
 //----------------------------------------------------------------------
 .data
 
+// .skip <bytes> reserves but dont initialize
+
 VOID:
 .word 0x0
 
@@ -237,6 +239,24 @@ _jump:
     jalr zero, Wrk, 0
 
 //----------------------------------------------------------------------
+
+/*
+// adapted from https://github.com/ScannedInAvian/riscyforth/blob/main/boot.S
+
+.equ UART_BASE, 0x10000000
+
+KEY:
+    li Wrk, UART_BASE
+1:
+    lb Nos, 5(Wrk)
+    andi Nos, Nos, 0x1
+    bequ Nos, zero, 1b
+
+    spull Psp, Top
+    lb Top, 0(Wrk)
+    jal zero, _link
+
+*/
 
 /***********************************************************************
 
