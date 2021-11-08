@@ -3,7 +3,7 @@
 
 _Looking for a graal ? That's one._
 
-## An list of atomic's was done by Mikael Patel as 
+## An list of atomic's was done by Mikael Patel as quoted in https://groups.google.com/g/comp.lang.forth/c/NS2icrCj1jQ/m/ohh9v4KphygJ
 
         S@ R@ @ ! nand plus 0= exit
 
