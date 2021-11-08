@@ -34,6 +34,7 @@ Using R32I, 32 bits cell,
 
 must be saved by subroutines (calee)
 
+( a PDP-11 )
 s4 ~X20~ as Rsp, return stack pointer
 s5 ~X21~ as Psp, parameter stack pointer
 s6 ~X22~ as Ipt, return register for jump and link
@@ -41,12 +42,17 @@ s7 ~X23~ as Top, Top on stack
 s8 ~X24~ as Nos, Next on stack, pull when need
 s9 ~X25~ as Wrk, temporary scratch register
 
+( extras )
+s10 ~X26~ as T0, temporary extra
+s11 ~X27~ as T1, temporary extra
+
 https://github.com/riscv-non-isa/riscv-asm-manual/blame/master/riscv-asm.md
 
 The following example shows how to load an absolute address:
 
     lui  a0, %hi(msg + 1)
     addi a0, a0, %lo(msg + 1)
+
 ```
 */
 
@@ -61,12 +67,16 @@ The following example shows how to load an absolute address:
  #define  STACK 18
  #define  BUFFER 80
 
+ 
+ #define  FLASHPAGE 1024    // page of flash memory for flush in GD32VF103CBT6
+
  #define  Psp s4    //   parameter stack
  #define  Rsp s5    //   return stack 
  #define  Ipt s6    //   reference pointer
  #define  Top s7    //   Top on parameter stack
  #define  Nos s8    //   Next on parameter stack
  #define  Wrk s9    //   hold for
+
  #define  T0 s10    //   temporary
  #define  T1 s11    //   temporary
 
@@ -110,7 +120,7 @@ The following example shows how to load an absolute address:
 //----------------------------------------------------------------------
 //  Dictionary
 //
-//   compound	[ link,size+flags,name,pad?, ref, ..., ref , _inner_ ]
+//   compound	[ link,size+flags,name,pad?, ref, ..., ref , EXIT ]
 //   primitives	[ link,size+flags,name,pad?, 0x0, code, (jal zero, link) ]
 //
 //----------------------------------------------------------------------
@@ -118,7 +128,9 @@ The following example shows how to load an absolute address:
 // riscV are byte oriented, but address must be even, and word bounds for branch :)
 // compiler only puts address at elf
 // exclusive bytes for size and flags, easy way
-// numeric labels only 0-99
+// numeric labels only 0-99, 
+// 99b does linked list to previous word
+//
 .macro header name, label, flags=0x0
 is_\label:
     .p2align 1, 0x00
@@ -136,53 +148,73 @@ is_\label:
 //----------------------------------------------------------------------
 .data
 
+// .fill <bytes> reserves and initializes
 // .skip <bytes> reserves but dont initialize
 
 VOID:
 .word 0x0
 
+// return stack
 RSP0:
 .fill STACK, CELL, 0x0
 
+//parameter stack
 PSP0:
 .fill STACK, CELL, 0x0
 
+// terminal input buffer
 TIB0:
 .fill BUFFER, BYTE, 0x0
 
+// flash buffer for flush
+.FIF0:
+.fill FLASHPAGE, BYTE, 0x0
+
+// next free flash address, for words
 FREEF:
 .word 0x0
 
+// next free sram address, for variables
 FRAMF:
 .word 0x0
 
+// source input address
 TIBF:
 .word 0x0
 
+// cursor in TIB
 TOIN:
 .word 0x0
 
+// numeric radix
 BASE:
 .word 0x0
 
+// state of interpreter, 0 = interpret, 1 = compile, 2 = postpone
 STATE:
 .word 0x0
 
+// link to latest word in dictionary
 LATEST:
 .word 0x0
 
+// system flags
 FLAGS:
 .word 0x0
 
+// random seed for random
 SEED:
 .word 0x0
 
+// turn on routine after boot
 TURN:
 .word 0x0
 
+// turn of routine before boot
 REST:
 .word 0x0
 
+// page of flash in sram 
 PAGE:
 .word 0x0
 
@@ -243,8 +275,6 @@ _jump:
 /*
 // adapted from https://github.com/ScannedInAvian/riscyforth/blob/main/boot.S
 
-.equ UART_BASE, 0x10000000
-
 KEY:
     li Wrk, UART_BASE
 1:
@@ -261,7 +291,8 @@ KEY:
 /***********************************************************************
 
   basic primitives
-
+  all primitives must have a 0x0 at start
+  order is critical because beq/bne/blt/bgt does only +/- 2 Mib offsets
 ***********************************************************************/
 //----------------------------------------------------------------------
 //   ( -- )
@@ -701,19 +732,8 @@ header "EXECUTE", "execute",
     spull Psp, Top
     jal zero, _link
     
-//  ZZZZ >< ABS ALLIGN 
+//  ZZZZ >< ABS 
 
-//----------------------------------------------------------------------
-//   ( w -- w ) 
-// allign a value to a cell multiple
-header "ALLIGN", "allign", 
-    .word 0x0
-    spull Psp, Nos
-    sb Nos, 0 (Top)
-//  beq zero, zero, _drop
-    spull Psp, Top
-    jal zero, _link
-    
 //----------------------------------------------------------------------
 //   ( b a -- ) 
 // writes one byte at address, unsigned
