@@ -904,4 +904,9 @@ HEADER "BMOVE", "bmove"
 //----------------------------------------------------------------------
 HEADER "_EOF_", "_eof_"
 
-// #include "table.S"
+/*
+1       1st     fst,    first
+2       2nd     snd,    second
+3       3rd     thd,    third
+4       4th     fth,    fourth
+*/
