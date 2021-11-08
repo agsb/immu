@@ -60,16 +60,48 @@ The following example shows how to load an absolute address:
 
 /* using a GCC compiler */
 
- #define  FALSE 0
- #define  TRUE -1
- #define  BYTE  1
- #define  CELL  4
- #define  STACK 18
- #define  BUFFER 80
+#define  FALSE 0
+#define  TRUE -1
+#define  BYTE  1
+#define  CELL  4
+#define  STACK 18
+#define  BUFFER 80
+
+#define  FLASHPAGE 1024    // page of flash memory for flush in GD32VF103CBT6
+
+#define F_IMMEDIATE 0x80
+#define F_COMPILE_ONLY 0x40
+#define F_HIDDEN  0x20
+#define F_TOGGLE  0x10
+#define F_COMMON  0x00
+
+F_TOMASK = 0xF0
+F_UNMASK = 0x0F
+
+#---------------------------------------------------------------------
+# Flow Control
+# assumes that all line edit is done at remote!
+# no delete, no moving cursor, just a static line.
+# works as a screen or block, just receives a line till a CR or CR LF
+# uses BS, ESC, CAN, XON, XOFF, for control
+#
+#define XON_      0x11    #; ascii DC1 ^Q
+#define XOFF_     0x13    #; ascii DC3 ^S
+
+#define CR_       0x0d    #; ascci carriage return ^M
+#define LF_       0x0a    #; ascii line feed ^J
+
+#define CAN_      0x18    #; ascii cancel ^C
+#define ESC_      0x1B    #; ascii escape ^[
+
+#define BS_       0x08    #; ascii backspace ^H
+#define TAB_      0x09    #; ascii horizontal ^I
+#define BL_       0x20    #; ascii space
+
+#define NUL_      0x00    #; ascii NUL ^@
 
  
- #define  FLASHPAGE 1024    // page of flash memory for flush in GD32VF103CBT6
-
+ 
  #define  Psp s4    //   parameter stack
  #define  Rsp s5    //   return stack 
  #define  Ipt s6    //   reference pointer
@@ -868,7 +900,7 @@ HEADER "BMOVE", "bmove"
     jal zero, 1b
 2:
     jal zero, drop
-    
+
 //----------------------------------------------------------------------
 HEADER "_EOF_", "_eof_"
 
