@@ -917,31 +917,32 @@ HEADER "CSCAN", "cscan"
 
 1:  // while (top) == c
     lb Wrk, 0 (Top)
-    beq Wrk, zero, 5f
+    beq Wrk, zero, 6f
     bne Wrk, Nos, 2f
-    addi Top, zero, 1
+    addi Top, Top, 1
     beq zero, zero, 1b
 
 2:  
-    // save start address
+    // push start address
     spush Psp, Top
 
+3:
     // wile (top) != c
     lb Wrk, 0 (Top)
-    beq Wrk, zero, 4f
-    beq Wrk, Nos, 3f
-    addi Top, zero, 1
-    beq zero, zero, 2b
+    beq Wrk, zero, 5f
+    beq Wrk, Nos, 4f
+    addi Top, Top, 1
+    beq zero, zero, 3b
 
-3:  // return lenght in Top
+4:  // return lenght in Top
     scopy Psp, Wrk, 0
-    sub Top, Wrk
+    sub Top, Top, Wrk
     jal zero, _link
 
-4:  // drop saved address
+5:  // pull saved address
     spull Psp, Wrk
 
-5:  // NIL (0x0) is end of buffer 
+6:  // NIL (0x0) is end of buffer 
     add Top, zero, zero
     jal zero, _link
 
