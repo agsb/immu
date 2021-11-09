@@ -1,6 +1,6 @@
 # An immutable Forth
 
- An implementation of Forth with inner interpreter using extended indirect thread code and a dictionary made of machine independent vocabularies. 
+ An implementation of Forth with inner interpreter using **extended indirect thread code** and a dictionary made of machine independent vocabularies. 
   
  Only the inner interpreter and vocabularies related to systems, drives and primitives are machine dependent. 
   
@@ -98,7 +98,7 @@ defcode:  ; a NULL and a jump, (where did self reference go ?)
 +-------+---+---+---+---+------+------+-------+-----+-----------+
 ```
 
-The operations of a extended indirect thread code inner interpreter, in non optimized pseudo code, are :
+The operations of a **extended indirect thread code** inner interpreter, in non optimized pseudo code, are :
 
 ```
 NEXT: 
@@ -202,9 +202,9 @@ Some information produces recipes, sequences of algorithms encoded by references
 
 And it can grow, incorporating these recipes and maybe, perhaps, creating recipes as well.
 
-The proposed small change allows these compiled recipes to be shared as executables inside Forth virtual machines.
+The proposed small change for **extended indirect thread code** allows these compiled recipes to be shared as executables inside Forth virtual machines.
 
-## *and that could be an immu( )table Forth.*
+## **and that could be an immu( )table Forth.**
 
 ```
 /* 
