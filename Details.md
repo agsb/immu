@@ -52,7 +52,7 @@ defcode:  ; a self reference and a EXIT (macro NEXT) in all primitives
 +------+---+---+---+---+---------+-------+-------+-------+------+
 ```
 
-The operations of a classic indirect thread code inner interpreter, in non optimized pseudo code, are :
+The operations of a **classic indirect thread code** inner interpreter, in non optimized pseudo code, are :
 
 ```
 NEXT: 
@@ -80,7 +80,7 @@ All primitive words does three jumps.
 Also in optimized codes, NEXT is executed two times, and is placed between UNNEST and NEST.
 
 
-## A proposal for extended indirect thread code   
+## A proposal for **extended indirect thread code**   
 
 _"Forth is free to reinvent the wheel, and I think that is a marvelous concept. No one should ever be afraid to reinvent the wheel, and we do it every day.", Chuck Moore, https://www.youtube.com/watch?v=xoyDNIcnpgc&t=9051s_
 
