@@ -4,7 +4,7 @@ An implementation of Forth with inner interpreter using extended indirect thread
   
 _Only the inner interpreter and vocabularies related to systems, drives and primitives are machine dependent._
 
-The extended indirect thread code (EITC) gives to Forth inner interpreter the decision of when use "pull and push" or "jump and link".
+The extended indirect thread code (EITC) gives to Forth inner interpreter the decision of when use "push and pull" or "jump and link".
 
 More information in [Details](https://github.com/agsb/immu/blob/main/Details.md)
 
