@@ -815,7 +815,7 @@ header "ALIGN", "align",
 // returns 0 if equal (no differ)
 // used most to compare names with less than 16 of length
 // 
-header "CSAME", "csame"
+header "SAME?", "sameq"
     .word 0x0
     spull Psp, Nos
     spull Psp, Wrk
