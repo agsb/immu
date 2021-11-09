@@ -874,7 +874,7 @@ HEADER "CMOVE", "cmove"
     addi Top, Top, -1
     jal zero, 1b
 2:
-    jal zero, drop
+    jal zero, _drop
 
 //----------------------------------------------------------------------
 //   ( a1 a2 u --- )
@@ -899,7 +899,51 @@ HEADER "BMOVE", "bmove"
     addi Top, Top, -1
     jal zero, 1b
 2:
-    jal zero, drop
+    jal zero, _drop
+
+//----------------------------------------------------------------------
+//   ( c a1  --- 0 | a2 u )
+// point next sequence without c and terminated by c
+// returns 0 if not found or end of buffer
+//
+HEADER "CSCAN", "cscan"
+    .word 0x0
+
+    // get the separator char
+    spull Psp, Nos
+
+    // safety mask
+    andi Nos, Nos, 0x000000FF
+
+1:  // while (top) == c
+    lb Wrk, 0 (Top)
+    beq Wrk, zero, 5f
+    bne Wrk, Nos, 2f
+    addi Top, zero, 1
+    beq zero, zero, 1b
+
+2:  
+    // save start address
+    spush Psp, Top
+
+    // wile (top) != c
+    lb Wrk, 0 (Top)
+    beq Wrk, zero, 4f
+    beq Wrk, Nos, 3f
+    addi Top, zero, 1
+    beq zero, zero, 2b
+
+3:  // return lenght in Top
+    scopy Psp, Wrk, 0
+    sub Top, Wrk
+    jal zero, _link
+
+4:  // drop saved address
+    spull Psp, Wrk
+
+5:  // NIL (0x0) is end of buffer 
+    add Top, zero, zero
+    jal zero, _link
 
 //----------------------------------------------------------------------
 HEADER "_EOF_", "_eof_"
