@@ -2,151 +2,167 @@
 
 pre-compiled words, for minimal interactive
 
-words, most from FIG-FORTH PDP-11 "classic"
+words, most from fig-forth pdp-11 "classic"
 
 */
+
 #---------------------------------------------------------------------- 
-# ok  
-header  "[", "LBRAC", 
-    .word DOCON, 0, STATE, TO, ENDS 
+# ok  must continue later
+header  "ZZZZ", "zzzz", 
+    .word ends 
  
 #---------------------------------------------------------------------- 
 # ok  
-header  "]", "RBRAC", 
-    .word DOCON, 1, STATE, TO, ENDS 
+header  "[", "lbrac", 
+    .word docon, 0, state, to, ends 
  
 #---------------------------------------------------------------------- 
-# ok  create a dictionary header with next word in 'TIB', not update latest link
+# ok  
+header  "]", "rbrac", 
+    .word docon, 1, state, to, ends 
+ 
+#---------------------------------------------------------------------- 
+# ok  
+header  "CONSTANT", "constant", 
+    .word create, zzzz, ends 
+ 
+#---------------------------------------------------------------------- 
+# ok  
+header  "VARIABLE", "variable", 
+    .word create, zzzz, ends 
+
+#---------------------------------------------------------------------- 
+# ok  create a dictionary entry with next word in 'tib', not update latest link
 header  "CREATE", "create", 
-    .word CREATE, ENDS 
+    .word create, zzzz, ends 
  
 #---------------------------------------------------------------------- 
-# ok  ends a word definition, update latest link
+# ok  ends a dictionary entry, update latest link
 header  "FINITE", "create", 
-    .word CREATE, ENDS 
+    .word create, zzzz, ends 
  
 #---------------------------------------------------------------------- 
 # ok  
-header  ":", "COLON", 
-    .word CREATE, RBRAC, ENDS 
+header  ":", "colon", 
+    .word create, rbrac, ends 
  
 #---------------------------------------------------------------------- 
 # ok  
-header  ";", "SEMMI", 
-    .word FINITE, LBRAC, ENDS 
+header  ";", "semmi", 
+    .word finite, lbrac, ends 
   
 #---------------------------------------------------------------------- 
-# ok BACK 
-header  "BACK", "BACK", F_IMMEDIATE 
-    .word HERE, SWAP, MINUS, COMMA, ENDS 
+# ok back 
+header  "BACK", "back", f_immediate 
+    .word here, swap, minus, comma, ends 
  
 #---------------------------------------------------------------------- 
-# ok MARK 
-header  "MARK", "MARK", F_IMMEDIATE 
-    .word HERE, 0, COMMA, ENDS 
+# ok mark 
+header  "MARK", "mark", f_immediate 
+    .word here, 0, comma, ends 
  
 #---------------------------------------------------------------------- 
-# ok BEGIN 
-header  "BEGIN", "BEGIN", F_IMMEDIATE 
-    .word HERE, ENDS 
+# ok begin 
+header  "BEGIN", "begin", f_immediate 
+    .word here, ends 
  
 #---------------------------------------------------------------------- 
-# ok AGAIN resolves a backward branch 
-header  "AGAIN", "AGAIN", F_IMMEDIATE 
-    .word COMP, BRANCH, BACK, ENDS 
+# ok again resolves a backward branch 
+header  "AGAIN", "again", f_immediate 
+    .word comp, branch, back, ends 
  
 #---------------------------------------------------------------------- 
-# ok UNTIL 
-header  "UNTIL", "UNTIL", F_IMMEDIATE 
-    .word COMP, ZBRANCH, BACK, ENDS 
+# ok until 
+header  "UNTIL", "until", f_immediate 
+    .word comp, zbranch, back, ends 
  
 #---------------------------------------------------------------------- 
-# ok UNLESS 
-header  "UNLESS", "UNLESS", F_IMMEDIATE 
-    .word INVERT, UNTIL, ENDS 
- 
-#---------------------------------------------------------------------- 
-# 
-# ok IF 
-header  "IF", "IF", F_IMMEDIATE 
-    .word COMP, ZBRANCH, MARK, ENDS 
+# ok unless 
+header  "UNLESS", "unless", f_immediate 
+    .word invert, until, ends 
  
 #---------------------------------------------------------------------- 
 # 
-# ok ENDIF resolves a forward branch 
-header  "ENDIF", "ENDIF", F_IMMEDIATE 
-    .word DUP, HERE, MINUS, SWAP, TO, ENDS 
+# ok if 
+header  "IF", "if", f_immediate 
+    .word comp, zbranch, mark, ends 
  
 #---------------------------------------------------------------------- 
 # 
-# ok THEN 
-header  "THEN", "THEN", F_IMMEDIATE 
-    .word ENDIF, ENDS 
+# ok endif resolves a forward branch 
+header  "ENDIF", "endif", f_immediate 
+    .word dup, here, minus, swap, to, ends 
  
 #---------------------------------------------------------------------- 
 # 
-# ok ELSE 
-header  "ELSE", "ELSE", F_IMMEDIATE 
-    .word COMP, BRANCH, MARK, SWAP, ENDIF, ENDS 
+# ok then 
+header  "THEN", "then", f_immediate 
+    .word endif, ends 
  
 #---------------------------------------------------------------------- 
 # 
-# ok WHILE 
-header  "WHILE", "WHILE", F_IMMEDIATE 
-    .word IF, ENDS 
+# ok else 
+header  "ELSE", "else", f_immediate 
+    .word comp, branch, mark, swap, endif, ends 
  
 #---------------------------------------------------------------------- 
 # 
-# ok REPEAT 
-header  "REPEAT", "REPEAT", F_IMMEDIATE 
-    .word TOR, TOR, AGAIN, RAT, RAT, MINUS, ENDIF, ENDS 
+# ok while 
+header  "WHILE", "while", f_immediate 
+    .word if, ends 
+ 
+#---------------------------------------------------------------------- 
+# 
+# ok repeat 
+header  "REPEAT", "repeat", f_immediate 
+    .word tor, tor, again, rat, rat, minus, endif, ends 
  
 #---------------------------------------------------------------------- 
 
-#ok Hex
+#ok hex
 header	"HEX", "hex",
-	.word docon, 16, RADX, TO, ENDS
+	.word docon, 16, radx, to, ends
 
 #ok decimal
 header	"DECIMAL", "dec",
-	.word docon, 10, RADX, TO, ENDS
+	.word docon, 10, radx, to, ends
 
-#ok Hex
+#ok hex
 header	"OCTAL", "oct",
-	.word docon, 8, RADX, TO, ENDS
+	.word docon, 8, radx, to, ends
 
 #---------------------------------------------------------------------- 
 
 
-#ok <BUILDS
+#ok <builds
 header	"<BUILDS", "builds"
-	.word docon, 0, ENDS
+	.word docon, 0, ends
 
-#ok DOES> 
+#ok does> 
 header	"DOES>", "does"
-	.word docon, 0, ENDS
+	.word docon, 0, ends
 
 /*
-        HEAD    210,CONSTANT,240,CON,DOCOL              ; ***** CONSTANT
-        .WORD   CREAT,SMUDG,COMMA,PSCOD
-DOCON:  MOV     (W),-(S)
-        NEXT
+        head    210,constant,240,con,docol              ; ***** constant
+        .word   creat,smudg,comma,pscod
+docon:  mov     (w),-(s)
+        next
 ;
-        HEAD    210,VARIABLE,240,VAR,DOCOL              ; ***** VARIABLE
-        .WORD   CON,PSCOD
-DOVAR:  MOV     W,-(S)
-        NEXT
+        head    210,variable,240,var,docol              ; ***** variable
+        .word   con,pscod
+dovar:  mov     w,-(s)
+        next
 ;
-        HEAD    207,^/<BUILDS/,323,BUILD,DOCOL          ; ***** <BUILDS
-;  CREATE NEW DATA TYPE WITH CODE ROUTINE IN HIGHER-LEVEL FORTH.
-        .WORD   ZERO,CON,SEMIS
+        head    207,^/<builds/,323,build,docol          ; ***** <builds
+;  create new data type with code routine in higher-level forth.
+        .word   zero,con,semis
 ;
-        HEAD    205,DOES>,276,DOES,DOCOL                ; ***** DOES>
-        .WORD   FROMR,LATES,PFA,STORE,PSCOD
-DODOE:  MOV     IP,-(RP)
-        MOV     (W)+,IP
-        MOV     W,-(S)
-        NEXT
+        head    205,does>,276,does,docol                ; ***** does>
+        .word   fromr,lates,pfa,store,pscod
+dodoe:  mov     ip,-(rp)
+        mov     (w)+,ip
+        mov     w,-(s)
+        next
 */
 
 
