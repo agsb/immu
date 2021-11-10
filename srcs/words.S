@@ -1,7 +1,30 @@
 /*
-words forth, most from FIG-FORTH PDP-11
-*/
 
+pre-compiled words, for minimal interactive
+
+words, most from FIG-FORTH PDP-11 "classic"
+
+*/
+#---------------------------------------------------------------------- 
+# ok  
+header  "[", "LBRAC", 
+    .word DOCON, 0, STATE, TO, ENDS 
+ 
+#---------------------------------------------------------------------- 
+# ok  
+header  "]", "RBRAC", 
+    .word DOCON, 1, STATE, TO, ENDS 
+ 
+#---------------------------------------------------------------------- 
+# ok  create a dictionary header with next word in 'TIB', not update latest link
+header  "CREATE", "create", 
+    .word CREATE, ENDS 
+ 
+#---------------------------------------------------------------------- 
+# ok  ends a word definition, update latest link
+header  "FINITE", "create", 
+    .word CREATE, ENDS 
+ 
 #---------------------------------------------------------------------- 
 # ok  
 header  ":", "COLON", 

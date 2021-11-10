@@ -450,7 +450,7 @@ header "NEGATE", "negate"
 
 //----------------------------------------------------------------------
 // ( u v -- w >> )
-header "RSHIFT", "shr"
+header "RSHIFT", "rshf"
     .word 0x0
     spull Psp, Nos
     srl Top, Top, Nos
@@ -458,7 +458,7 @@ header "RSHIFT", "shr"
 
 //----------------------------------------------------------------------
 // ( u v -- w <<  )
-header "LSHIFT", "shl"
+header "LSHIFT", "lshf"
     .word 0x0
     spull Psp, Nos
     sll Top, Top, Nos
@@ -912,7 +912,7 @@ HEADER "CSCAN", "cscan"
     // get the separator char
     spull Psp, Nos
 
-    // safety mask
+    // safety mask low byte
     andi Nos, Nos, 0x000000FF
 
 1:  // while (top) == c
@@ -952,7 +952,7 @@ HEADER "CSCAN", "cscan"
 // return a2 (cfa) or zero
 // bytes: link(4),flags(1),size(1),name(n),pads(?)
 //
-HEADER "FIND", "findf"
+HEADER "FIND", "cfind"
     .word 0x0
 1:
     // copy cstr address
@@ -1025,9 +1025,55 @@ HEADER "FIND", "findf"
     add Top, zero, zero
 9: 
     jal zero, _link 
+//----------------------------------------------------------------------
 
+//---------------------------------------------------------------------- 
+// ok STATE
+HEADER "STATE", "state"
+    .word 0x0
+    spush Psp, Top
+    li Top, STATE
+    jal zero, _link 
     
-
+//---------------------------------------------------------------------- 
+// ok STATE
+HEADER "BASE", "base"
+    .word 0x0
+    spush Psp, Top
+    li Top, BASE
+    jal zero, _link 
+    
+//---------------------------------------------------------------------- 
+// ok LATEST
+HEADER "LATEST", "latest"
+    .word 0x0
+    spush Psp, Top
+    li Top, LATEST
+    jal zero, _link 
+    
+//---------------------------------------------------------------------- 
+// ok TOIN
+HEADER ">IN", "toin"
+    .word 0x0
+    spush Psp, Top
+    li Top, LATEST
+    jal zero, _link 
+    
+//---------------------------------------------------------------------- 
+// ok DP
+HEADER "DP", "dp"
+    .word 0x0
+    spush Psp, Top
+    li Top, FREEF
+    jal zero, _link 
+    
+//---------------------------------------------------------------------- 
+// ok DP
+HEADER "UP", "up"
+    .word 0x0
+    spush Psp, Top
+    li Top, FRAMF 
+    jal zero, _link 
 
 
 
