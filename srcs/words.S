@@ -10,7 +10,35 @@ words, most from fig-forth pdp-11 "classic"
 # ok  must continue later
 header  "ZZZZ", "zzzz", 
     .word ends 
- 
+
+#---------------------------------------------------------------------- 
+# ok  must continue later
+header  "ALLOT", "allot",
+    .word dp, plusto, ends
+    
+#---------------------------------------------------------------------- 
+# ok  must continue later
+header  "HERE", "here",
+    .word dp, at, ends
+
+#---------------------------------------------------------------------- 
+# ok  push a cell onto dictionary
+header  ",", "comma",
+    .word here, to, CELL, allot, ends
+
+#---------------------------------------------------------------------- 
+# ok  push a byte onto dictionary
+header  "C,", "ccomma",
+    .word here, cto, BYTE, allot, ends
+
+#---------------------------------------------------------------------- 
+# ok  does a entry in dictionary, does not update latest.
+# zzzz needs fill pads ?
+header  "ENTRY", "entry", 
+    .word latest, at, comma, 0, ccomma, cscan, dup, ccomma, 
+    .word dup, tor, here, rot, rot, cmove, rto, allot, 
+    .word dp, dup, aligned, minus, dp, to, ends 
+
 #---------------------------------------------------------------------- 
 # ok  
 header  "[", "lbrac", 

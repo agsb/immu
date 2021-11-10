@@ -799,15 +799,82 @@ header "+!", "plusto",
     jal zero, _link
 
 //----------------------------------------------------------------------
+// from amforth 6.9
 //   ( a -- b )
 // aligns a address to next CELL
-header "ALIGN", "align", 
+header "ALIGNED", "aligned", 
     .word 0x0
-    addi Wrk, Wrk, (CELL - 1)
+    andi Wrk, Top, 1
     add Top, Top, Wrk
-    xori Wrk, Wrk, -1 
-    and Top, Top, Wrk
+    andi Wrk, Top, 2 
+    add Top, Top, Wrk
     jal zero, _link
+
+// -----------------------------------------------------------------------------
+// ok multiply ( w1 w2 -- w1 * w2 )
+header "*", "multiply", 
+    .word 0x0
+    spull Psp, Nos
+    mul Top, Top, Nos
+    jal zero, _link
+
+// -----------------------------------------------------------------------------
+// ok unsigned multiply ( w1 w2 -- w1 * w2 )
+header "m*", "dmultiply", 
+    .word 0x0
+    lw Nos, 0 (Psp)
+    mul Wrk, Top, Nos
+    sws Wrk, 0 (Psp)
+    mulh top, Top, Nos
+    jal zero, _link
+
+// -----------------------------------------------------------------------------
+// ok unsigned multiply ( w1 w2 -- w1 * w2 )
+header "um*", "udmultiply", 
+    .word 0x0
+    lw Nos, 0 (Psp)
+    mul Wrk, Top, Nos
+    sws Wrk, 0 (Psp)
+    mulhu top, Top, Nos
+    jal zero, _link
+
+// -----------------------------------------------------------------------------
+// ok divide ( w1 w2 -- quotient )
+header "/", "divide", 
+    .word 0x0
+    spull Psp, Nos
+    div Top,  Nos, Top
+    jal zero, _link
+
+// -----------------------------------------------------------------------------
+// ok module ( w1 w2 -- remainder ) 
+header "mod", "module", 
+    .word 0x0
+    spull Psp, Nos
+    rem Top,  Nos, Top
+    jal zero, _link
+
+// -----------------------------------------------------------------------------
+// ok dual divide ( w1 w2 -- remainder quotient )
+header "/mod", "dualdivide", 
+    .word 0x0
+    lw Nos, 0 (Psp)
+    rem Wrk, Top, Nos
+    sw Wrk, 0 (Psp)
+    div top, Top, Nos
+    jal zero, _link
+
+// -----------------------------------------------------------------------------
+// ok unsigned dual divide  ( w1 w2 -- remainder quotient )
+header "u/mod", "udualdivide", 
+    .word 0x0
+    lw Nos, 0 (Psp)
+    remu Wrk, Top, Nos
+    sw Wrk, 0 (Psp)
+    divu Top, Top, Nos
+    jal zero, _link
+
+
 
 //----------------------------------------------------------------------
 //   ( a1 a2 u --- FALSE | TRUE )
@@ -858,7 +925,7 @@ HEADER "CFILL", "cfill"
    
 //----------------------------------------------------------------------
 //   ( a1 a2 u --- )
-// move bytes from source++ to destination++, decrease count--
+// move bytes from a1 source++ to a2 destination++, decrease count--
 // returns 0 if equal (no differ)
 //
 HEADER "CMOVE", "cmove"
@@ -903,7 +970,7 @@ HEADER "BMOVE", "bmove"
 
 //----------------------------------------------------------------------
 //   ( c a1  --- 0 | a2 u )
-// point next sequence without c and terminated by c
+// point next between c vvvv c
 // returns 0 if not found or end of buffer
 //
 HEADER "CSCAN", "cscan"
@@ -912,20 +979,15 @@ HEADER "CSCAN", "cscan"
     // get the separator char
     spull Psp, Nos
 
-    // safety mask low byte
-    andi Nos, Nos, 0x000000FF
-
 1:  // while (top) == c
     lb Wrk, 0 (Top)
     beq Wrk, zero, 6f
     bne Wrk, Nos, 2f
     addi Top, Top, 1
     beq zero, zero, 1b
-
 2:  
     // push start address
     spush Psp, Top
-
 3:
     // wile (top) != c
     lb Wrk, 0 (Top)
@@ -933,26 +995,23 @@ HEADER "CSCAN", "cscan"
     beq Wrk, Nos, 4f
     addi Top, Top, 1
     beq zero, zero, 3b
-
 4:  // return lenght in Top
     scopy Psp, Wrk, 0
     sub Top, Top, Wrk
     jal zero, _link
-
 5:  // pull saved address
     spull Psp, Wrk
-
 6:  // NIL (0x0) is end of buffer 
     add Top, zero, zero
     jal zero, _link
 
 //---------------------------------------------------------------------- 
-//   ( a1 a2 --- 0 | a3 )
+//   ( a1 a2 --- a1 0 | a1 a3 )
 // search vocabulary at a2 for counted string at a1
-// return a2 (cfa) or zero
+// return a2 (lfa) or zero
 // bytes: link(4),flags(1),size(1),name(n),pads(?)
 //
-HEADER "FIND", "cfind"
+HEADER "CFIND", "cfind"
     .word 0x0
 1:
     // copy cstr address
@@ -968,10 +1027,12 @@ HEADER "FIND", "cfind"
     // if doesn't match, try next one
     bne T0, T1, 2b
 
-    // size and first char match
+// size and first char match
+    // push lfa
     spush Psp, Wrk
+
+    // load length
     lb Tos,  (CELL+1) (Wrk)
-    
 3:    
     // compare all name
     addi Tos, Tos, -1
@@ -985,44 +1046,13 @@ HEADER "FIND", "cfind"
     // not same, try next word
     spull Psp, Tos
     beq zero, zero, 1f
-
 5:  
     // found it
-    spull Psp, Top
-    // drop address
-    spull Psp, Nos
-
-    // for sake all code must be CELL aligned, must use .p2align 2 
-    // 4 bytes (CELL) for Link, 2 bytes for flag+size, n bytes for name, <pad>
-    // get length
-    lb Wrk, (CELL+1) Top
-    // add offset
-    addi Wrk, Wrk, (CELL+2)
-    // ((VirtualAddr+PageSize-1) & ~(PageSize-1))    
-    addi Wrk, Wrk, (CELL-1)
-    add  Wrk, Top, Wrk
-    andi Wrk, ~(CELL-1)
-    // push the cfa 
-    spush Psp, Wrk
-    
-    lb Wrk, (CELL) Top
-    andi Wrk, Wrk, F_IMMEDIATE
-    bne Wrk, zero, 7:
-
-// forth 2012 ( -- cfa -1 | cfa +1 ) +1 is immediate
-6:
-    // non immediate
-    addi Tos, Tos, 1
-    beq zero, zero, 9f
-7:
-    // per immediate
-    addi Tos, Tos, -1
-    beq zero, zero, 9f
- 
+    spull Psp, Wrk
 8:
     // leaves string at stack
     // and a zero as not found
-    add Top, zero, zero
+    add Top, Wrk, zero
 9: 
     jal zero, _link 
 //----------------------------------------------------------------------
@@ -1075,10 +1105,63 @@ HEADER "UP", "up"
     li Top, FRAMF 
     jal zero, _link 
 
-
+#---------------------------------------------------------------------- 
+# ok  ( lfa -- flag )
+header  "FFA", "eflag", 
+    .word 0x0
+    lb Top, (CELL) (Top)
+    jal zero, _link
+    
+#---------------------------------------------------------------------- 
+# ok  ( lfa -- nfa )
+header  "NFA", "ecname", 
+    .word 0x0
+    lb Top, (CELL+1) (Top)
+    jal zero, _link
+    
+#---------------------------------------------------------------------- 
+# ok  ( lfa -- cfa )
+header  "CFA", "cfa", 
+    .word 0x0
+    // for sake all code must be CELL aligned, must use .p2align 2 
+    // not sure if is correct in all cases
+    // get length
+    lb Wrk, (CELL+1) Top
+    // add offset
+    addi Wrk, Wrk, (CELL+2)
+    // ((VirtualAddr+PageSize-1) & ~(PageSize-1))    
+    addi Wrk, Wrk, (CELL-1)
+    add  Wrk, Top, Wrk
+    andi Wrk, ~(CELL-1)
+    // push the cfa 
+    spush Psp, Wrk
+    jal zero, _link
+        
+#---------------------------------------------------------------------- 
+# ok  ( lfa -- flags )
+header  "IMMEDIATE?", "fimmeq", 
+# ok  ( lfa -- cfa )
+    .word 0x0
+    lb Wrk, (CELL) Top
+    andi Wrk, Wrk, F_IMMEDIATE
+    beq Wrk, zero, _isfalse
+    bne Wrk, zero, _istrue
+    
+#---------------------------------------------------------------------- 
+# ok  ( lfa -- flags )
+header  "COMPILE_ONLY?", "fcompq", 
+# ok  ( lfa -- cfa )
+    .word 0x0
+    lb Wrk, (CELL) Top
+    andi Wrk, Wrk, F_COMPILE_ONLY
+    beq Wrk, zero, _isfalse
+    bne Wrk, zero, _istrue
+    
+// forth 2012 ( -- cfa -1 | cfa +1 ) +1 is immediate
 
 //----------------------------------------------------------------------
 HEADER "_EOF_", "_eof_"
+    .word 0x0
 
 /*
 1       1st     fst,    first
