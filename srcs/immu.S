@@ -811,6 +811,10 @@ header "ALIGNED", "aligned",
     jal zero, _link
 
 // -----------------------------------------------------------------------------
+
+#ifdef MULDIV
+
+// -----------------------------------------------------------------------------
 // ok multiply ( w1 w2 -- w1 * w2 )
 header "*", "multiply", 
     .word 0x0
@@ -824,7 +828,7 @@ header "m*", "dmultiply",
     .word 0x0
     lw Nos, 0 (Psp)
     mul Wrk, Top, Nos
-    sws Wrk, 0 (Psp)
+    sw Wrk, 0 (Psp)
     mulh top, Top, Nos
     jal zero, _link
 
@@ -834,7 +838,7 @@ header "um*", "udmultiply",
     .word 0x0
     lw Nos, 0 (Psp)
     mul Wrk, Top, Nos
-    sws Wrk, 0 (Psp)
+    sw Wrk, 0 (Psp)
     mulhu top, Top, Nos
     jal zero, _link
 
@@ -856,7 +860,7 @@ header "mod", "module",
 
 // -----------------------------------------------------------------------------
 // ok dual divide ( w1 w2 -- remainder quotient )
-header "/mod", "dualdivide", 
+header "/mod", "dualdiv", 
     .word 0x0
     lw Nos, 0 (Psp)
     rem Wrk, Top, Nos
@@ -866,7 +870,7 @@ header "/mod", "dualdivide",
 
 // -----------------------------------------------------------------------------
 // ok unsigned dual divide  ( w1 w2 -- remainder quotient )
-header "u/mod", "udualdivide", 
+header "u/mod", "udualdiv", 
     .word 0x0
     lw Nos, 0 (Psp)
     remu Wrk, Top, Nos
@@ -874,7 +878,7 @@ header "u/mod", "udualdivide",
     divu Top, Top, Nos
     jal zero, _link
 
-
+#endif
 
 //----------------------------------------------------------------------
 //   ( a1 a2 u --- FALSE | TRUE )
@@ -1032,11 +1036,11 @@ HEADER "CFIND", "cfind"
     spush Psp, Wrk
 
     // load length
-    lb Tos,  (CELL+1) (Wrk)
+    lb Top,  (CELL+1) (Wrk)
 3:    
     // compare all name
-    addi Tos, Tos, -1
-    beq Tos, zero, 5f
+    addi Top, Top, -1
+    beq Top, zero, 5f
     addi Wrk, Wrk, 1
     addi Nos, Nos, 1
     lb T0, (CELL+1) (Wrk)
@@ -1044,8 +1048,8 @@ HEADER "CFIND", "cfind"
     beq T0, T1, 3b
 4:
     // not same, try next word
-    spull Psp, Tos
-    beq zero, zero, 1f
+    spull Psp, Top
+    beq zero, zero, 1b
 5:  
     // found it
     spull Psp, Wrk
@@ -1124,25 +1128,23 @@ header  "NFA", "ecname",
 header  "CFA", "cfa", 
     .word 0x0
     // for sake all code must be CELL aligned, must use .p2align 2 
-    // not sure if is correct in all cases
     // get length
-    lb Wrk, (CELL+1) Top
+    lb Wrk, (CELL+1) (Top)
     // add offset
-    addi Wrk, Wrk, (CELL+2)
-    // ((VirtualAddr+PageSize-1) & ~(PageSize-1))    
-    addi Wrk, Wrk, (CELL-1)
-    add  Wrk, Top, Wrk
-    andi Wrk, ~(CELL-1)
-    // push the cfa 
-    spush Psp, Wrk
+    addi Top, Wrk, (CELL+2)
+	// align it
+    andi Wrk, Top, 1
+    add Top, Top, Wrk
+    andi Wrk, Top, 2 
+    add Top, Top, Wrk
     jal zero, _link
-        
+
 #---------------------------------------------------------------------- 
 # ok  ( lfa -- flags )
 header  "IMMEDIATE?", "fimmeq", 
 # ok  ( lfa -- cfa )
     .word 0x0
-    lb Wrk, (CELL) Top
+    lb Wrk, (CELL) (Top)
     andi Wrk, Wrk, F_IMMEDIATE
     beq Wrk, zero, _isfalse
     bne Wrk, zero, _istrue
@@ -1152,7 +1154,7 @@ header  "IMMEDIATE?", "fimmeq",
 header  "COMPILE_ONLY?", "fcompq", 
 # ok  ( lfa -- cfa )
     .word 0x0
-    lb Wrk, (CELL) Top
+    lb Wrk, (CELL) (Top)
     andi Wrk, Wrk, F_COMPILE_ONLY
     beq Wrk, zero, _isfalse
     bne Wrk, zero, _istrue
