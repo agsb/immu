@@ -252,25 +252,25 @@ _jump:  // jump
 
 ## bibliography 
       
-“http://worrydream.com/refs/Moore - Forth - The Early Years.pdf”
+http://worrydream.com/refs/Moore - Forth - The Early Years.pdf
 
-“http://www.forth.org/POL.pdf”
+http://www.forth.org/POL.pdf
 
-“http://thinking-forth.sourceforge.net/”
+http://thinking-forth.sourceforge.net/
 
-“http://www.forth.org/KittPeakForthPrimer.pdf”
+http://www.forth.org/KittPeakForthPrimer.pdf
 
-“http://www.forth.org/fig-forth/fig-forth_PDP-11.pdf”
+http://www.forth.org/fig-forth/fig-forth_PDP-11.pdf
 
-"http://forth.org/OffeteStore/1013_eForthAndZen.pdf"
+http://forth.org/OffeteStore/1013_eForthAndZen.pdf
 
-"https://www.bradrodriguez.com/papers/moving1.htm"
+https://www.bradrodriguez.com/papers/moving1.htm
 
-“https://muforth.nimblemachines.com/threaded-code/”
+https://muforth.nimblemachines.com/threaded-code/
 
-“https://muforth.nimblemachines.com/call-versus-branch-and-link/”
+https://muforth.nimblemachines.com/call-versus-branch-and-link/
 
-“https://riscv.org/specifications/”
+https://riscv.org/specifications/
 
 ## Disclaimer
 
