@@ -13,37 +13,31 @@ header  ";", "SEMMI",
     .word FINITE, LBRAC, ENDS 
   
 #---------------------------------------------------------------------- 
-# 
 # ok BACK 
 header  "BACK", "BACK", F_IMMEDIATE 
     .word HERE, SWAP, MINUS, COMMA, ENDS 
  
 #---------------------------------------------------------------------- 
-# 
 # ok MARK 
 header  "MARK", "MARK", F_IMMEDIATE 
     .word HERE, 0, COMMA, ENDS 
  
 #---------------------------------------------------------------------- 
-# 
 # ok BEGIN 
 header  "BEGIN", "BEGIN", F_IMMEDIATE 
     .word HERE, ENDS 
  
 #---------------------------------------------------------------------- 
-# 
 # ok AGAIN resolves a backward branch 
 header  "AGAIN", "AGAIN", F_IMMEDIATE 
     .word COMP, BRANCH, BACK, ENDS 
  
 #---------------------------------------------------------------------- 
-# 
 # ok UNTIL 
 header  "UNTIL", "UNTIL", F_IMMEDIATE 
     .word COMP, ZBRANCH, BACK, ENDS 
  
 #---------------------------------------------------------------------- 
-# 
 # ok UNLESS 
 header  "UNLESS", "UNLESS", F_IMMEDIATE 
     .word INVERT, UNTIL, ENDS 

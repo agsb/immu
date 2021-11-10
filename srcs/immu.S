@@ -187,19 +187,19 @@ VOID:
 .word 0x0
 
 // return stack
-RSP0:
+XRSP:
 .fill STACK, CELL, 0x0
 
 //parameter stack
-PSP0:
+XPSP:
 .fill STACK, CELL, 0x0
 
 // terminal input buffer
-TIB0:
+XTIB:
 .fill BUFFER, BYTE, 0x0
 
 // flash buffer for flush
-.FIF0:
+XFIF:
 .fill FLASHPAGE, BYTE, 0x0
 
 // next free flash address, for words
@@ -234,7 +234,7 @@ LATEST:
 FLAGS:
 .word 0x0
 
-// random seed for random
+// seed for random
 SEED:
 .word 0x0
 
@@ -450,7 +450,7 @@ header "NEGATE", "negate"
 
 //----------------------------------------------------------------------
 // ( u v -- w >> )
-header "SHR", "shr"
+header "RSHIFT", "shr"
     .word 0x0
     spull Psp, Nos
     srl Top, Top, Nos
@@ -458,7 +458,7 @@ header "SHR", "shr"
 
 //----------------------------------------------------------------------
 // ( u v -- w <<  )
-header "SHL", "shl"
+header "LSHIFT", "shl"
     .word 0x0
     spull Psp, Nos
     sll Top, Top, Nos
@@ -945,6 +945,91 @@ HEADER "CSCAN", "cscan"
 6:  // NIL (0x0) is end of buffer 
     add Top, zero, zero
     jal zero, _link
+
+//---------------------------------------------------------------------- 
+//   ( a1 a2 --- 0 | a3 )
+// search vocabulary at a2 for counted string at a1
+// return a2 (cfa) or zero
+// bytes: link(4),flags(1),size(1),name(n),pads(?)
+//
+HEADER "FIND", "findf"
+    .word 0x0
+1:
+    // copy cstr address
+    scopy Psp, Nos, 0
+2:  
+    lw Wrk, 0 (Top)     # point to lfa
+    beq Wrk, zero, 8f   # end of vocabulary
+
+    lw Top, 0 (Wrk)           # update to link
+    // check size and first char
+    lh T0, (CELL+1) (Wrk)   
+    lh T1, 0 (Nos)
+    // if doesn't match, try next one
+    bne T0, T1, 2b
+
+    // size and first char match
+    spush Psp, Wrk
+    lb Tos,  (CELL+1) (Wrk)
+    
+3:    
+    // compare all name
+    addi Tos, Tos, -1
+    beq Tos, zero, 5f
+    addi Wrk, Wrk, 1
+    addi Nos, Nos, 1
+    lb T0, (CELL+1) (Wrk)
+    lb T1, 0 (Nos)
+    beq T0, T1, 3b
+4:
+    // not same, try next word
+    spull Psp, Tos
+    beq zero, zero, 1f
+
+5:  
+    // found it
+    spull Psp, Top
+    // drop address
+    spull Psp, Nos
+
+    // for sake all code must be CELL aligned, must use .p2align 2 
+    // 4 bytes (CELL) for Link, 2 bytes for flag+size, n bytes for name, <pad>
+    // get length
+    lb Wrk, (CELL+1) Top
+    // add offset
+    addi Wrk, Wrk, (CELL+2)
+    // ((VirtualAddr+PageSize-1) & ~(PageSize-1))    
+    addi Wrk, Wrk, (CELL-1)
+    add  Wrk, Top, Wrk
+    andi Wrk, ~(CELL-1)
+    // push the cfa 
+    spush Psp, Wrk
+    
+    lb Wrk, (CELL) Top
+    andi Wrk, Wrk, F_IMMEDIATE
+    bne Wrk, zero, 7:
+
+// forth 2012 ( -- cfa -1 | cfa +1 ) +1 is immediate
+6:
+    // non immediate
+    addi Tos, Tos, 1
+    beq zero, zero, 9f
+7:
+    // per immediate
+    addi Tos, Tos, -1
+    beq zero, zero, 9f
+ 
+8:
+    // leaves string at stack
+    // and a zero as not found
+    add Top, zero, zero
+9: 
+    jal zero, _link 
+
+    
+
+
+
 
 //----------------------------------------------------------------------
 HEADER "_EOF_", "_eof_"
