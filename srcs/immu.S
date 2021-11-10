@@ -1066,7 +1066,7 @@ HEADER "CFIND", "cfind"
 HEADER "STATE", "state"
     .word 0x0
     spush Psp, Top
-    li Top, STATE
+    la Top, STATE
     jal zero, _link 
     
 //---------------------------------------------------------------------- 
@@ -1074,7 +1074,7 @@ HEADER "STATE", "state"
 HEADER "BASE", "base"
     .word 0x0
     spush Psp, Top
-    li Top, BASE
+    la Top, BASE
     jal zero, _link 
     
 //---------------------------------------------------------------------- 
@@ -1082,7 +1082,7 @@ HEADER "BASE", "base"
 HEADER "LATEST", "latest"
     .word 0x0
     spush Psp, Top
-    li Top, LATEST
+    la Top, LATEST
     jal zero, _link 
     
 //---------------------------------------------------------------------- 
@@ -1090,7 +1090,7 @@ HEADER "LATEST", "latest"
 HEADER ">IN", "toin"
     .word 0x0
     spush Psp, Top
-    li Top, LATEST
+    la Top, LATEST
     jal zero, _link 
     
 //---------------------------------------------------------------------- 
@@ -1098,7 +1098,7 @@ HEADER ">IN", "toin"
 HEADER "DP", "dp"
     .word 0x0
     spush Psp, Top
-    li Top, FREEF
+    la Top, FREEF
     jal zero, _link 
     
 //---------------------------------------------------------------------- 
@@ -1106,7 +1106,7 @@ HEADER "DP", "dp"
 HEADER "UP", "up"
     .word 0x0
     spush Psp, Top
-    li Top, FRAMF 
+    la Top, FRAMF 
     jal zero, _link 
 
 #---------------------------------------------------------------------- 
