@@ -127,7 +127,7 @@ LINK:
 
 ```
 
-_"Explain all that", said the Mock Turtle.“, Lewis Carol, "Alice's Adventures in Wonderland"_
+**_"Explain all that", said the Mock Turtle.“, Lewis Carol, "Alice's Adventures in Wonderland"_**
 
 The code above only executes jumps when references to primitives words, marked with a NULL reference.
 
