@@ -142,31 +142,6 @@ header  "POSTPONE", "postpone", F_IMMEDIATE
     .word tickcomp, ends
 
 #---------------------------------------------------------------------- 
-# ok  evals
-header  "EVALS", "evals", 
-    .word find, zdup, zbranch, 2f - . 
-    .word isword, ends
-2:  .word isnumber, ends 
-
-#---------------------------------------------------------------------- 
-# ok  
-header  "isword", "isword",
-# ( xt f  )
-    .word state, at 
-# ( xt f s )
-    .word zbranch, 2f - . 
-    .word iscompile, ends
-2:  .word doexecute, ends 
-
-#---------------------------------------------------------------------- 
-# ok  
-header  "iscompile", "iscompile",
-# ( xt f ) immediate is 1, else -1
-    .word zgth, zbranch, 2f - . 
-    .word doexecute, ends
-2:  .word docompile, ends
-
-#---------------------------------------------------------------------- 
 # ok  compile
 # also a hook for debug
 header  "docompile", "docompile", 
@@ -180,8 +155,33 @@ header  "doexecute", "doexecute",
 
 #---------------------------------------------------------------------- 
 # ok  
+header  "iscompile", "iscompile",
+# ( xt f ) immediate is 1, else -1
+    .word zgth, zbranch, 2f - . 
+    .word doexecute, ends
+2:  .word docompile, ends
+
+#---------------------------------------------------------------------- 
+# ok  
+header  "isword", "isword",
+# ( xt f  )
+    .word state, at 
+# ( xt f s )
+    .word zbranch, 2f - . 
+    .word iscompile, ends
+2:  .word doexecute, ends 
+
+#---------------------------------------------------------------------- 
+# ok  
 header  "isnumber", "isnumber", 
     .word zzzz, ends
+
+#---------------------------------------------------------------------- 
+# ok  evals
+header  "EVALS", "evals", 
+    .word find, zdup, zbranch, 2f - . 
+    .word isword, ends
+2:  .word isnumber, ends 
 
 #---------------------------------------------------------------------- 
 # ok  to execute
