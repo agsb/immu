@@ -66,6 +66,7 @@ The following example shows how to load an absolute address:
 #define  CELL  4
 #define  STACK 18
 #define  BUFFER 80
+#define  LENGTH 16
 
 #define  FLASHPAGE 1024    // page of flash memory for flush in GD32VF103CBT6
 
@@ -371,21 +372,28 @@ header "0>", "zgth"
     bge Top, zero, _isfalse 
 
 //----------------------------------------------------------------------
-header "=", "eq", 
+// ( w -- FALSE | TRUE)
+header "0<", "zgth"    
+    .word 0x0
+    blt Top, zero, _isfalse
+    bge Top, zero, _istrue 
+
+//----------------------------------------------------------------------
+header "=", "equ", 
     .word 0x0
     spull Psp, Nos
     beq Top, Nos, _istrue
     bne Top, Nos, _isfalse
 
 //----------------------------------------------------------------------
-header "<", "lt", 
+header ">", "gth", 
     .word 0x0
     spull Psp, Nos
     blt Top, Nos, _istrue
     bge Top, Nos, _isfalse
     
 //----------------------------------------------------------------------
-header ">", "gt", 
+header "<", "lth", 
     .word 0x0
     spull Psp, Nos
     blt Nos, Top, _istrue
@@ -455,7 +463,7 @@ header "NEGATE", "negate"
 
 //----------------------------------------------------------------------
 // ( u v -- w >> )
-header "RSHIFT", "rshf"
+header "RSHIFT", "rshift"
     .word 0x0
     spull Psp, Nos
     srl Top, Top, Nos
@@ -463,7 +471,7 @@ header "RSHIFT", "rshf"
 
 //----------------------------------------------------------------------
 // ( u v -- w <<  )
-header "LSHIFT", "lshf"
+header "LSHIFT", "lshift"
     .word 0x0
     spull Psp, Nos
     sll Top, Top, Nos
@@ -934,7 +942,7 @@ header "CSAME", "csame"
 //   ( a u c --- )
 // copy  (c) byte to (a) destination++, decrease (u) count--
 //
-HEADER "CFILL", "cfill"
+header "CFILL", "cfill"
     .word 0x0
     spull Psp, Nos
     spull Psp, Wrk
@@ -953,7 +961,7 @@ HEADER "CFILL", "cfill"
 // move bytes from a1 source++ to a2 destination++, decrease count--
 // returns 0 if equal (no differ)
 //
-HEADER "CMOVE", "cmove"
+header "CMOVE", "cmove"
     .word 0x0
     spull Psp, Nos
     spull Psp, Wrk
@@ -974,7 +982,7 @@ HEADER "CMOVE", "cmove"
 // offsets calculated inside
 // returns 0 if equal (no differ)
 //
-HEADER "BMOVE", "bmove"
+header "BMOVE", "bmove"
     .word 0x0
     spull Psp, Nos
     spull Psp, Wrk
@@ -994,27 +1002,65 @@ HEADER "BMOVE", "bmove"
     jal zero, _drop
 
 //----------------------------------------------------------------------
-//   ( c a1  --- 0 | a2 u )
-// point next between c vvvv c
+//   ( c a1  --- a2 )
+// point next non c
 // returns 0 at end of buffer
 //
-HEADER "CSCAN", "cscan"
+header "cskip", "cskip"
     .word 0x0
-
     // get the separator char
     spull Psp, Nos
+1:  // while (top) == c
+    lb Wrk, 0 (Top)
+    beq Wrk, zero, 3f
+    bne Wrk, Nos, 2f
+    addi Top, Top, 1
+    beq zero, zero, 1b
+2:  
+    jal zero, _link
+3   
+    add Top, Wrk, zero
+    jal zero, _link
 
+//----------------------------------------------------------------------
+//   ( c a1  --- a2 )
+// point next c
+// returns 0 at end of buffer
+//
+header "cfind", "cfind"
+    .word 0x0
+    // get the separator char
+    spull Psp, Nos
+1:  // while (top) == c
+    lb Wrk, 0 (Top)
+    beq Wrk, zero, 3f
+    beq Wrk, Nos, 2f
+    addi Top, Top, 1
+    beq zero, zero, 1b
+2:  
+    jal zero, _link
+3   
+    add Top, zero, zero
+    jal zero, _link
+
+//----------------------------------------------------------------------
+//   ( c a1  --- 0 | a2 u )
+// point next between ccsssssssc
+// returns 0 at end of buffer
+//
+header "sscan", "sscan"
+    .word 0x0
+    // get the separator char
+    spull Psp, Nos
 1:  // while (top) == c
     lb Wrk, 0 (Top)
     beq Wrk, zero, 6f
     bne Wrk, Nos, 2f
     addi Top, Top, 1
     beq zero, zero, 1b
-2:  
-    // push start address
+2:  // push start address
     spush Psp, Top
-3:
-    // wile (top) != c
+3:  // wile (top) != c
     lb Wrk, 0 (Top)
     beq Wrk, zero, 5f
     beq Wrk, Nos, 4f
@@ -1033,10 +1079,10 @@ HEADER "CSCAN", "cscan"
 //---------------------------------------------------------------------- 
 //   ( a1 a2 --- a1 0 | a1 a3 )
 // search vocabulary at a2 for counted string at a1
-// return a2 (lfa) or zero
+// return a3 (lfa) or zero
 // bytes: link(4),flags(1),size(1),name(n),pads(?)
 //
-HEADER "CFIND", "cfind"
+header "sfind", "sfind"
     .word 0x0
 1:
     // copy cstr address
@@ -1084,7 +1130,7 @@ HEADER "CFIND", "cfind"
 
 //---------------------------------------------------------------------- 
 // ok STATE
-HEADER "STATE", "state"
+header "STATE", "state"
     .word 0x0
     spush Psp, Top
     la Top, STATE
@@ -1092,7 +1138,7 @@ HEADER "STATE", "state"
     
 //---------------------------------------------------------------------- 
 // ok BASE
-HEADER "BASE", "base"
+header "BASE", "base"
     .word 0x0
     spush Psp, Top
     la Top, BASE
@@ -1100,7 +1146,7 @@ HEADER "BASE", "base"
     
 //---------------------------------------------------------------------- 
 // ok LATEST
-HEADER "LATEST", "latest"
+header "LATEST", "latest"
     .word 0x0
     spush Psp, Top
     la Top, LATEST
@@ -1108,7 +1154,7 @@ HEADER "LATEST", "latest"
     
 //---------------------------------------------------------------------- 
 // ok TOIN
-HEADER ">IN", "toin"
+header ">IN", "toin"
     .word 0x0
     spush Psp, Top
     la Top, LATEST
@@ -1116,7 +1162,7 @@ HEADER ">IN", "toin"
     
 //---------------------------------------------------------------------- 
 // ok DP
-HEADER "DP", "dp"
+header "DP", "dp"
     .word 0x0
     spush Psp, Top
     la Top, FREEF
@@ -1124,7 +1170,7 @@ HEADER "DP", "dp"
     
 //---------------------------------------------------------------------- 
 // ok UP
-HEADER "UP", "up"
+header "UP", "up"
     .word 0x0
     spush Psp, Top
     la Top, FRAMF 
@@ -1162,7 +1208,7 @@ header  "CFA", "cfa",
 
         
 //----------------------------------------------------------------------
-HEADER "_EOF_", "_eof_"
+header "_EOF_", "_eof_"
     .word 0x0
 
 #include "words.S"

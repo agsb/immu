@@ -1,12 +1,12 @@
-/*
+/*********************************************************************
 
-pre-compiled words, for minimal interactive
+pre-compiled words, for be minimal interactive 
 
 if-else-then with double ends, skips non sense branches to jump
 
 some words from fig-forth pdp-11 "classic"
 
-*/
+**********************************************************************/
 
 #---------------------------------------------------------------------- 
 # ok  must continue later
@@ -28,12 +28,12 @@ header  "HERE", "here",
 #---------------------------------------------------------------------- 
 # ok  push a cell onto dictionary
 header  ",", "comma",
-    .word here, to, CELL, allot, ends
+    .word here, to, cell, allot, ends
 
 #---------------------------------------------------------------------- 
 # ok  push a byte onto dictionary
 header  "C,", "ccomma",
-    .word here, cto, BYTE, allot, ends
+    .word here, cto, one, allot, ends
 
 #---------------------------------------------------------------------- 
 # ok  ( a f -- (a) xor f )
@@ -49,65 +49,66 @@ header  "FLAGGED", "flagged",
 
 #---------------------------------------------------------------------- 
 # ok  receive a string from terminal input buffer, always. ( n -- a u )
-header  "ACCEPT", "accept", 
+header  "PARSE-NAME", "parse-name", 
      .word tor,
-1:   .word bl_, toin, at, cscan, 
+1:   .word bl_, toin, at, sscan, 
     # test if not empty
      .word dup, zbranch, 2f - .
     # update toin
     .word dup, toin, plusto, 
     # verify length ( a u -- ) (n)
-    .word dup, rto, swap, lth, zbranch, 3f - . ZZZZ
-    .word drop
-    .word rto, drop, tor
-3:  .word rto, ends
-    # else refill 
-2:  .word tib0, tibz, refill, branch, 1 - .  
+    .word dup, rat, lth, zbranch, 3f - . 
+    .word drop, rto, ends 
+3:  .word rto, drop, ends
+    # else auto refill 
+2:  .word tib0, tibz, refill, branch, 1f - .  
 
 #---------------------------------------------------------------------- 
-# ok  does a entry in dictionary, does not update latest.
+# ok   find
+header  "FIND-NAME", "find-name", 
+    .word sfind, dup, zbranch, 3f - . 
+# ( a1 a3 -- xt -1|1 )
+    .word swap, drop, dup, cfa, swap, ffa
+    .word docon, F_IMMEDIATE, andf, zbranch, 2f - . 
+    .word one, ends
+2:  .word oneneg
+# ( a1 0 )
+3:  .word ends
+
+#---------------------------------------------------------------------- 
+# ok  get a string from tib, and search it at dictionary 
 #
-header "create", "docreate",
-    .word accept
+header "FIND", "find",
+    .word parse-name, find-name, ends
+
+#---------------------------------------------------------------------- 
+# ok  create a dictionary entry with next word in 'tib', 
+# update latest to safe restore DP
+#
+header "CREATE", "create",
     # leave a address to link
     .word here
+    # receive a string
+    .word docon, LENGTH, accept
     # place link
-    .word latest, at, comma, 
+    .word latest, at, comma
     # place flags
-    .word nil, ccomma, 
+    .word nil, ccomma
     # place lenght
     .word dup, ccomma
     # place name 
     .word dup, tor, here, swap, cmove, rto, allot 
-    # update DP
-    .word here, aligned, dp, to, 
-    # leave a address to link at latest 
+    # update DP aligned
+    .word here, aligned, dp, to
+    # update latest
+    .word latest, to
     .word ends 
-
+ 
 #---------------------------------------------------------------------- 
-# ok  ZZZZ
-header  "COLD", "cold", 
-    .word ends
-
-#---------------------------------------------------------------------- 
-# ok  ZZZZ
-header  "WARM", "warm", 
-    .word ends
-
-#---------------------------------------------------------------------- 
-# ok  ZZZZ
-header  "BYE", "bye", 
-    .word ends
-
-#---------------------------------------------------------------------- 
-# ok  ZZZZ
-header  "QUIT", "quit", 
-    .word ends
-
-#---------------------------------------------------------------------- 
-# ok  ZZZZ
-header  "ACCEPT", "accept", 
-    .word ends
+# ok  ends a dictionary entry
+# hook for debug
+header  "FINITE", "finite", 
+    .word ends 
 
 #---------------------------------------------------------------------- 
 # ok  ZZZZ
@@ -118,19 +119,7 @@ header  "INTERPRET", "interpret",
 # ok ZZZZ  
 header  "ABORT", "abort", 
     .word ends
-    
-#---------------------------------------------------------------------- 
-# ok  full find
-header  "FIND", "find", 
-    .word cscan, cfind, dup, zbranch, 3f - . 
-# ( a1 a3 -- xt -1|1 )
-1:  .word nip, dup, cfa, swap, ffa
-    .word docon, F_IMMEDIATE, andf, zbranch, 2f - . 
-    .word one, branch, 3f - . 
-2:  .word oneneg 
-# ( a1 0 )
-3:  .word ends 
-    
+        
 #---------------------------------------------------------------------- 
 # ok  tick, returns cfa of next word in input buffer in Top
 # not safe for not found word
@@ -203,27 +192,21 @@ header  "[", "lbrac",
 # ok  to compile
 header  "]", "rbrac", 
     .word docon, 1, state, to, ends 
- 
+#---------------------------------------------------------------------- 
+# ok  
+header  "COMPILE", "compile", 
+    .word docon, comma, ends 
+  
 #---------------------------------------------------------------------- 
 # ok  
 header  "CONSTANT", "constant", 
-    .word create, zzzz, ends 
+    .word create, compile, docon, comma, finite, ends 
  
 #---------------------------------------------------------------------- 
 # ok  
 header  "VARIABLE", "variable", 
-    .word create, zzzz, ends 
+    .word create, compile, dovar, 0, comma, finite, ends 
 
-#---------------------------------------------------------------------- 
-# ok  create a dictionary entry with next word in 'tib', not update latest link
-header  "CREATE", "create", 
-    .word create, zzzz, ends 
- 
-#---------------------------------------------------------------------- 
-# ok  ends a dictionary entry, update latest link
-header  "FINITE", "finite", 
-    .word zzzz, ends 
- 
 #---------------------------------------------------------------------- 
 # ok  
 header  ":", "colon", 
@@ -234,6 +217,30 @@ header  ":", "colon",
 header  ";", "semmi", 
     .word finite, lbrac, ends 
   
+#---------------------------------------------------------------------- 
+# ok  ZZZZ
+header  "COLD", "cold", 
+    .word ends
+
+#---------------------------------------------------------------------- 
+# ok  ZZZZ
+header  "WARM", "warm", 
+    .word ends
+
+#---------------------------------------------------------------------- 
+# ok  ZZZZ
+header  "BYE", "bye", 
+    .word ends
+
+#---------------------------------------------------------------------- 
+# ok  ZZZZ
+header  "QUIT", "quit", 
+    .word ends
+
+/**********************************************************************
+    forth control words
+**********************************************************************/
+
 #---------------------------------------------------------------------- 
 # ok back 
 header  "BACK", "back", #f_immediate 
