@@ -40,8 +40,8 @@ header  "TOGGLE", "toggle",
 # ok  does a entry in dictionary, does not update latest.
 # zzzz needs fill pads ?
 header  "ENTRY", "entry", 
-    .word latest, at, comma, 0, ccomma, cscan, dup, ccomma, 
-    .word dup, tor, here, rot, rot, cmove, rto, allot, 
+    .word latest, at, comma, nil, ccomma, cscan, dup, ccomma 
+    .word dup, tor, here, rot, rot, cmove, rto, allot 
     .word dp, dup, aligned, minus, dp, to, ends 
 
 #---------------------------------------------------------------------- 
@@ -71,7 +71,7 @@ header  "ACCEPT", "accept",
 
 #---------------------------------------------------------------------- 
 # ok  ZZZZ
-header  "INTERPRET", "lbrac", 
+header  "INTERPRET", "interpret", 
     .word ends
 
 /*
@@ -82,7 +82,7 @@ header  "EVAL", "eval",
     .word F_POSTPONE, andf, zbranch, _eimmediate - . , postpone, branch _eecompile
     .word zbranch, _eexecute - . , 
 _eeimmediate:
-    .word dup, ffa, dup, F_IMMEDIATE, andf, zbranch, _eexecute - . ,   
+    .word dup, ffa, dup, #f_immediate, andf, zbranch, _eexecute - . ,   
 _eecompile:
     .word compile, ends
 _eexecute:
@@ -109,49 +109,49 @@ header  "ABORT", "abort",
     
 #---------------------------------------------------------------------- 
 # ok forces compile next word  
-header  "COMPILE?", "compileq", F_IMMEDIATE
-    .word state, docon, F_COMPILE, andf, 
-    .word zbranch, 2f - . , 
-1:  .word true, branch 3f
+header  "COMPILE?", "compileq", #f_immediate
+    .word state, docon, F_COMPILE, andf
+    .word zbranch, 2f - . 
+1:  .word true, branch, 3f
 2:  .word false
 3:  .word ends
 
 #---------------------------------------------------------------------- 
 # ok toggles flag, if set forces compile next word  
-header  "POSTPONE", "´postpone", F_IMMEDIATE
-    .word state, docon, F_COMPILE, andf, zbranch 2f - . ,
-    .word state, docon, F_POSTPONE, toggle, branch 3f - . ,
-2:  .word abort,  
+header  "POSTPONE", "postpone", #f_immediate
+    .word state, docon, F_COMPILE, andf, zbranch, 2f - . 
+    .word state, docon, F_POSTPONE, toggle, branch, 3f - . 
+2:  .word abort  
 3:  .word ends
     
     
 #---------------------------------------------------------------------- 
 # ok  full find
 header  "FIND", "find", 
-    .word cscan, cfind, dup, zbranch 2f - . , 
+    .word cscan, cfind, dup, zbranch, 2f - . 
 # ( a1 a3 -- xt -1|1 )
-1:  .word nip, dup, cfa, swap, ffa,
-    .word docon, F_IMMEDIATE, andf, zbranch 2f - . ,
-    .word docon, 1, branch, 3f - . ,
-2:  .word docon, -1, 
+1:  .word nip, dup, cfa, swap, ffa
+    .word docon, F_IMMEDIATE, andf, zbranch, 2f - . 
+    .word docon, 1, branch, 3f - . 
+2:  .word docon, -1 
 # ( a1 0 )
 3:  .word ends 
     
 #---------------------------------------------------------------------- 
-# ok  execute
-header  "COMPILE", "compile", 
+# ok  compile
+header  "COMPILE", "docompile", 
     .word zzzz, ends 
 
 #---------------------------------------------------------------------- 
 # ok  execute
-header  "EXECUTE", "execute", 
+header  "EXECUTE", "doexecute", 
     .word zzzz, ends 
+
 #---------------------------------------------------------------------- 
-# ok  execute
-header  "EVALS", "EVALS", 
-    .word find, (a 0 | xt f) 
-    .word zdup, zbranch 2f - . ,
-    .word isword, branch, 3f - . ,
+# ok  evals
+header  "EVALS", "evals", 
+    .word find, zdup, zbranch, 2f - . 
+    .word isword, branch, 3f - . 
 2:  .word isnumber
 3:  .word ends 
 
@@ -164,32 +164,32 @@ header  "isnumber", "isnumber",
 # ok  
 header  "isword", "isword",
 # ( xt f -- xt f s )
-    .word state, at, 
+    .word state, at 
 # ( xt f s )
-    .word zdup, zbranch, 2f - . ,
-    .word iscompile, branch, 3f - . ,    
-2:  .word drop, execute  
+    .word zdup, zbranch, 2f - . 
+    .word iscompile, branch, 3f - .     
+2:  .word drop, doexecute  
 3:  .word ends 
 
 #---------------------------------------------------------------------- 
 # ok  
 header  "iscompile", "iscompile",
 # ( xt f s )
-    .word docon, F_POSTPONE, andf, zbranch, 2f - . ,
-    .word postpone, drop, compile, branch, 4f - . ,
+    .word docon, F_POSTPONE, andf, zbranch, 2f - . 
+    .word postpone, drop, docompile, branch, 4f - . 
 # ( xt f ) immediate is 1, else -1
-2:  .word zgth, zbranch, 3f - . ,
-    .word execute, branch, 4f - . ,
-3:  .word compile
+2:  .word zgth, zbranch, 3f - . 
+    .word doexecute, branch, 4f - . 
+3:  .word docompile
 4:  .word ends
 
 #---------------------------------------------------------------------- 
-# ok  execute
+# ok  to execute
 header  "[", "lbrac", 
     .word docon, 0, state, to, ends 
  
 #---------------------------------------------------------------------- 
-# ok  compile
+# ok  to compile
 header  "]", "rbrac", 
     .word docon, 1, state, to, ends 
  
@@ -225,83 +225,83 @@ header  ";", "semmi",
   
 #---------------------------------------------------------------------- 
 # ok back 
-header  "BACK", "back", f_immediate 
+header  "BACK", "back", #f_immediate 
     .word here, swap, minus, comma, ends 
  
 #---------------------------------------------------------------------- 
 # ok mark 
-header  "MARK", "mark", f_immediate 
+header  "MARK", "mark", #f_immediate 
     .word here, 0, comma, ends 
  
 #---------------------------------------------------------------------- 
 # ok begin 
-header  "BEGIN", "begin", f_immediate 
+header  "BEGIN", "begin", #f_immediate 
     .word here, ends 
  
 #---------------------------------------------------------------------- 
 # ok again resolves a backward branch 
-header  "AGAIN", "again", f_immediate 
+header  "AGAIN", "again", #f_immediate 
     .word comp, branch, back, ends 
  
 #---------------------------------------------------------------------- 
 # ok until 
-header  "UNTIL", "until", f_immediate 
+header  "UNTIL", "until", #f_immediate 
     .word comp, zbranch, back, ends 
  
 #---------------------------------------------------------------------- 
 # ok unless 
-header  "UNLESS", "unless", f_immediate 
+header  "UNLESS", "unless", #f_immediate 
     .word invert, until, ends 
  
 #---------------------------------------------------------------------- 
 # 
 # ok if 
-header  "IF", "if", f_immediate 
+header  "IF", "if", #f_immediate 
     .word comp, zbranch, mark, ends 
  
 #---------------------------------------------------------------------- 
 # 
 # ok endif resolves a forward branch 
-header  "ENDIF", "endif", f_immediate 
+header  "ENDIF", "endif", #f_immediate 
     .word dup, here, minus, swap, to, ends 
  
 #---------------------------------------------------------------------- 
 # 
 # ok then 
-header  "THEN", "then", f_immediate 
+header  "THEN", "then", #f_immediate 
     .word endif, ends 
  
 #---------------------------------------------------------------------- 
 # 
 # ok else 
-header  "ELSE", "else", f_immediate 
+header  "ELSE", "else", #f_immediate 
     .word comp, branch, mark, swap, endif, ends 
  
 #---------------------------------------------------------------------- 
 # 
 # ok while 
-header  "WHILE", "while", f_immediate 
+header  "WHILE", "while", #f_immediate 
     .word if, ends 
  
 #---------------------------------------------------------------------- 
 # 
 # ok repeat 
-header  "REPEAT", "repeat", f_immediate 
+header  "REPEAT", "repeat", #f_immediate 
     .word tor, tor, again, rat, rat, minus, endif, ends 
  
 #---------------------------------------------------------------------- 
 
 #ok hex
 header	"HEX", "hex",
-	.word docon, 16, radx, to, ends
+	.word docon, 16, base, to, ends
 
 #ok decimal
 header	"DECIMAL", "dec",
-	.word docon, 10, radx, to, ends
+	.word docon, 10, base, to, ends
 
 #ok hex
 header	"OCTAL", "oct",
-	.word docon, 8, radx, to, ends
+	.word docon, 8, base, to, ends
 
 #---------------------------------------------------------------------- 
 

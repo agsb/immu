@@ -283,7 +283,7 @@ _forth_:
 
 //----------------------------------------------------------------------
 //
-header "EXIT", "EXIT"
+header "EXIT", "ends"
 _inner: 
     .word 0x0
 
@@ -721,7 +721,7 @@ header "SWIP", "swip",
 //----------------------------------------------------------------------
 // trick, load Top <- (IP)
 // used by constant, leaves a value onto Top, also know as doLit
-header "DOCON", "DOCON", 
+header "DOCON", "docon", 
     .word 0x0
     spush Psp, Top 
     lw Top, 0 (Ipt)
@@ -732,7 +732,7 @@ _iic:
 //----------------------------------------------------------------------
 // trick, load Top <- IP
 // used by variable, leaves a reference onto Top,  
-header "DOVAR", "DOVAR", 
+header "DOVAR", "dovar", 
     .word 0x0
     spush Psp, Top 
     add Top, Ipt, zero
@@ -1116,14 +1116,14 @@ HEADER "UP", "up"
 
 #---------------------------------------------------------------------- 
 # ok  ( lfa -- flag )
-header  "FFA", "eflag", 
+header  "FFA", "ffa", 
     .word 0x0
     lb Top, (CELL) (Top)
     jal zero, _link
     
 #---------------------------------------------------------------------- 
 # ok  ( lfa -- nfa )
-header  "NFA", "ecname", 
+header  "NFA", "nfa", 
     .word 0x0
     lb Top, (CELL+1) (Top)
     jal zero, _link
@@ -1169,6 +1169,8 @@ header  "COMPILE_ONLY?", "fcompq",
 //----------------------------------------------------------------------
 HEADER "_EOF_", "_eof_"
     .word 0x0
+
+#include "words.S"
 
 /*
 1       1st     fst,    first
