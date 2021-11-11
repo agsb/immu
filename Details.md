@@ -252,7 +252,7 @@ _jump:  // jump
 
 ## bibliography 
       
-http://worrydream.com/refs/Moore - Forth - The Early Years.pdf
+http://worrydream.com/refs/Moore%20-%20Forth%20-%20The%20Early%20Years.pdf
 
 http://www.forth.org/POL.pdf
 
