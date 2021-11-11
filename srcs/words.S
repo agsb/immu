@@ -2,12 +2,16 @@
 
 pre-compiled words, for minimal interactive
 
-words, most from fig-forth pdp-11 "classic"
+if-else-then with double ends, skips non sense branches to jump
+
+some words from fig-forth pdp-11 "classic"
 
 */
 
 #---------------------------------------------------------------------- 
 # ok  must continue later
+# trap for incomplete words
+#
 header  "ZZZZ", "zzzz", 
     .word ends 
 
@@ -32,34 +36,53 @@ header  "C,", "ccomma",
     .word here, cto, BYTE, allot, ends
 
 #---------------------------------------------------------------------- 
-# ok  ( a w -- (a) xor w )
+# ok  ( a f -- (a) xor f )
 header  "TOGGLE", "toggle",
     .word over, at, xorf, to, ends
 
 #---------------------------------------------------------------------- 
-# ok  does a entry in dictionary, does not update latest.
-# zzzz needs fill pads ?
-header  "ENTRY", "entry", 
-    .word bl_, toin, at, cscan, dup, zbranch, 2f - .
+# ok  ( a f - FALSE | TRUE )
+header  "FLAGGED", "flagged", 
+    .word over, at, andf, zbranch, 2f - .
+    .word TRUE, ends
+    .word FALSE, ends
+
+#---------------------------------------------------------------------- 
+# ok  receive a string from terminal input buffer, always. ( n -- a u )
+header  "ACCEPT", "accept", 
+     .word tor,
+1:   .word bl_, toin, at, cscan, 
+    # test if not empty
+     .word dup, zbranch, 2f - .
     # update toin
-    .word dup, toin, plusto, ends
-2:  .word tibz, refill,  ends 
+    .word dup, toin, plusto, 
+    # verify length ( a u -- ) (n)
+    .word dup, rto, swap, lth, zbranch, 3f - . ZZZZ
+    .word drop
+    .word rto, drop, tor
+3:  .word rto, ends
+    # else refill 
+2:  .word tib0, tibz, refill, branch, 1 - .  
 
 #---------------------------------------------------------------------- 
 # ok  does a entry in dictionary, does not update latest.
 #
 header "create", "docreate",
-    .word entry
+    .word accept
+    # leave a address to link
+    .word here
     # place link
     .word latest, at, comma, 
     # place flags
     .word nil, ccomma, 
     # place lenght
     .word dup, ccomma
-    # Place name 
+    # place name 
     .word dup, tor, here, swap, cmove, rto, allot 
+    # update DP
     .word here, aligned, dp, to, 
-    .word here, ends 
+    # leave a address to link at latest 
+    .word ends 
 
 #---------------------------------------------------------------------- 
 # ok  ZZZZ
@@ -96,14 +119,6 @@ header  "INTERPRET", "interpret",
 header  "ABORT", "abort", 
     .word ends
     
-#---------------------------------------------------------------------- 
-# ok  ( w f - FALSE | TRUE )
-header  "flagged", "flagged", 
-# ok  ( lfa -- cfa )
-    .word andf, zbranch, 2f - .
-    .word TRUE, ends
-    .word FALSE, ends
-
 #---------------------------------------------------------------------- 
 # ok  full find
 header  "FIND", "find", 
