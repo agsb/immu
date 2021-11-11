@@ -101,6 +101,7 @@ ELSE                                              ( c-addr )
 THEN
 */
 
+
 #---------------------------------------------------------------------- 
 # ok ZZZZ  
 header  "ABORT", "abort", 
@@ -108,9 +109,80 @@ header  "ABORT", "abort",
     
 #---------------------------------------------------------------------- 
 # ok forces compile next word  
+header  "COMPILE?", "compileq", F_IMMEDIATE
+    .word state, docon, F_COMPILE, andf, 
+    .word zbranch, 2f - . , 
+1:  .word true, branch 3f
+2:  .word false
+3:  .word ends
+
+#---------------------------------------------------------------------- 
+# ok toggles flag, if set forces compile next word  
 header  "POSTPONE", "´postpone", F_IMMEDIATE
-    .word state, dovar, F_POSTPONE, toggle, ends
+    .word state, docon, F_COMPILE, andf, zbranch 2f - . ,
+    .word state, docon, F_POSTPONE, toggle, branch 3f - . ,
+2:  .word abort,  
+3:  .word ends
     
+    
+#---------------------------------------------------------------------- 
+# ok  full find
+header  "FIND", "find", 
+    .word cscan, cfind, dup, zbranch 2f - . , 
+# ( a1 a3 -- xt -1|1 )
+1:  .word nip, dup, cfa, swap, ffa,
+    .word docon, F_IMMEDIATE, andf, zbranch 2f - . ,
+    .word docon, 1, branch, 3f - . ,
+2:  .word docon, -1, 
+# ( a1 0 )
+3:  .word ends 
+    
+#---------------------------------------------------------------------- 
+# ok  execute
+header  "COMPILE", "compile", 
+    .word zzzz, ends 
+
+#---------------------------------------------------------------------- 
+# ok  execute
+header  "EXECUTE", "execute", 
+    .word zzzz, ends 
+#---------------------------------------------------------------------- 
+# ok  execute
+header  "EVALS", "EVALS", 
+    .word find, (a 0 | xt f) 
+    .word zdup, zbranch 2f - . ,
+    .word isword, branch, 3f - . ,
+2:  .word isnumber
+3:  .word ends 
+
+#---------------------------------------------------------------------- 
+# ok  
+header  "isnumber", "isnumber", 
+    .word zzzz, ends
+
+#---------------------------------------------------------------------- 
+# ok  
+header  "isword", "isword",
+# ( xt f -- xt f s )
+    .word state, at, 
+# ( xt f s )
+    .word zdup, zbranch, 2f - . ,
+    .word iscompile, branch, 3f - . ,    
+2:  .word drop, execute  
+3:  .word ends 
+
+#---------------------------------------------------------------------- 
+# ok  
+header  "iscompile", "iscompile",
+# ( xt f s )
+    .word docon, F_POSTPONE, andf, zbranch, 2f - . ,
+    .word postpone, drop, compile, branch, 4f - . ,
+# ( xt f ) immediate is 1, else -1
+2:  .word zgth, zbranch, 3f - . ,
+    .word execute, branch, 4f - . ,
+3:  .word compile
+4:  .word ends
+
 #---------------------------------------------------------------------- 
 # ok  execute
 header  "[", "lbrac", 
@@ -138,8 +210,8 @@ header  "CREATE", "create",
  
 #---------------------------------------------------------------------- 
 # ok  ends a dictionary entry, update latest link
-header  "FINITE", "create", 
-    .word create, zzzz, ends 
+header  "FINITE", "finite", 
+    .word zzzz, ends 
  
 #---------------------------------------------------------------------- 
 # ok  
