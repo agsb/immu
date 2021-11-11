@@ -32,6 +32,11 @@ header  "C,", "ccomma",
     .word here, cto, BYTE, allot, ends
 
 #---------------------------------------------------------------------- 
+# ok  ( a w -- (a) xor w )
+header  "TOGGLE", "toggle",
+    .word over, at, xorf, to, ends
+
+#---------------------------------------------------------------------- 
 # ok  does a entry in dictionary, does not update latest.
 # zzzz needs fill pads ?
 header  "ENTRY", "entry", 
@@ -40,12 +45,79 @@ header  "ENTRY", "entry",
     .word dp, dup, aligned, minus, dp, to, ends 
 
 #---------------------------------------------------------------------- 
-# ok  
+# ok  ZZZZ
+header  "COLD", "cold", 
+    .word ends
+
+#---------------------------------------------------------------------- 
+# ok  ZZZZ
+header  "WARM", "warm", 
+    .word ends
+
+#---------------------------------------------------------------------- 
+# ok  ZZZZ
+header  "BYE", "bye", 
+    .word ends
+
+#---------------------------------------------------------------------- 
+# ok  ZZZZ
+header  "QUIT", "quit", 
+    .word ends
+
+#---------------------------------------------------------------------- 
+# ok  ZZZZ
+header  "ACCEPT", "accept", 
+    .word ends
+
+#---------------------------------------------------------------------- 
+# ok  ZZZZ
+header  "INTERPRET", "lbrac", 
+    .word ends
+
+/*
+#---------------------------------------------------------------------- 
+# ok  ( lfa)
+header  "EVAL", "eval", 
+    .word state, at, dup
+    .word F_POSTPONE, andf, zbranch, _eimmediate - . , postpone, branch _eecompile
+    .word zbranch, _eexecute - . , 
+_eeimmediate:
+    .word dup, ffa, dup, F_IMMEDIATE, andf, zbranch, _eexecute - . ,   
+_eecompile:
+    .word compile, ends
+_eexecute:
+    .word drop
+    .word execute, ends
+
+...                                                 ( c-addr )
+FIND ?DUP IF	                                    ( xt +-1 )
+   STATE @ IF	                                    ( xt +-1 )
+     0> IF EXECUTE ELSE COMPILE, THEN	  ( ??? )
+   ELSE	                                           ( xt +-1 )
+     DROP EXECUTE                                ( ??? )
+   THEN
+ELSE                                              ( c-addr )
+   ( whatever you do for an undefined word )
+THEN
+*/
+
+#---------------------------------------------------------------------- 
+# ok ZZZZ  
+header  "ABORT", "abort", 
+    .word ends
+    
+#---------------------------------------------------------------------- 
+# ok forces compile next word  
+header  "POSTPONE", "´postpone", F_IMMEDIATE
+    .word state, dovar, F_POSTPONE, toggle, ends
+    
+#---------------------------------------------------------------------- 
+# ok  execute
 header  "[", "lbrac", 
     .word docon, 0, state, to, ends 
  
 #---------------------------------------------------------------------- 
-# ok  
+# ok  compile
 header  "]", "rbrac", 
     .word docon, 1, state, to, ends 
  

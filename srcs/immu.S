@@ -73,6 +73,11 @@ The following example shows how to load an absolute address:
 #define F_COMPILE_ONLY 0x40
 #define F_HIDDEN  0x20
 #define F_TOGGLE  0x10
+
+#define F_POSTPONE 0x02
+#define F_COMPILE  0x01
+#define F_EXECUTE  0x00
+
 #define F_COMMON  0x00
 
 F_TOMASK = 0xF0
@@ -466,7 +471,7 @@ header "LSHIFT", "lshf"
 
 //----------------------------------------------------------------------
 // ( u v -- w )
-header "AND", "and"
+header "AND", "andf"
     .word 0x0
     spull Psp, Nos
     and Top, Top, Nos
@@ -474,7 +479,7 @@ header "AND", "and"
 
 //----------------------------------------------------------------------
 // ( u v -- w )
-header "OR", "or"
+header "OR", "orf"
     .word 0x0
     spull Psp, Nos
     or Top, Top, Nos
@@ -482,7 +487,7 @@ header "OR", "or"
 
 //----------------------------------------------------------------------
 // ( u v -- w )
-header "XOR", "xor"
+header "XOR", "xorf"
     .word 0x0
     spull Psp, Nos
     xor Top, Top, Nos
@@ -490,7 +495,7 @@ header "XOR", "xor"
 
 //----------------------------------------------------------------------
 // ( u v -- w )
-header "NAND", "nand",
+header "NAND", "nandf",
     .word 0x0
     spull Psp, Nos
     and Nos, Top, Nos
