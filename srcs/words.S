@@ -40,9 +40,26 @@ header  "TOGGLE", "toggle",
 # ok  does a entry in dictionary, does not update latest.
 # zzzz needs fill pads ?
 header  "ENTRY", "entry", 
-    .word latest, at, comma, nil, ccomma, cscan, dup, ccomma 
-    .word dup, tor, here, rot, rot, cmove, rto, allot 
-    .word dp, dup, aligned, minus, dp, to, ends 
+    .word bl_, toin, at, cscan, dup, zbranch, 2f - .
+    # update toin
+    .word dup, toin, plusto, ends
+2:  .word tibz, refill,  ends 
+
+#---------------------------------------------------------------------- 
+# ok  does a entry in dictionary, does not update latest.
+#
+header "create", "docreate",
+    .word entry
+    # place link
+    .word latest, at, comma, 
+    # place flags
+    .word nil, ccomma, 
+    # place lenght
+    .word dup, ccomma
+    # Place name 
+    .word dup, tor, here, swap, cmove, rto, allot 
+    .word here, aligned, dp, to, 
+    .word here, ends 
 
 #---------------------------------------------------------------------- 
 # ok  ZZZZ
@@ -72,35 +89,7 @@ header  "ACCEPT", "accept",
 #---------------------------------------------------------------------- 
 # ok  ZZZZ
 header  "INTERPRET", "interpret", 
-    .word ends
-
-/*
-#---------------------------------------------------------------------- 
-# ok  ( lfa)
-header  "EVAL", "eval", 
-    .word state, at, dup
-    .word F_POSTPONE, andf, zbranch, _eimmediate - . , postpone, branch _eecompile
-    .word zbranch, _eexecute - . , 
-_eeimmediate:
-    .word dup, ffa, dup, #f_immediate, andf, zbranch, _eexecute - . ,   
-_eecompile:
-    .word compile, ends
-_eexecute:
-    .word drop
-    .word execute, ends
-
-...                                                 ( c-addr )
-FIND ?DUP IF	                                    ( xt +-1 )
-   STATE @ IF	                                    ( xt +-1 )
-     0> IF EXECUTE ELSE COMPILE, THEN	  ( ??? )
-   ELSE	                                           ( xt +-1 )
-     DROP EXECUTE                                ( ??? )
-   THEN
-ELSE                                              ( c-addr )
-   ( whatever you do for an undefined word )
-THEN
-*/
-
+    .word evals, ends
 
 #---------------------------------------------------------------------- 
 # ok ZZZZ  
@@ -108,80 +97,87 @@ header  "ABORT", "abort",
     .word ends
     
 #---------------------------------------------------------------------- 
-# ok forces compile next word  
-header  "COMPILE?", "compileq", #f_immediate
-    .word state, docon, F_COMPILE, andf
-    .word zbranch, 2f - . 
-1:  .word true, branch, 3f
-2:  .word false
-3:  .word ends
+# ok  ( w f - FALSE | TRUE )
+header  "flagged", "flagged", 
+# ok  ( lfa -- cfa )
+    .word andf, zbranch, 2f - .
+    .word TRUE, ends
+    .word FALSE, ends
 
-#---------------------------------------------------------------------- 
-# ok toggles flag, if set forces compile next word  
-header  "POSTPONE", "postpone", #f_immediate
-    .word state, docon, F_COMPILE, andf, zbranch, 2f - . 
-    .word state, docon, F_POSTPONE, toggle, branch, 3f - . 
-2:  .word abort  
-3:  .word ends
-    
-    
 #---------------------------------------------------------------------- 
 # ok  full find
 header  "FIND", "find", 
-    .word cscan, cfind, dup, zbranch, 2f - . 
+    .word cscan, cfind, dup, zbranch, 3f - . 
 # ( a1 a3 -- xt -1|1 )
 1:  .word nip, dup, cfa, swap, ffa
     .word docon, F_IMMEDIATE, andf, zbranch, 2f - . 
-    .word docon, 1, branch, 3f - . 
-2:  .word docon, -1 
+    .word one, branch, 3f - . 
+2:  .word oneneg 
 # ( a1 0 )
 3:  .word ends 
     
 #---------------------------------------------------------------------- 
-# ok  compile
-header  "COMPILE", "docompile", 
-    .word zzzz, ends 
+# ok  tick, returns cfa of next word in input buffer in Top
+# not safe for not found word
+header  "'", "tick", 
+    .word find, drop, ends 
 
 #---------------------------------------------------------------------- 
-# ok  execute
-header  "EXECUTE", "doexecute", 
-    .word zzzz, ends 
+# ok  as tick, but forces execute next word
+header  "'[", "tickexec", F_IMMEDIATE 
+    .word tick, execute, ends
+
+#---------------------------------------------------------------------- 
+# ok  as tick, but forces compile next word 
+header  "']", "tickcomp", F_IMMEDIATE 
+    .word tick, comma, ends
+
+#---------------------------------------------------------------------- 
+# ok  tick, returns cfa of next word in input buffer in Top
+header  "POSTPONE", "postpone", F_IMMEDIATE 
+    .word tickcomp, ends
 
 #---------------------------------------------------------------------- 
 # ok  evals
 header  "EVALS", "evals", 
     .word find, zdup, zbranch, 2f - . 
-    .word isword, branch, 3f - . 
-2:  .word isnumber
-3:  .word ends 
+    .word isword, ends
+2:  .word isnumber, ends 
+
+#---------------------------------------------------------------------- 
+# ok  
+header  "isword", "isword",
+# ( xt f  )
+    .word state, at 
+# ( xt f s )
+    .word zbranch, 2f - . 
+    .word iscompile, ends
+2:  .word doexecute, ends 
+
+#---------------------------------------------------------------------- 
+# ok  
+header  "iscompile", "iscompile",
+# ( xt f ) immediate is 1, else -1
+    .word zgth, zbranch, 2f - . 
+    .word doexecute, ends
+2:  .word docompile, ends
+
+#---------------------------------------------------------------------- 
+# ok  compile
+# also a hook for debug
+header  "docompile", "docompile", 
+    .word comma, ends 
+
+#---------------------------------------------------------------------- 
+# ok  execute
+# also a hook for debug
+header  "doexecute", "doexecute", 
+    .word execute, ends 
 
 #---------------------------------------------------------------------- 
 # ok  
 header  "isnumber", "isnumber", 
     .word zzzz, ends
-
-#---------------------------------------------------------------------- 
-# ok  
-header  "isword", "isword",
-# ( xt f -- xt f s )
-    .word state, at 
-# ( xt f s )
-    .word zdup, zbranch, 2f - . 
-    .word iscompile, branch, 3f - .     
-2:  .word drop, doexecute  
-3:  .word ends 
-
-#---------------------------------------------------------------------- 
-# ok  
-header  "iscompile", "iscompile",
-# ( xt f s )
-    .word docon, F_POSTPONE, andf, zbranch, 2f - . 
-    .word postpone, drop, docompile, branch, 4f - . 
-# ( xt f ) immediate is 1, else -1
-2:  .word zgth, zbranch, 3f - . 
-    .word doexecute, branch, 4f - . 
-3:  .word docompile
-4:  .word ends
 
 #---------------------------------------------------------------------- 
 # ok  to execute

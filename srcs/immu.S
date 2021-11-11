@@ -507,28 +507,44 @@ header "NAND", "nandf",
 header "0", "nil", 
     .word 0x0
     spush Psp, Top 
-    add Top, zero, zero  // li Top, 0
+    add Top, zero, zero
+    jal zero, _link
+
+//----------------------------------------------------------------------
+// ( -- 0 )
+header "-1", "oneneg", 
+    .word 0x0
+    spush Psp, Top 
+    add Top, zero, -1
+    jal zero, _link
+
+//----------------------------------------------------------------------
+// ( -- 0 )
+header "-2", "twoneg", 
+    .word 0x0
+    spush Psp, Top 
+    add Top, zero, -2
     jal zero, _link
 
 //----------------------------------------------------------------------
 header "1", "one", 
     .word 0x0
     spush Psp, Top 
-    addi Top, zero, 1  // li Top, 1
+    addi Top, zero, 1
     jal zero, _link
 
 //----------------------------------------------------------------------
 header "2", "two", 
     .word 0x0
     spush Psp, Top 
-    addi Top, zero, 2  // li Top, 2
+    addi Top, zero, 2
     jal zero, _link
 
 //----------------------------------------------------------------------
 header "CELL", "cell", 
     .word 0x0
     spush Psp, Top 
-    addi Top, zero, CELL   // li Top, CELL
+    addi Top, zero, CELL
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -891,7 +907,7 @@ header "u/mod", "udualdiv",
 // returns 0 if equal (no differ)
 // used most to compare names with less than 16 of length
 // 
-header "SAME?", "sameq"
+header "CSAME", "csame"
     .word 0x0
     spull Psp, Nos
     spull Psp, Wrk
@@ -980,7 +996,7 @@ HEADER "BMOVE", "bmove"
 //----------------------------------------------------------------------
 //   ( c a1  --- 0 | a2 u )
 // point next between c vvvv c
-// returns 0 if not found or end of buffer
+// returns 0 at end of buffer
 //
 HEADER "CSCAN", "cscan"
     .word 0x0
@@ -1075,7 +1091,7 @@ HEADER "STATE", "state"
     jal zero, _link 
     
 //---------------------------------------------------------------------- 
-// ok STATE
+// ok BASE
 HEADER "BASE", "base"
     .word 0x0
     spush Psp, Top
@@ -1107,7 +1123,7 @@ HEADER "DP", "dp"
     jal zero, _link 
     
 //---------------------------------------------------------------------- 
-// ok DP
+// ok UP
 HEADER "UP", "up"
     .word 0x0
     spush Psp, Top
@@ -1144,28 +1160,7 @@ header  "CFA", "cfa",
     add Top, Top, Wrk
     jal zero, _link
 
-#---------------------------------------------------------------------- 
-# ok  ( lfa -- flags )
-header  "IMMEDIATE?", "fimmeq", 
-# ok  ( lfa -- cfa )
-    .word 0x0
-    lb Wrk, (CELL) (Top)
-    andi Wrk, Wrk, F_IMMEDIATE
-    beq Wrk, zero, _isfalse
-    bne Wrk, zero, _istrue
-    
-#---------------------------------------------------------------------- 
-# ok  ( lfa -- flags )
-header  "COMPILE_ONLY?", "fcompq", 
-# ok  ( lfa -- cfa )
-    .word 0x0
-    lb Wrk, (CELL) (Top)
-    andi Wrk, Wrk, F_COMPILE_ONLY
-    beq Wrk, zero, _isfalse
-    bne Wrk, zero, _istrue
-    
-// forth 2012 ( -- cfa -1 | cfa +1 ) +1 is immediate
-
+        
 //----------------------------------------------------------------------
 HEADER "_EOF_", "_eof_"
     .word 0x0
