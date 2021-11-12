@@ -4,6 +4,8 @@ pre-compiled words, for be minimal interactive
 
 if-else-then with double ends, skips non sense branches to jump
 
+0 is nil, because zero is reserved for the x0 riscv register
+
 some words from fig-forth pdp-11 "classic"
 
 **********************************************************************/
@@ -15,6 +17,36 @@ some words from fig-forth pdp-11 "classic"
 header  "ZZZZ", "zzzz", 
     .word ends 
 
+#---------------------------------------------------------------------- 
+# ok STATE
+header "STATE", "state"
+    .word dolit, STATE, ends
+    
+#---------------------------------------------------------------------- 
+# ok BASE
+header "BASE", "base"
+    .word dolit, BASE, ends
+    
+#---------------------------------------------------------------------- 
+# ok LATEST
+header "LATEST", "latest"
+    .word dolit, LATEST, ends
+    
+#---------------------------------------------------------------------- 
+# ok TOIN
+header ">IN", "toin"
+    .word dolit, TOIN, ends
+    
+#---------------------------------------------------------------------- 
+# ok DP
+header "DP", "dp"
+    .word dolit, FREEF, ends
+    
+#---------------------------------------------------------------------- 
+# ok UP
+header "UP", "up"
+    .word dolit, FRAMF, ends
+    
 #---------------------------------------------------------------------- 
 # ok  must continue later
 header  "ALLOT", "allot",
@@ -45,7 +77,27 @@ header  "TOGGLE", "toggle",
 header  "FLAGGED", "flagged", 
     .word over, at, andf, zbranch, 2f - .
     .word TRUE, ends
-    .word FALSE, ends
+2:  .word FALSE, ends
+
+#---------------------------------------------------------------------- 
+# ok  receive a string to terminal input buffer, always. ( n -- a u )
+header  "REFILL", "refill", 
+    .word TIB0, TOIN, to
+1:  .word keyq, branch, 1 - .
+    .word dup, toin, dup, at, to, one, plusto 
+2:  .word dup, cr_, zbranch, 4f - .
+    .word toin, at, nil, to, branch, 20f - .
+4:  .word dup, bs_, zbranch, 6f - .
+    .word dup, toin, at, one, minus, 
+6:
+
+#----------------------------------------------------------------------
+header "EXPECT", "expect"
+    .work ends
+
+#----------------------------------------------------------------------
+header "QUERY", "query"
+    .work tib, at, docon, BUFFER, expect, 0, toin, to, ends
 
 #---------------------------------------------------------------------- 
 # ok  receive a string from terminal input buffer, always. ( n -- a u )

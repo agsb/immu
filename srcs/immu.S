@@ -744,9 +744,10 @@ header "SWIP", "swip",
 
 //----------------------------------------------------------------------
 // trick, load Top <- (IP)
-// used by constant, leaves a value onto Top, also know as doLit
+// used by constant, leaves the contents of next cell from dictionary onto Top, aka doLit
 header "DOCON", "docon", 
     .word 0x0
+dolit:
     spush Psp, Top 
     lw Top, 0 (Ipt)
 _iic:
@@ -1128,54 +1129,6 @@ header "sfind", "sfind"
     jal zero, _link 
 //----------------------------------------------------------------------
 
-//---------------------------------------------------------------------- 
-// ok STATE
-header "STATE", "state"
-    .word 0x0
-    spush Psp, Top
-    la Top, STATE
-    jal zero, _link 
-    
-//---------------------------------------------------------------------- 
-// ok BASE
-header "BASE", "base"
-    .word 0x0
-    spush Psp, Top
-    la Top, BASE
-    jal zero, _link 
-    
-//---------------------------------------------------------------------- 
-// ok LATEST
-header "LATEST", "latest"
-    .word 0x0
-    spush Psp, Top
-    la Top, LATEST
-    jal zero, _link 
-    
-//---------------------------------------------------------------------- 
-// ok TOIN
-header ">IN", "toin"
-    .word 0x0
-    spush Psp, Top
-    la Top, LATEST
-    jal zero, _link 
-    
-//---------------------------------------------------------------------- 
-// ok DP
-header "DP", "dp"
-    .word 0x0
-    spush Psp, Top
-    la Top, FREEF
-    jal zero, _link 
-    
-//---------------------------------------------------------------------- 
-// ok UP
-header "UP", "up"
-    .word 0x0
-    spush Psp, Top
-    la Top, FRAMF 
-    jal zero, _link 
-
 #---------------------------------------------------------------------- 
 # ok  ( lfa -- flag )
 header  "FFA", "ffa", 
@@ -1208,10 +1161,13 @@ header  "CFA", "cfa",
 
         
 //----------------------------------------------------------------------
-header "_EOF_", "_eof_"
+header "_EOW_", "_eoW_"
     .word 0x0
 
-#include "words.S"
+#include "words.S":
+
+header "_EOF_", "_eof_"
+    .word 0x0
 
 /*
 1       1st     fst,    first
