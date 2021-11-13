@@ -79,45 +79,48 @@ header  "FLAGGED", "flagged",
     .word TRUE, ends
 2:  .word FALSE, ends
 
+
 #---------------------------------------------------------------------- 
 # ok  receive a string to terminal input buffer, always. ( n -- a u )
 header  "REFILL", "refill", 
-    .word TIB0, TOIN, to
-1:  .word keyq, branch, 1 - .
+/*
+    .word dolit, XTIB, dolit, TIBF, to
+1:  .word keyq, branch, 1b - .
     .word dup, toin, dup, at, to, one, plusto 
-2:  .word dup, cr_, zbranch, 4f - .
-    .word toin, at, nil, to, branch, 20f - .
-4:  .word dup, bs_, zbranch, 6f - .
-    .word dup, toin, at, one, minus, 
+2:  .word dup, dolit, CR_, zbranch, 4f - .
+    .word toin, at, nil, to, branch, 6f - .
+4:  .word dup, dolit, BS_, zbranch, 6f - .
+    .word dup, toin, at, one, minus 
 6:
+*/
 
 #----------------------------------------------------------------------
 header "EXPECT", "expect"
-    .work ends
+    .word ends
 
 #----------------------------------------------------------------------
 header "QUERY", "query"
-    .work tib, at, docon, BUFFER, expect, 0, toin, to, ends
+    .word dolit, TIBF, at, docon, BUFFER, expect, dolit, 0, toin, to, ends
 
 #---------------------------------------------------------------------- 
 # ok  receive a string from terminal input buffer, always. ( n -- a u )
-header  "PARSE-NAME", "parse-name", 
-     .word tor,
-1:   .word bl_, toin, at, sscan, 
+header  "PARSE-NAME", "parse_name" 
+     .word tor
+1:   .word BL_, toin, at, sscan 
     # test if not empty
      .word dup, zbranch, 2f - .
     # update toin
-    .word dup, toin, plusto, 
+    .word dup, toin, plusto 
     # verify length ( a u -- ) (n)
     .word dup, rat, lth, zbranch, 3f - . 
     .word drop, rto, ends 
 3:  .word rto, drop, ends
-    # else auto refill 
-2:  .word tib0, tibz, refill, branch, 1f - .  
+    # test else auto refill 
+2:  .word zzzz, refill, branch, 1b - .  
 
 #---------------------------------------------------------------------- 
 # ok   find
-header  "FIND-NAME", "find-name", 
+header  "FIND-NAME", "find_name", 
     .word sfind, dup, zbranch, 3f - . 
 # ( a1 a3 -- xt -1|1 )
     .word swap, drop, dup, cfa, swap, ffa
@@ -131,7 +134,7 @@ header  "FIND-NAME", "find-name",
 # ok  get a string from tib, and search it at dictionary 
 #
 header "FIND", "find",
-    .word parse-name, find-name, ends
+    .word parse_name, find_name, ends
 
 #---------------------------------------------------------------------- 
 # ok  create a dictionary entry with next word in 'tib', 
@@ -141,7 +144,7 @@ header "CREATE", "create",
     # leave a address to link
     .word here
     # receive a string
-    .word docon, LENGTH, accept
+    .word dolit, LENGTH, expect
     # place link
     .word latest, at, comma
     # place flags
@@ -247,7 +250,7 @@ header  "]", "rbrac",
 #---------------------------------------------------------------------- 
 # ok  
 header  "COMPILE", "compile", 
-    .word docon, comma, ends 
+    .word dolit, comma, ends 
   
 #---------------------------------------------------------------------- 
 # ok  
@@ -311,12 +314,12 @@ header  "BEGIN", "begin", #f_immediate
 #---------------------------------------------------------------------- 
 # ok again resolves a backward branch 
 header  "AGAIN", "again", #f_immediate 
-    .word comp, branch, back, ends 
+    .word compile, branch, back, ends 
  
 #---------------------------------------------------------------------- 
 # ok until 
 header  "UNTIL", "until", #f_immediate 
-    .word comp, zbranch, back, ends 
+    .word compile, zbranch, back, ends 
  
 #---------------------------------------------------------------------- 
 # ok unless 
@@ -327,7 +330,7 @@ header  "UNLESS", "unless", #f_immediate
 # 
 # ok if 
 header  "IF", "if", #f_immediate 
-    .word comp, zbranch, mark, ends 
+    .word compile, zbranch, mark, ends 
  
 #---------------------------------------------------------------------- 
 # 
@@ -345,7 +348,7 @@ header  "THEN", "then", #f_immediate
 # 
 # ok else 
 header  "ELSE", "else", #f_immediate 
-    .word comp, branch, mark, swap, endif, ends 
+    .word compile, branch, mark, swap, endif, ends 
  
 #---------------------------------------------------------------------- 
 # 
@@ -363,26 +366,26 @@ header  "REPEAT", "repeat", #f_immediate
 
 #ok hex
 header	"HEX", "hex",
-	.word docon, 16, base, to, ends
+	.word dolit, 16, base, to, ends
 
 #ok decimal
 header	"DECIMAL", "dec",
-	.word docon, 10, base, to, ends
+	.word dolit, 10, base, to, ends
 
 #ok hex
 header	"OCTAL", "oct",
-	.word docon, 8, base, to, ends
+	.word dolit, 8, base, to, ends
 
 #---------------------------------------------------------------------- 
 
 
 #ok <builds
 header	"<BUILDS", "builds"
-	.word docon, 0, ends
+	.word dolit, 0, ends
 
 #ok does> 
 header	"DOES>", "does"
-	.word docon, 0, ends
+	.word dolit, 0, ends
 
 /*
         head    210,constant,240,con,docol              ; ***** constant

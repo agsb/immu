@@ -13,7 +13,22 @@ riscv64-unknown-elf-gcc -O0 -march=rv32i -mabi=ilp32 \
 
 riscv64-unknown-elf-objcopy -O ihex main.elf main.hex
 
-riscv64-unknown-elf-objdump --disassemble-all main.elf > main.lot
-
+riscv64-unknown-elf-objdump --reloc --line-numbers \
+	--prefix-addresses --disassemble-all \
+	--syms main.elf > main.lot
 
 exit
+
+riscv64-unknown-elf-gcc -O0 -march=rv32i -mabi=ilp32 \
+    -fverbose-asm -fshort-enums -Wall -Wstrict-prototypes \
+    -Wa,-adhlns=main.o  -std=gnu99 -nostartfiles -nostdlib -nostartfiles \
+    -Wp,-M,-MP,-MT,main.o,-MF,.dep/main.elf.d main.o --output main.elf -Wl,-Map=main.map,--cref
+
+
+riscv64-unknown-elf-gcc -O0 -march=rv32i -mabi=ilp32 \
+    -fverbose-asm -fshort-enums -Wall -Wstrict-prototypes \
+	-std=gnu99 -ffreestanding -nostartfiles -nostdlib -nodefaultlibs \
+    -Wp,-M,-MP,-MT,main.o,-MF,.dep/main.elf.d main.o --output main.elf 
+    -Wa,-adhlns=main.o \
+	-Wl,--gc-sections,-Map=main.map,--cref \
+

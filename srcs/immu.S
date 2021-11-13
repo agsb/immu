@@ -373,7 +373,7 @@ header "0>", "zgth"
 
 //----------------------------------------------------------------------
 // ( w -- FALSE | TRUE)
-header "0<", "zgth"    
+header "0<", "zlth"    
     .word 0x0
     blt Top, zero, _isfalse
     bge Top, zero, _istrue 
@@ -1019,7 +1019,7 @@ header "cskip", "cskip"
     beq zero, zero, 1b
 2:  
     jal zero, _link
-3   
+3:   
     add Top, Wrk, zero
     jal zero, _link
 
@@ -1040,7 +1040,7 @@ header "cfind", "cfind"
     beq zero, zero, 1b
 2:  
     jal zero, _link
-3   
+3:   
     add Top, zero, zero
     jal zero, _link
 
@@ -1164,7 +1164,7 @@ header  "CFA", "cfa",
 header "_EOW_", "_eoW_"
     .word 0x0
 
-#include "words.S":
+#include "words.S"
 
 header "_EOF_", "_eof_"
     .word 0x0
