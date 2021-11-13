@@ -12,305 +12,314 @@ no complex listings
 
 **********************************************************************/
 
-#---------------------------------------------------------------------- 
-# ok  must continue later
-# trap for incomplete words caused by unsleeped nights
-#
+//---------------------------------------------------------------------- 
+// ok  must continue later
+// trap for incomplete words caused by unsleeped nights
+//
 header  "ZZZZ", "zzzz", 
     .word ends 
 
-#---------------------------------------------------------------------- 
-# ok STATE
+//---------------------------------------------------------------------- 
+// ok STATE
 header "STATE", "state"
     .word dolit, STATE, ends
     
-#---------------------------------------------------------------------- 
-# ok BASE
+//---------------------------------------------------------------------- 
+// ok BASE
 header "BASE", "base"
     .word dolit, BASE, ends
     
-#---------------------------------------------------------------------- 
-# ok LATEST
+//---------------------------------------------------------------------- 
+// ok LATEST
 header "LATEST", "latest"
     .word dolit, LATEST, ends
     
-#---------------------------------------------------------------------- 
-# ok TOIN
+//---------------------------------------------------------------------- 
+// ok TOIN
 header ">IN", "toin"
     .word dolit, TOIN, ends
     
-#---------------------------------------------------------------------- 
-# ok DP
+//---------------------------------------------------------------------- 
+// ok DP
 header "DP", "dp"
     .word dolit, FREEF, ends
     
-#---------------------------------------------------------------------- 
-# ok UP
+//---------------------------------------------------------------------- 
+// ok UP
 header "UP", "up"
     .word dolit, FRAMF, ends
     
-#---------------------------------------------------------------------- 
-# ok  must continue later
+//---------------------------------------------------------------------- 
+// ok  must continue later
 header  "ALLOT", "allot",
     .word dp, plusto, ends
     
-#---------------------------------------------------------------------- 
-# ok  must continue later
+//---------------------------------------------------------------------- 
+// ok  must continue later
 header  "HERE", "here",
     .word dp, at, ends
 
-#---------------------------------------------------------------------- 
-# ok  push a cell onto dictionary
+//---------------------------------------------------------------------- 
+// ok  push a cell onto dictionary
 header  ",", "comma",
     .word here, to, cell, allot, ends
 
-#---------------------------------------------------------------------- 
-# ok  push a byte onto dictionary
+//---------------------------------------------------------------------- 
+// ok  push a byte onto dictionary
 header  "C,", "ccomma",
     .word here, cto, one, allot, ends
 
-#---------------------------------------------------------------------- 
-# ok  ( a f -- (a) xor f )
+//---------------------------------------------------------------------- 
+// ok  ( a f -- (a) xor f )
 header  "TOGGLE", "toggle",
     .word over, at, xorf, to, ends
 
-#---------------------------------------------------------------------- 
-# ok  ( a f - FALSE | TRUE )
+//---------------------------------------------------------------------- 
+// ok  ( a f - FALSE | TRUE )
 header  "FLAGGED", "flagged", 
     .word over, at, andf, zbranch, 2f - .
     .word TRUE, ends
 2:  .word FALSE, ends
 
-#---------------------------------------------------------------------- 
-# ok  receive a string to terminal input buffer, always. ( n -- a u )
+//---------------------------------------------------------------------- 
+// ok  receive a string to terminal input buffer, always. ( n -- a u )
 header  "REFILL", "refill", 
+
+/*
     .word TIB0, TOIN, to
-1:  .word keyq, branch, 1 - .
+1:  .word keyq, branch, 1b - .
     .word dup, toin, dup, at, to, one, plusto 
 2:  .word dup, cr_, zbranch, 4f - .
     .word toin, at, nil, to, branch, 20f - .
 4:  .word dup, bs_, zbranch, 6f - .
     .word dup, toin, at, one, minus, 
 6:
+*/
 
-#----------------------------------------------------------------------
+//----------------------------------------------------------------------
 header "EXPECT", "expect"
-    .work ends
+    .word ends
 
-#----------------------------------------------------------------------
+//----------------------------------------------------------------------
 header "QUERY", "query"
-    .work tib, at, docon, BUFFER, expect, 0, toin, to, ends
+    .word zzzz, at, dolit, BUFFER, expect, 0, toin, to, ends
 
-#---------------------------------------------------------------------- 
-# ok  receive a string from terminal input buffer, always. ( n -- a u )
-header  "PARSE-NAME", "parse-name", 
-     .word tor,
-1:   .word bl_, toin, at, sscan, 
-    # test if not empty
+//---------------------------------------------------------------------- 
+// ok  receive a string from terminal input buffer, always. ( n -- a u )
+header  "PARSE-NAME", "parsename", 
+     .word tor
+1:   .word dolit, BL_, toin, at, sscan 
+    // test if not empty
      .word dup, zbranch, 2f - .
-    # update toin
-    .word dup, toin, plusto, 
-    # verify length ( a u -- ) (n)
+    // update toin
+    .word dup, toin, plusto 
+    // verify length ( a u -- ) (n)
     .word dup, rat, lth, zbranch, 3f - . 
     .word drop, rto, ends 
 3:  .word rto, drop, ends
-    # else auto refill 
-2:  .word tib0, tibz, refill, branch, 1f - .  
+    // else auto refill 
+2:  .word zzzz, refill, branch, 1b - .  
 
-#---------------------------------------------------------------------- 
-# ok   find
-header  "FIND-NAME", "find-name", 
+//---------------------------------------------------------------------- 
+// ok   find
+header  "FIND-NAME", "findname", 
     .word sfind, dup, zbranch, 3f - . 
-# ( a1 a3 -- xt -1|1 )
+// ( a1 a3 -- xt -1|1 )
     .word swap, drop, dup, cfa, swap, ffa
     .word dolit, F_IMMEDIATE, andf, zbranch, 2f - . 
     .word one, ends
 2:  .word oneneg
-# ( a1 0 )
+// ( a1 0 )
 3:  .word ends
 
-#---------------------------------------------------------------------- 
-# ok  get a string from tib, and search it at dictionary 
-#
+//---------------------------------------------------------------------- 
+// ok  get a string from tib, and search it at dictionary 
+//
 header "FIND", "find",
-    .word parse-name, find-name, ends
+    .word parsename, findname, ends
 
-#---------------------------------------------------------------------- 
-# ok  create a dictionary entry with next word in 'tib', 
-# update latest to safe restore DP
-#
+//---------------------------------------------------------------------- 
+// ok  get a string from tib, and search it at dictionary 
+//
+header "ACCEPT", "accept",
+    .word dolit, LENGTH, zzzz, ends 
+
+//---------------------------------------------------------------------- 
+// ok  create a dictionary entry with next word in 'tib', 
+// update latest to safe restore DP
+//
 header "CREATE", "create",
-    # leave a address to link
+    // leave a address to link
     .word here
-    # receive a string
-    .word dolit, LENGTH, accept
-    # place link
+    // receive a string
+    .word accept
+    // place link
     .word latest, at, comma
-    # place flags
+    // place flags
     .word nil, ccomma
-    # place length 
+    // place length 
     .word dup, ccomma
-    # place name 
+    // place name 
     .word dup, tor, here, swap, cmove, rto, allot 
-    # update DP aligned
+    // update DP aligned
     .word here, aligned, dp, to
-    # update latest
+    // update latest
     .word latest, to
     .word ends 
  
-#---------------------------------------------------------------------- 
-# ok  ends a dictionary entry
-# hook for debug
+//---------------------------------------------------------------------- 
+// ok  ends a dictionary entry
+// hook for debug
 header  "FINITE", "finite", 
     .word ends 
 
-#---------------------------------------------------------------------- 
-# ok  ZZZZ
+//---------------------------------------------------------------------- 
+// ok  ZZZZ
 header  "INTERPRET", "interpret", 
     .word evals, ends
 
-#---------------------------------------------------------------------- 
-# ok ZZZZ  
+//---------------------------------------------------------------------- 
+// ok ZZZZ  
 header  "ABORT", "abort", 
     .word dolit, XRSP, rsto
     .word dolit, XPSP, psto
     .word dolit, XTIB, dolit, TIBF, to
     .word ends
         
-#---------------------------------------------------------------------- 
-# ok  tick, returns cfa of next word in input buffer in Top
-# not safe for not found word
+//---------------------------------------------------------------------- 
+// ok  tick, returns cfa of next word in input buffer in Top
+// not safe for not found word
 header  "'", "tick", 
     .word find, drop, ends 
 
-#---------------------------------------------------------------------- 
-# ok  as tick, but forces execute next word
+//---------------------------------------------------------------------- 
+// ok  as tick, but forces execute next word
 header  "'[", "tickexec", F_IMMEDIATE 
-    .word tick, execute, ends
+    .word tick, exec, ends
 
-#---------------------------------------------------------------------- 
-# ok  as tick, but forces compile next word 
+//---------------------------------------------------------------------- 
+// ok  as tick, but forces compile next word 
 header  "']", "tickcomp", F_IMMEDIATE 
     .word tick, comma, ends
 
-#---------------------------------------------------------------------- 
-# ok  tick, returns cfa of next word in input buffer in Top
+//---------------------------------------------------------------------- 
+// ok  tick, returns cfa of next word in input buffer in Top
 header  "POSTPONE", "postpone", F_IMMEDIATE 
     .word tickcomp, ends
 
-#---------------------------------------------------------------------- 
-# ok  compile
-# also a hook for debug
+//---------------------------------------------------------------------- 
+// ok  compile
+// also a hook for debug
 header  "docompile", "docompile", 
     .word comma, ends 
 
-#---------------------------------------------------------------------- 
-# ok  execute
-# also a hook for debug
+//---------------------------------------------------------------------- 
+// ok  execute
+// also a hook for debug
 header  "doexecute", "doexecute", 
-    .word execute, ends 
+    .word exec, ends 
 
-#---------------------------------------------------------------------- 
-# ok  
+//---------------------------------------------------------------------- 
+// ok  
 header  "iscompile", "iscompile",
-# ( xt f ) immediate is 1, else -1
+// ( xt f ) immediate is 1, else -1
     .word zgth, zbranch, 2f - . 
     .word doexecute, ends
 2:  .word docompile, ends
 
-#---------------------------------------------------------------------- 
-# ok  
+//---------------------------------------------------------------------- 
+// ok  
 header  "isword", "isword",
-# ( xt f  )
+// ( xt f  )
     .word state, at 
-# ( xt f s )
+// ( xt f s )
     .word zbranch, 2f - . 
     .word iscompile, ends
 2:  .word doexecute, ends 
 
-#---------------------------------------------------------------------- 
-# ok  
+//---------------------------------------------------------------------- 
+// ok  
 header  "isnumber", "isnumber", 
     .word zzzz, ends
 
-#---------------------------------------------------------------------- 
-# ok  evals
+//---------------------------------------------------------------------- 
+// ok  evals
 header  "EVALS", "evals", 
     .word find, zdup, zbranch, 2f - . 
     .word isword, ends
 2:  .word isnumber, ends 
 
-#---------------------------------------------------------------------- 
-# ok  to execute
+//---------------------------------------------------------------------- 
+// ok  to execute
 header  "[", "lbrac", 
-    .word docon, 0, state, to, ends 
+    .word dolit, 0, state, to, ends 
  
-#---------------------------------------------------------------------- 
-# ok  to compile
+//---------------------------------------------------------------------- 
+// ok  to compile
 header  "]", "rbrac", 
-    .word docon, 1, state, to, ends 
-#---------------------------------------------------------------------- 
-# ok  comp, 
+    .word dolit, 1, state, to, ends 
+//---------------------------------------------------------------------- 
+// ok  comp, 
 header  "COMPILE,", "comp", 
     .word rto, dup, at, comma, cell, plus, tor, ends 
 
-#----------------------------------------------------------------------
-# ok  exec, a Top reference is pushed into return stack
+//----------------------------------------------------------------------
+// ok  exec, a Top reference is pushed into return stack
 header "EXECUTE", "exec", 
     .word tor, ends
     
-#---------------------------------------------------------------------- 
-# ok  ( w -- )
+//---------------------------------------------------------------------- 
+// ok  ( w -- )
 header  "CONSTANT", "constant", 
     .word create, comp, dolit, comma, finite, ends 
  
-#---------------------------------------------------------------------- 
-# ok  ( -- )
+//---------------------------------------------------------------------- 
+// ok  ( -- )
 header  "VARIABLE", "variable", 
     .word create, comp, dolit, 0, comma, finite, ends 
 
-#---------------------------------------------------------------------- 
-# ok  
+//---------------------------------------------------------------------- 
+// ok  
 header  "SMUDGED", "smudged", 
     .word latest, at, cell, plus, dolit, F_HIDDEN, toggle, ends
 
-#---------------------------------------------------------------------- 
-# ok  
+//---------------------------------------------------------------------- 
+// ok  
 header  "IMMEDIATE", "immediate", 
     .word latest, at, cell, plus, dolit, F_IMMEDIATE, toggle, ends
 
-#---------------------------------------------------------------------- 
-# ok  
+//---------------------------------------------------------------------- 
+// ok  
 header  "COMPILE_ONLY", "compileonly", 
     .word latest, at, cell, plus, dolit, F_COMPILE_ONLY, toggle, ends
 
-#---------------------------------------------------------------------- 
-# ok  
+//---------------------------------------------------------------------- 
+// ok  
 header  ":", "colon", 
     .word create, smudged, rbrac, ends 
  
-#---------------------------------------------------------------------- 
-# ok  
+//---------------------------------------------------------------------- 
+// ok  
 header  ";", "semmi", 
     .word finite, comp, ends, smudged, lbrac, ends 
   
-#---------------------------------------------------------------------- 
-# ok  ZZZZ
+//---------------------------------------------------------------------- 
+// ok  ZZZZ
 header  "COLD", "cold", 
     .word ends
 
-#---------------------------------------------------------------------- 
-# ok  ZZZZ
+//---------------------------------------------------------------------- 
+// ok  ZZZZ
 header  "WARM", "warm", 
     .word ends
 
-#---------------------------------------------------------------------- 
-# ok  ZZZZ
+//---------------------------------------------------------------------- 
+// ok  ZZZZ
 header  "BYE", "bye", 
     .word ends
 
-#---------------------------------------------------------------------- 
-# ok  ZZZZ
+//---------------------------------------------------------------------- 
+// ok  ZZZZ
 header  "QUIT", "quit", 
     .word ends
 
@@ -318,95 +327,95 @@ header  "QUIT", "quit",
     forth control words
 **********************************************************************/
 
-#---------------------------------------------------------------------- 
-# ok back 
-header  "BACK", "back", #f_immediate 
+//---------------------------------------------------------------------- 
+// ok back 
+header  "BACK", "back", //f_immediate 
     .word here, swap, minus, comma, ends 
  
-#---------------------------------------------------------------------- 
-# ok mark 
-header  "MARK", "mark", #f_immediate 
+//---------------------------------------------------------------------- 
+// ok mark 
+header  "MARK", "mark", //f_immediate 
     .word here, 0, comma, ends 
  
-#---------------------------------------------------------------------- 
-# ok begin 
-header  "BEGIN", "begin", #f_immediate 
+//---------------------------------------------------------------------- 
+// ok begin 
+header  "BEGIN", "begin", //f_immediate 
     .word here, ends 
  
-#---------------------------------------------------------------------- 
-# ok again resolves a backward branch 
-header  "AGAIN", "again", #f_immediate 
+//---------------------------------------------------------------------- 
+// ok again resolves a backward branch 
+header  "AGAIN", "again", //f_immediate 
     .word comp, branch, back, ends 
  
-#---------------------------------------------------------------------- 
-# ok until 
-header  "UNTIL", "until", #f_immediate 
+//---------------------------------------------------------------------- 
+// ok until 
+header  "UNTIL", "until", //f_immediate 
     .word comp, zbranch, back, ends 
  
-#---------------------------------------------------------------------- 
-# ok unless 
-header  "UNLESS", "unless", #f_immediate 
+//---------------------------------------------------------------------- 
+// ok unless 
+header  "UNLESS", "unless", //f_immediate 
     .word invert, until, ends 
  
-#---------------------------------------------------------------------- 
-# 
-# ok if 
-header  "IF", "if", #f_immediate 
+//---------------------------------------------------------------------- 
+// 
+// ok if 
+header  "IF", "if", //f_immediate 
     .word comp, zbranch, mark, ends 
  
-#---------------------------------------------------------------------- 
-# 
-# ok endif resolves a forward branch 
-header  "ENDIF", "endif", #f_immediate 
+//---------------------------------------------------------------------- 
+// 
+// ok endif resolves a forward branch 
+header  "ENDIF", "endif", //f_immediate 
     .word dup, here, minus, swap, to, ends 
  
-#---------------------------------------------------------------------- 
-# 
-# ok then 
-header  "THEN", "then", #f_immediate 
+//---------------------------------------------------------------------- 
+// 
+// ok then 
+header  "THEN", "then", //f_immediate 
     .word endif, ends 
  
-#---------------------------------------------------------------------- 
-# 
-# ok else 
-header  "ELSE", "else", #f_immediate 
+//---------------------------------------------------------------------- 
+// 
+// ok else 
+header  "ELSE", "else", //f_immediate 
     .word comp, branch, mark, swap, endif, ends 
  
-#---------------------------------------------------------------------- 
-# 
-# ok while 
-header  "WHILE", "while", #f_immediate 
+//---------------------------------------------------------------------- 
+// 
+// ok while 
+header  "WHILE", "while", //f_immediate 
     .word if, ends 
  
-#---------------------------------------------------------------------- 
-# 
-# ok repeat 
-header  "REPEAT", "repeat", #f_immediate 
+//---------------------------------------------------------------------- 
+// 
+// ok repeat 
+header  "REPEAT", "repeat", //f_immediate 
     .word tor, tor, again, rat, rat, minus, endif, ends 
  
-#---------------------------------------------------------------------- 
+//---------------------------------------------------------------------- 
 
-#ok hex
+// ok hex
 header	"HEX", "hex",
-	.word docon, 16, base, to, ends
+	.word dolit, 16, base, to, ends
 
-#ok decimal
+// ok decimal
 header	"DECIMAL", "dec",
-	.word docon, 10, base, to, ends
+	.word dolit, 10, base, to, ends
 
-#ok hex
+// ok hex
 header	"OCTAL", "oct",
-	.word docon, 8, base, to, ends
+	.word dolit, 8, base, to, ends
 
-#---------------------------------------------------------------------- 
+//---------------------------------------------------------------------- 
 
-#ok <builds
+// ok <builds
 header	"<BUILDS", "builds"
-	.word docon, 0, ends
+	.word dolit, 0, ends
 
-#ok does> 
+// ok does> 
 header	"DOES>", "does"
-	.word docon, 0, ends
+	.word dolit, 0, ends
 
 /*
         head    210,constant,240,con,docol              ; ***** constant
@@ -429,8 +438,9 @@ dodoe:  mov     ip,-(rp)
         mov     (w)+,ip
         mov     w,-(s)
         next
+*/
 
-
+/*
 ...                                                 ( c-addr )
 FIND ?DUP IF	                                    ( xt +-1 )
    STATE @ IF	                                    ( xt +-1 )
@@ -442,6 +452,7 @@ ELSE                                                ( c-addr )
    ( whatever you do for an undefined word )
 THEN
 ... 
+
 */
 
 

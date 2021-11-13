@@ -1,7 +1,7 @@
 
 /*
  *  DISCLAIMER
- */
+ *
  *  Copyright © 2021, Alvaro Gomes Sobral Barcellos,
  *
  *  Permission is hereby granted, free of charge, to any person obtaining
@@ -28,7 +28,7 @@
 /*
 A Forth with extended indirect thread code
 
-# RISCV considerations 
+// RISCV considerations 
 
 Using R32I, 32 bits cell, 
 
@@ -68,7 +68,7 @@ The following example shows how to load an absolute address:
 #define  BUFFER 80
 #define  LENGTH 16
 
-#define  FLASHPAGE 1024    // page of flash memory for flush in GD32VF103CBT6
+#define  FLASHPAGE 1024    # page of flash memory for flush in GD32VF103CBT6
 
 #define F_IMMEDIATE 0x80
 #define F_COMPILE_ONLY 0x40
@@ -84,39 +84,37 @@ The following example shows how to load an absolute address:
 F_TOMASK = 0xF0
 F_UNMASK = 0x0F
 
-#---------------------------------------------------------------------
-# Flow Control
-# assumes that all line edit is done at remote!
-# no delete, no moving cursor, just a static line.
-# works as a screen or block, just receives a line till a CR or CR LF
-# uses BS, ESC, CAN, XON, XOFF, for control
-#
-#define XON_      0x11    #; ascii DC1 ^Q
-#define XOFF_     0x13    #; ascii DC3 ^S
+//---------------------------------------------------------------------
+// Flow Control
+// assumes that all line edit is done at remote!
+// no delete, no moving cursor, just a static line.
+// works as a screen or block, just receives a line till a CR or CR LF
+// uses BS, ESC, CAN, XON, XOFF, for control
+//
+#define XON_      0x11    //#; ascii DC1 ^Q
+#define XOFF_     0x13    //#; ascii DC3 ^S
 
-#define CR_       0x0d    #; ascci carriage return ^M
-#define LF_       0x0a    #; ascii line feed ^J
+#define CR_       0x0d    //#; ascci carriage return ^M
+#define LF_       0x0a    //#; ascii line feed ^J
 
-#define CAN_      0x18    #; ascii cancel ^C
-#define ESC_      0x1B    #; ascii escape ^[
+#define CAN_      0x18    //#; ascii cancel ^C
+#define ESC_      0x1B    //#; ascii escape ^[
 
-#define BS_       0x08    #; ascii backspace ^H
-#define TAB_      0x09    #; ascii horizontal ^I
-#define BL_       0x20    #; ascii space
+#define BS_       0x08    //#; ascii backspace ^H
+#define TAB_      0x09    //#; ascii horizontal ^I
+#define BL_       0x20    //#; ascii space
 
-#define NUL_      0x00    #; ascii NUL ^@
-
+#define NUL_      0x00    //#; ascii NUL ^@
  
  
- #define  Psp s4    //   parameter stack
- #define  Rsp s5    //   return stack 
- #define  Ipt s6    //   reference pointer
- #define  Top s7    //   Top on parameter stack
- #define  Nos s8    //   Next on parameter stack
- #define  Wrk s9    //   hold for
-
- #define  T0 s10    //   temporary
- #define  T1 s11    //   temporary
+#define  Psp s4    //#   parameter stack
+#define  Rsp s5    //#   return stack 
+#define  Ipt s6    //#   reference pointer
+#define  Top s7    //#   Top on parameter stack
+#define  Nos s8    //#   Next on parameter stack
+#define  Wrk s9    //#   hold for
+#define  T0 s10    //#   temporary
+#define  T1 s11    //#   temporary
 
 //----------------------------------------------------------------------
 // stack macros
@@ -373,7 +371,7 @@ header "0>", "zgth"
 
 //----------------------------------------------------------------------
 // ( w -- FALSE | TRUE)
-header "0<", "zgth"    
+header "0<", "zlth"    
     .word 0x0
     blt Top, zero, _isfalse
     bge Top, zero, _istrue 
@@ -1010,7 +1008,7 @@ header "cskip", "cskip"
     beq zero, zero, 1b
 2:  
     jal zero, _link
-3   
+3:   
     add Top, Wrk, zero
     jal zero, _link
 
@@ -1031,7 +1029,7 @@ header "cfind", "cfind"
     beq zero, zero, 1b
 2:  
     jal zero, _link
-3   
+3:   
     add Top, zero, zero
     jal zero, _link
 
@@ -1080,10 +1078,10 @@ header "sfind", "sfind"
     // copy cstr address
     scopy Psp, Nos, 0
 2:  
-    lw Wrk, 0 (Top)     # point to lfa
-    beq Wrk, zero, 8f   # end of vocabulary
+    lw Wrk, 0 (Top)     // point to lfa
+    beq Wrk, zero, 8f   // end of vocabulary
 
-    lw Top, 0 (Wrk)           # update to link
+    lw Top, 0 (Wrk)           // update to link
     // check size and first char
     lh T0, (CELL+1) (Wrk)   
     lh T1, 0 (Nos)
@@ -1120,22 +1118,22 @@ header "sfind", "sfind"
     jal zero, _link 
 //----------------------------------------------------------------------
 
-#---------------------------------------------------------------------- 
-# ok  ( lfa -- flag )
+//---------------------------------------------------------------------- 
+// ok  ( lfa -- flag )
 header  "FFA", "ffa", 
     .word 0x0
     lb Top, (CELL) (Top)
     jal zero, _link
     
-#---------------------------------------------------------------------- 
-# ok  ( lfa -- nfa )
+//---------------------------------------------------------------------- 
+// ok  ( lfa -- nfa )
 header  "NFA", "nfa", 
     .word 0x0
     lb Top, (CELL+1) (Top)
     jal zero, _link
     
-#---------------------------------------------------------------------- 
-# ok  ( lfa -- cfa )
+//---------------------------------------------------------------------- 
+// ok  ( lfa -- cfa )
 header  "CFA", "cfa", 
     .word 0x0
     // for sake all code must be CELL aligned, must use .p2align 2 
@@ -1155,7 +1153,7 @@ header  "CFA", "cfa",
 header "_EOW_", "_eoW_"
     .word 0x0
 
-#include "words.S":
+#include "words.S"
 
 header "_EOF_", "_eof_"
     .word 0x0
