@@ -1,7 +1,7 @@
 
 /*
  *  DISCLAIMER
- *
+ */
  *  Copyright © 2021, Alvaro Gomes Sobral Barcellos,
  *
  *  Permission is hereby granted, free of charge, to any person obtaining
@@ -373,7 +373,7 @@ header "0>", "zgth"
 
 //----------------------------------------------------------------------
 // ( w -- FALSE | TRUE)
-header "0<", "zlth"    
+header "0<", "zgth"    
     .word 0x0
     blt Top, zero, _isfalse
     bge Top, zero, _istrue 
@@ -785,15 +785,6 @@ _branch:
     add Ipt, Ipt, Wrk
     jal zero, _link
 
-//----------------------------------------------------------------------
-// trick, a Top reference is pushed into return stack
-header "EXECUTE", "execute", 
-    .word 0x0
-    spush Rsp, Top 
-//  beq zero, zero, _drop    
-    spull Psp, Top
-    jal zero, _link
-    
 //  ZZZZ >< ABS 
 
 //----------------------------------------------------------------------
@@ -1019,7 +1010,7 @@ header "cskip", "cskip"
     beq zero, zero, 1b
 2:  
     jal zero, _link
-3:   
+3   
     add Top, Wrk, zero
     jal zero, _link
 
@@ -1040,7 +1031,7 @@ header "cfind", "cfind"
     beq zero, zero, 1b
 2:  
     jal zero, _link
-3:   
+3   
     add Top, zero, zero
     jal zero, _link
 
@@ -1164,7 +1155,7 @@ header  "CFA", "cfa",
 header "_EOW_", "_eoW_"
     .word 0x0
 
-#include "words.S"
+#include "words.S":
 
 header "_EOF_", "_eof_"
     .word 0x0
