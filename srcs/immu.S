@@ -101,8 +101,9 @@ F_UNMASK = 0x0F
 #define ESC_      0x1B    //#; ascii escape ^[
 
 #define BS_       0x08    //#; ascii backspace ^H
-#define TAB_      0x09    //#; ascii horizontal ^I
+#define TB_      0x09     //#; ascii horizontal ^I
 #define BL_       0x20    //#; ascii space
+#define TL_       0x7E    //#; ascii tilde
 
 #define NUL_      0x00    //#; ascii NUL ^@
  
@@ -226,7 +227,7 @@ TOIN:
 BASE:
 .word 0x0
 
-// state of interpreter, 0 = interpret, 1 = compile, 2 = postpone
+// state of interpreter, 0 = interpret, 1 = compile
 STATE:
 .word 0x0
 
@@ -252,6 +253,14 @@ REST:
 
 // page of flash in sram 
 PAGE:
+.word 0x0
+
+// context, where to search a word, reference of vocabulary
+CONTXT:
+.word 0x0
+
+// current, where to create a word, reference of vocabulary
+CURTXT:
 .word 0x0
 
 /***********************************************************************
@@ -282,7 +291,7 @@ _forth_:
 
 //----------------------------------------------------------------------
 //
-header "EXIT", "ends"
+header "ENDS", "ends"
 _inner: 
     .word 0x0
 
@@ -900,6 +909,77 @@ header "u/mod", "udualdiv",
 #endif
 
 //----------------------------------------------------------------------
+//   ( a1 a2 u --- )
+// move cells (32bit) from a1 source++ to a2 destination++, decrease count--
+// returns 0 if equal (no differ)
+//
+header "MOVE", "move"
+    .word 0x0
+    spull Psp, Nos
+    spull Psp, Wrk
+    spush Rsp, Psp
+1:
+    beq Top, zero, 2f
+    lw Psp, 0(Wrk)
+    sw Psp, 0(Nos)
+    addi Wrk, Wrk, CELL
+    addi Nos, Nos, CELL
+    addi Top, Top, -1
+    beq zero, zero, 1b
+2:
+    spull Rsp, Psp
+    jal zero, _drop
+
+//----------------------------------------------------------------------
+//   ( a1 a2 u --- )
+// move bytes from a1 source++ to a2 destination++, decrease count--
+// returns 0 if equal (no differ)
+//
+header "CMOVE", "cmove"
+    .word 0x0
+    spull Psp, Nos
+    spull Psp, Wrk
+    spush Rsp, Psp
+1:
+    beq Top, zero, 2f
+    lb Psp, 0(Wrk)
+    sb Psp, 0(Nos)
+    addi Wrk, Wrk, 1
+    addi Nos, Nos, 1
+    addi Top, Top, -1
+    beq zero, zero, 1b
+2:
+    spull Rsp, Psp
+    jal zero, _drop
+
+//----------------------------------------------------------------------
+//   ( a1 a2 u --- )
+// move bytes from source-- to destination--, decrease count--
+// offsets calculated inside
+// returns 0 if equal (no differ)
+//
+header "BMOVE", "bmove"
+    .word 0x0
+    spull Psp, Nos
+    spull Psp, Wrk
+    spush Rsp, Psp
+
+// do offsets    
+    add Nos, Nos, Top 
+    add Wrk, Wrk, Top 
+1:
+    beq Top, zero, 2f
+    lb Psp, 0(Wrk)
+    sb Psp, 0(Nos)
+    addi Wrk, Wrk, -1
+    addi Nos, Nos, -1
+    addi Top, Top, -1
+    beq zero, zero, 1b
+2:
+    spull Rsp, Psp
+    jal zero, _drop
+
+//----------------------------------------------------------------------
 //   ( a1 a2 u --- FALSE | TRUE )
 // compare bytes from source++ to destination++, decrease count--
 // returns 0 if equal (no differ)
@@ -917,12 +997,10 @@ header "CSAME", "csame"
     lb T1, 0 (Nos)
     or T0, T1, T0
     bne T0, zero, 2f
-
     addi Wrk, Wrk, 1
     addi Nos, Nos, 1
-
     addi Top, Top, -1
-    jal zero, 1b
+    beq zero, zero, 1b
 2:
     // results
     add Top, T0, zero
@@ -947,51 +1025,6 @@ header "CFILL", "cfill"
     jal zero, drop
    
 //----------------------------------------------------------------------
-//   ( a1 a2 u --- )
-// move bytes from a1 source++ to a2 destination++, decrease count--
-// returns 0 if equal (no differ)
-//
-header "CMOVE", "cmove"
-    .word 0x0
-    spull Psp, Nos
-    spull Psp, Wrk
-1:
-    beq Top, zero, 2f
-    lb T0, 0(Wrk)
-    sb T0, 0(Nos)
-    addi Wrk, Wrk, 1
-    addi Nos, Nos, 1
-    addi Top, Top, -1
-    jal zero, 1b
-2:
-    jal zero, _drop
-
-//----------------------------------------------------------------------
-//   ( a1 a2 u --- )
-// move bytes from source-- to destination--, decrease count--
-// offsets calculated inside
-// returns 0 if equal (no differ)
-//
-header "BMOVE", "bmove"
-    .word 0x0
-    spull Psp, Nos
-    spull Psp, Wrk
-
-// do offsets    
-    add Nos, Nos, Top 
-    add Wrk, Wrk, Top 
-1:
-    beq Top, zero, 2f
-    lb T0, 0(Wrk)
-    sb T0, 0(Nos)
-    addi Wrk, Wrk, -1
-    addi Nos, Nos, -1
-    addi Top, Top, -1
-    jal zero, 1b
-2:
-    jal zero, _drop
-
-//----------------------------------------------------------------------
 //   ( c a1  --- a2 )
 // point next non c
 // returns 0 at end of buffer
@@ -1000,6 +1033,7 @@ header "cskip", "cskip"
     .word 0x0
     // get the separator char
     spull Psp, Nos
+
 1:  // while (top) == c
     lb Wrk, 0 (Top)
     beq Wrk, zero, 3f
@@ -1021,6 +1055,7 @@ header "cfind", "cfind"
     .word 0x0
     // get the separator char
     spull Psp, Nos
+
 1:  // while (top) == c
     lb Wrk, 0 (Top)
     beq Wrk, zero, 3f
@@ -1048,20 +1083,25 @@ header "sscan", "sscan"
     bne Wrk, Nos, 2f
     addi Top, Top, 1
     beq zero, zero, 1b
+
 2:  // push start address
     spush Psp, Top
+
 3:  // wile (top) != c
     lb Wrk, 0 (Top)
     beq Wrk, zero, 5f
     beq Wrk, Nos, 4f
     addi Top, Top, 1
     beq zero, zero, 3b
+
 4:  // return lenght in Top
     scopy Psp, Wrk, 0
     sub Top, Top, Wrk
     jal zero, _link
+
 5:  // pull saved address
     spull Psp, Wrk
+
 6:  // NIL (0x0) is end of buffer 
     add Top, zero, zero
     jal zero, _link

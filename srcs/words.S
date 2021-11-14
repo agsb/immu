@@ -48,7 +48,22 @@ header "DP", "dp"
 // ok UP
 header "UP", "up"
     .word dolit, FRAMF, ends
-    
+
+//---------------------------------------------------------------------- 
+// ok CONTEXT
+header "CONTEXT", "context"
+    .word dolit, CONTXT, ends
+
+//---------------------------------------------------------------------- 
+// ok CURRENT
+header "CURRENT", "current"
+    .word dolit, CURTXT, ends
+            
+//---------------------------------------------------------------------- 
+// ok  DEFINITIONS
+header  "DEFINITIONS", "definitions",
+    .word context, at, current, to, ends
+
 //---------------------------------------------------------------------- 
 // ok  must continue later
 header  "ALLOT", "allot",
@@ -82,6 +97,22 @@ header  "FLAGGED", "flagged",
 2:  .word FALSE, ends
 
 //---------------------------------------------------------------------- 
+// ok  
+header  "CODE", "code",
+    .word zzzz, ends
+
+//---------------------------------------------------------------------- 
+// ok  
+header  "END-CODE", "endcode",
+    .word zzzz, ends
+
+//---------------------------------------------------------------------- 
+// ok  
+header  ";CODE", "semicode",
+    .word zzzz, ends
+
+
+//---------------------------------------------------------------------- 
 // ok  receive a string to terminal input buffer, always. ( n -- a u )
 header  "REFILL", "refill", 
 
@@ -97,12 +128,38 @@ header  "REFILL", "refill",
 */
 
 //----------------------------------------------------------------------
+// ok expect, as forth 79 std ( a n -- )
 header "EXPECT", "expect"
+    // append a space
+    .word over, dolit, BL_, sawp, to
+1:
+    .word one, minus, zbranch, 10f - .
+2:
+    .word key, 
+    .word dup, dolit, CR_, minus, zbranch, 10f - .
+    .word dup, dolit, LF_, minus, zbranch, 10f - .
+    .word dup, dolit, BS_, minus, zbranch, 4f -.
+    .word dup, dolit, ESC_, minus, zbranch, 6f - .
+    .word dup, dolit, TB_, minus, zbranch, 8f - .
+    .word dup, dolit, BL_, gth, zbranch, 2f - .
+    .word dup, dolit, TL_, lth, zbranch, 2f - .
+8:  // do tab 
+    .word drop, dolit, BL_,
+    // do valid
+    .word over, to, swap, one, plus, swap
+    .word branch, 1b - .
+4:  // do backspace
+    .word drop, one, minus, branch, 2b - .
+6:  // do escape 
+    .word drop, branch, 2b - .  
+10:  
+    // append a null    
+    .word swap, dup, dolit, NIL_, to
     .word ends
-
+    
 //----------------------------------------------------------------------
 header "QUERY", "query"
-    .word zzzz, at, dolit, BUFFER, expect, 0, toin, to, ends
+    .word dolit, TIBX, dolit, BUFFER, expect, 0, toin, to, ends
 
 //---------------------------------------------------------------------- 
 // ok  receive a string from terminal input buffer, always. ( n -- a u )
@@ -203,7 +260,7 @@ header  "']", "tickcomp", F_IMMEDIATE
     .word tick, comma, ends
 
 //---------------------------------------------------------------------- 
-// ok  tick, returns cfa of next word in input buffer in Top
+// ok  tick, returns cfa of next word in input buffer in Top, zzzz still
 header  "POSTPONE", "postpone", F_IMMEDIATE 
     .word tickcomp, ends
 
@@ -258,6 +315,7 @@ header  "[", "lbrac",
 // ok  to compile
 header  "]", "rbrac", 
     .word dolit, 1, state, to, ends 
+
 //---------------------------------------------------------------------- 
 // ok  comp, 
 header  "COMPILE,", "comp", 
@@ -267,6 +325,11 @@ header  "COMPILE,", "comp",
 // ok  exec, a Top reference is pushed into return stack
 header "EXECUTE", "exec", 
     .word tor, ends
+
+//----------------------------------------------------------------------
+// ok  dodoes (?), interpreter continues at contents of cell
+header "DODOES", "dodoes", 
+    .word rto, at, tor, ends
     
 //---------------------------------------------------------------------- 
 // ok  ( w -- )
@@ -319,9 +382,37 @@ header  "BYE", "bye",
     .word ends
 
 //---------------------------------------------------------------------- 
-// ok  ZZZZ
+// ok  
 header  "QUIT", "quit", 
-    .word ends
+    .word dolit, RSPX, rpto, lbrac, ends
+
+//---------------------------------------------------------------------- 
+// ok  ( -- )
+header  "SPACE", "space", 
+    .word dolit, BL_, emit, ends
+
+//---------------------------------------------------------------------- 
+// ok  ( n -- )
+header  "SPACES", "spaces", 
+1:  .word dup zbranch, 2f -.
+    .word space, one, minus,
+    .word branch, 1f - .
+2:  .word drop, ends
+
+//---------------------------------------------------------------------- 
+// ok  (a n -- )
+header  "TYPE", "type", 
+1:  .word dup zbranch, 2f -.
+    .word swap, dup, at, emit, 
+    .word one, plus, swap
+    .word one, minus,
+    .word branch, 1f - .
+2:  .word drop, ends
+
+//---------------------------------------------------------------------- 
+// ok  (a n -- )
+header  "VOCABULARY", "vocabulary",
+    .word zzzz, ends
 
 /**********************************************************************
     forth control words
@@ -455,5 +546,29 @@ THEN
 
 */
 
+//---------------------------------------------------------------------- 
+// ok PICK (A -- N)
+header	"PICK", "pick"
+	.word cells, psat, plus, at, ends
+
+//---------------------------------------------------------------------- 
+// ok 2DROP (A B -- )
+header	"2DROP", "twodrop"
+	.word drop, drop, ends
+
+//---------------------------------------------------------------------- 
+// ok 2DUP (A B -- A B A B)
+header	"2DUP", "twodup"
+	.word over, over, ends
+
+//---------------------------------------------------------------------- 
+// ok 2SWAP (A B C D -- C D A B)
+header	"2SWAP", "twoswap"
+	.word rot, tor, rot, rto, ends
+
+//---------------------------------------------------------------------- 
+// ok 2OVER (A B C D -- A B C D A B)
+header	"2OVER", "twoover"
+	.word zzzz, ends
 
 
