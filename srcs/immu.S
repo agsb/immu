@@ -101,7 +101,7 @@ F_UNMASK = 0x0F
 #define ESC_      0x1B    //#; ascii escape ^[
 
 #define BS_       0x08    //#; ascii backspace ^H
-#define TB_      0x09     //#; ascii horizontal ^I
+#define TB_       0x09    //#; ascii horizontal ^I
 #define BL_       0x20    //#; ascii space
 #define TL_       0x7E    //#; ascii tilde
 

@@ -96,6 +96,9 @@ header  "FLAGGED", "flagged",
     .word TRUE, ends
 2:  .word FALSE, ends
 
+/***********************************************************************
+    still no assembler
+***********************************************************************/
 //---------------------------------------------------------------------- 
 // ok  
 header  "CODE", "code",
@@ -131,11 +134,14 @@ header  "REFILL", "refill",
 // ok expect, as forth 79 std ( a n -- )
 header "EXPECT", "expect"
     // append a space
-    .word over, dolit, BL_, sawp, to
+    // .word over, dolit, BL_, swap, to
 1:
-    .word one, minus, zbranch, 10f - .
-2:
-    .word key, 
+    
+    .word dup, zbranch, 10f - .
+    .word swap
+2:  // getch
+    .word key
+    // verify  
     .word dup, dolit, CR_, minus, zbranch, 10f - .
     .word dup, dolit, LF_, minus, zbranch, 10f - .
     .word dup, dolit, BS_, minus, zbranch, 4f -.
@@ -146,14 +152,16 @@ header "EXPECT", "expect"
 8:  // do tab 
     .word drop, dolit, BL_,
     // do valid
-    .word over, to, swap, one, plus, swap
-    .word branch, 1b - .
+    .word over, to 
+    .word one, plus
+    .word swap, one, minus, branch, 1b - .
 4:  // do backspace
-    .word drop, one, minus, branch, 2b - .
+    .word drop
+    .word one, minus
+    .word swap, one, plus, branch, 1b - .
 6:  // do escape 
-    .word drop, branch, 2b - .  
-10:  
-    // append a null    
+    .word drop, branch, 2b - .
+10: // append a null    
     .word swap, dup, dolit, NIL_, to
     .word ends
     
