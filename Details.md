@@ -226,7 +226,7 @@ jump (jal zero,) _link, ends all primitive words, also is a "hook" for debug bef
 
 */
 
-header "EXIT","EXIT"
+header "ends","ends"
     .word 0x0
 _unnest: // pull
     lw s6, 0(s5)
