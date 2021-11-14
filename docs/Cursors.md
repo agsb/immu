@@ -29,11 +29,13 @@ Some of these operations are well know, examples are:
     
     v next (I) -> I,  v nest I -> (R), v unnest (R) -> I, 
 
-    v s@ S -> (S), v r@ R -> (S), v s! (S) -> S, v r! (S) -> R, v >r (S) -> (R), v r> (R) -> (S)
+    v s@ S -> (S), v r@ R -> (S), v s! (S) -> S, v r! (S) -> R, 
+    
+    v >r (S) -> (R), v r> (R) -> (S)
 
     v dovar I -> (S), v dodoes I -> (D), v dolit (I) -> (D)
 
-    v  store ! (S) -> (I), v fetch @ (I) -> (S)
+    v store ! (S) -> (I), v fetch @ (I) -> (S)
 
     v here D -> (S), v allot (S) -> D, v comma (S) -> (D)
 
