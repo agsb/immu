@@ -132,37 +132,39 @@ header  "REFILL", "refill",
 
 //----------------------------------------------------------------------
 // ok expect, as forth 79 std ( a n -- )
+// always place a nil at end, no edit capable
 header "EXPECT", "expect"
     // append a space
     // .word over, dolit, BL_, swap, to
-1:
-    
-    .word dup, zbranch, 10f - .
+1:  // last in 
+    .word dup, zbranch, 12f - .
     .word swap
 2:  // getch
     .word key
     // verify  
     .word dup, dolit, CR_, minus, zbranch, 10f - .
     .word dup, dolit, LF_, minus, zbranch, 10f - .
-    .word dup, dolit, BS_, minus, zbranch, 4f -.
-    .word dup, dolit, ESC_, minus, zbranch, 6f - .
-    .word dup, dolit, TB_, minus, zbranch, 8f - .
-    .word dup, dolit, BL_, gth, zbranch, 2f - .
-    .word dup, dolit, TL_, lth, zbranch, 2f - .
-8:  // do tab 
-    .word drop, dolit, BL_,
+    .word dup, dolit, BS_, minus, zbranch, 8f -.
+    .word dup, dolit, TB_, minus, zbranch, 6f - .
+    .word dup, dolit, ESC_, minus, zbranch, 2b - .
+    // try BL_
+    .word dup, dolit, BL_, gth, zbranch, 2b - .
+    // try TL_
+    .word dup, dolit, TL_, lth, zbranch, 2b - .
+6:  // do tab 
+    .word drop, dolit, BL_
     // do valid
     .word over, to 
-    .word one, plus
-    .word swap, one, minus, branch, 1b - .
-4:  // do backspace
+    .word one, plus, swap
+    .word one, minus, branch, 1b - .
+8:  // do backspace
     .word drop
-    .word one, minus
-    .word swap, one, plus, branch, 1b - .
-6:  // do escape 
-    .word drop, branch, 2b - .
-10: // append a null    
-    .word swap, dup, dolit, NIL_, to
+    .word one, minus, swap
+    .word one, plus, branch, 1b - .
+10: // cr-lf ( a n c)
+    .word drop
+12: // append a null 
+    .word drop, dolit, NIL_, to
     .word ends
     
 //----------------------------------------------------------------------

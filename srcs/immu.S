@@ -393,6 +393,7 @@ header "=", "equ",
     bne Top, Nos, _isfalse
 
 //----------------------------------------------------------------------
+// (n1 n2 -- n1 > n2)
 header ">", "gth", 
     .word 0x0
     spull Psp, Nos
@@ -400,6 +401,7 @@ header ">", "gth",
     bge Top, Nos, _isfalse
     
 //----------------------------------------------------------------------
+// (n1 n2 -- n1 < n2)
 header "<", "lth", 
     .word 0x0
     spull Psp, Nos
@@ -439,7 +441,7 @@ header "PS@", "psat",
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( u v -- w )
+// ( u v -- u+v )
 header "+", "plus",
     .word 0x0
     spull Psp, Nos
@@ -447,11 +449,11 @@ header "+", "plus",
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( u v -- w )
+// ( u v -- u-v )
 header "-", "minus",
     .word 0x0
     spull Psp, Nos
-    add Top, Top, Nos
+    add Top, Nos, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -469,7 +471,7 @@ header "NEGATE", "negate"
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( u v -- w >> )
+// ( u v -- u>>v )
 header "RSHIFT", "rshift"
     .word 0x0
     spull Psp, Nos
@@ -477,7 +479,7 @@ header "RSHIFT", "rshift"
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( u v -- w <<  )
+// ( u v -- u<<v  )
 header "LSHIFT", "lshift"
     .word 0x0
     spull Psp, Nos
@@ -773,12 +775,10 @@ header "DOVAR", "dovar",
     jal zero, _link
 
 //----------------------------------------------------------------------
-// trick, if Top not zero skip next reference, drop Top
+// trick, branch if Top is zero else skip next reference
 header "?BRANCH", "zbranch", 
     .word 0x0
-    add Wrk, zero, Top 
-    spull Psp, Top 
-    beq Wrk, zero, _branch
+    beq Top, zero, _branch
 //  beq zero, zero, _iic
     addi Ipt, Ipt, CELL
     jal zero, _link
@@ -839,6 +839,11 @@ header "ALIGNED", "aligned",
     jal zero, _link
 
 // -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// ok multiply ( w1 w2 w3 -- ((w1 * w2) / w3) ) zzzz
+header "*/", "timesdivide", 
+    .word 0x0
+    jal zero, _link
 
 #ifdef MULDIV
 
@@ -958,7 +963,7 @@ header "CMOVE", "cmove"
 // offsets calculated inside
 // returns 0 if equal (no differ)
 //
-header "BMOVE", "bmove"
+header "CMOVE>", "cmoveb"
     .word 0x0
     spull Psp, Nos
     spull Psp, Wrk
