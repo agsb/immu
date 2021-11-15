@@ -2,9 +2,9 @@
 
 Forth lives in an array, a sequential set of cells, and have four cursors. The parameter stack index S, the return stack index R, the instruction pointer I, and the dictionary index D. Each cursor points a cell, which values is represented by (S), (R), (I), and (D).
   
-The S and R are sequential access indexes for cells and their values are limited to reserved ranges. By convention S cells are used for keep parameters and R cells are used to keep for return indexes.
+The S and R are sequential access indexes for cells and their values are limited to reserved ranges. By convention S cells are used for keep parameters and R cells are used to keep for return indexes. All stacks are last in, first out.
       
-The I and D are random access indices for the array of cells, usually I points to a cell to be interpreted and the D points to the next free cell in the set.
+The I and D are random access indexes for the array of cells, usually I points to a cell to be interpreted and the D always points to the next free cell at the set.
 
 Also is used a cursor T, for a terminal input buffer whith only two operations (I) -> T, (T) -> (S).
 
