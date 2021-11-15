@@ -28,6 +28,11 @@
 /*
 A Forth with extended indirect thread code
 
+(S: w1 w2 w3 -- w1 w3) parameter stack, before -- after, w3 at top
+(R: w1 w2 w3 -- w1 w3) return stack, before -- after, w3 at top
+
+simetric division, floored to zero
+
 // RISCV considerations 
 
 Using R32I, 32 bits cell, 
@@ -372,7 +377,7 @@ header "0=", "zequ"
     bne Top, zero, _isfalse
 
 //----------------------------------------------------------------------
-// ( w -- FALSE | TRUE)
+// ( w -- FALSE | TRUE) xxxx
 header "0>", "zgth"    
     .word 0x0
     blt Top, zero, _istrue
@@ -579,11 +584,21 @@ header "CELL+", "cellp",
     jal zero, _link
 
 //----------------------------------------------------------------------
-// CELL is 4, sub a CELL size
-header "CELL-", "cellm", 
+// CHAR is one byte, just add zero 
+// hook 
+header "CHARS", "chars", 
     .word 0x0
-    addi Top, Top, -1*CELL
+    add Top, Top, zero
     jal zero, _link
+
+//----------------------------------------------------------------------
+// CHAR is one byte, add a char size
+header "CHAR+", "cellp", 
+    .word 0x0
+    addi Top, Top, BYTE
+    jal zero, _link
+
+
 
 //----------------------------------------------------------------------
 header ">R", "tor", 
@@ -1061,7 +1076,7 @@ header "cfind", "cfind"
     // get the separator char
     spull Psp, Nos
 
-1:  // while (top) == c
+1:  // while (top) != c
     lb Wrk, 0 (Top)
     beq Wrk, zero, 3f
     beq Wrk, Nos, 2f
