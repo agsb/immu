@@ -125,4 +125,8 @@ Note: { variable constant key } also defined. _It's a great learning course_
     SWAP RSHIFT INVERT AND < - */MOD CHARS CALIGNED CALIGN C@ C, C! CELLS ALIGN @ , ! 
 
     48 primitives, 69 words 
+    
+## https://github.com/project-forth-works/project-forth-works, Ulrich Hoffmann et alli
+
+
         
