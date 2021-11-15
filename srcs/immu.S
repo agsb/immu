@@ -333,6 +333,18 @@ KEY:
 
 */
 
+//----------------------------------------------------------------------
+//   ( -- )
+header "KEY", "key", 
+    .word 0x0
+    jal zero, _link
+
+//----------------------------------------------------------------------
+//   ( -- )
+header "EMIT", "emit", 
+    .word 0x0
+    jal zero, _link
+
 /***********************************************************************
 
   basic primitives
@@ -345,6 +357,7 @@ header "NOOP", "noop",
     .word 0x0
 _noop: 
     jal zero, _link
+
 
 //----------------------------------------------------------------------
 //   ( -- FALSE)
@@ -515,6 +528,14 @@ header "NAND", "nandf",
     spull Psp, Nos
     and Nos, Top, Nos
     neg Top, Nos
+    jal zero, _link
+
+//----------------------------------------------------------------------
+// ( -- 0 )
+header "bl", "bl", 
+    .word 0x0
+    spush Psp, Top 
+    addi Top, zero, BL_
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -840,6 +861,8 @@ header "ALIGNED", "aligned",
 
 // -----------------------------------------------------------------------------
 
+#define MULDIV
+
 #ifdef MULDIV
 
 // -----------------------------------------------------------------------------
@@ -857,7 +880,7 @@ header "m*", "dmultiply",
     lw Nos, 0 (Psp)
     mul Wrk, Top, Nos
     sw Wrk, 0 (Psp)
-    mulh top, Top, Nos
+    mulh Top, Top, Nos
     jal zero, _link
 
 // -----------------------------------------------------------------------------
@@ -867,7 +890,7 @@ header "um*", "udmultiply",
     lw Nos, 0 (Psp)
     mul Wrk, Top, Nos
     sw Wrk, 0 (Psp)
-    mulhu top, Top, Nos
+    mulhu Top, Top, Nos
     jal zero, _link
 
 // -----------------------------------------------------------------------------
@@ -875,7 +898,7 @@ header "um*", "udmultiply",
 header "/", "divide", 
     .word 0x0
     spull Psp, Nos
-    div Top,  Nos, Top
+    div Top, Nos, Top
     jal zero, _link
 
 // -----------------------------------------------------------------------------
@@ -893,7 +916,7 @@ header "/mod", "dualdiv",
     lw Nos, 0 (Psp)
     rem Wrk, Top, Nos
     sw Wrk, 0 (Psp)
-    div top, Top, Nos
+    div Top, Top, Nos
     jal zero, _link
 
 // -----------------------------------------------------------------------------

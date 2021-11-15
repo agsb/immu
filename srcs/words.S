@@ -118,17 +118,8 @@ header  ";CODE", "semicode",
 //---------------------------------------------------------------------- 
 // ok  receive a string to terminal input buffer, always. ( n -- a u )
 header  "REFILL", "refill", 
+    .word zzzz, ends
 
-/*
-    .word TIB0, TOIN, to
-1:  .word keyq, branch, 1b - .
-    .word dup, toin, dup, at, to, one, plusto 
-2:  .word dup, cr_, zbranch, 4f - .
-    .word toin, at, nil, to, branch, 20f - .
-4:  .word dup, bs_, zbranch, 6f - .
-    .word dup, toin, at, one, minus, 
-6:
-*/
 
 //----------------------------------------------------------------------
 // ok expect, as forth 79 std ( a n -- )
@@ -150,7 +141,7 @@ header "EXPECT", "expect"
     .word dup, dolit, BL_, gth, zbranch, 2f - .
     .word dup, dolit, TL_, lth, zbranch, 2f - .
 8:  // do tab 
-    .word drop, dolit, BL_,
+    .word drop, dolit, BL_
     // do valid
     .word over, to 
     .word one, plus
@@ -162,12 +153,12 @@ header "EXPECT", "expect"
 6:  // do escape 
     .word drop, branch, 2b - .
 10: // append a null    
-    .word swap, dup, dolit, NIL_, to
+    .word swap, dup, nil, to
     .word ends
     
 //----------------------------------------------------------------------
 header "QUERY", "query"
-    .word dolit, TIBX, dolit, BUFFER, expect, 0, toin, to, ends
+    .word dolit, XTIB, dolit, BUFFER, expect, 0, toin, to, ends
 
 //---------------------------------------------------------------------- 
 // ok  receive a string from terminal input buffer, always. ( n -- a u )
@@ -392,7 +383,7 @@ header  "BYE", "bye",
 //---------------------------------------------------------------------- 
 // ok  
 header  "QUIT", "quit", 
-    .word dolit, RSPX, rpto, lbrac, ends
+    .word dolit, XRSP, rsto, lbrac, ends
 
 //---------------------------------------------------------------------- 
 // ok  ( -- )
@@ -402,19 +393,19 @@ header  "SPACE", "space",
 //---------------------------------------------------------------------- 
 // ok  ( n -- )
 header  "SPACES", "spaces", 
-1:  .word dup zbranch, 2f -.
-    .word space, one, minus,
-    .word branch, 1f - .
+1:  .word dup, zbranch, 2f -.
+    .word space, one, minus
+    .word branch, 1b - .
 2:  .word drop, ends
 
 //---------------------------------------------------------------------- 
 // ok  (a n -- )
 header  "TYPE", "type", 
-1:  .word dup zbranch, 2f -.
-    .word swap, dup, at, emit, 
+1:  .word dup, zbranch, 2f -.
+    .word swap, dup, at, emit 
     .word one, plus, swap
-    .word one, minus,
-    .word branch, 1f - .
+    .word one, minus
+    .word branch, 1b - .
 2:  .word drop, ends
 
 //---------------------------------------------------------------------- 
