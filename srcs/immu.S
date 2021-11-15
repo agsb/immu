@@ -112,6 +112,7 @@ F_UNMASK = 0x0F
 
 #define NUL_      0x00    //#; ascii NUL ^@
  
+//---------------------------------------------------------------------
  
 #define  Psp s4    //#   parameter stack
 #define  Rsp s5    //#   return stack 
@@ -173,6 +174,29 @@ F_UNMASK = 0x0F
 // numeric labels only 0-99, 
 // 99b does linked list to previous word
 //
+//;
+//; set start reverse linked list
+//;
+
+/*
+.set _link_, 0x0
+
+.macro HEADER name, label, flags=0x0
+is_\label:
+    .p2align 1, 0x00
+99:
+    .word _link_
+    .set _link_, 99b
+    .byte \flags
+    .byte (3f - 2f) 
+2:
+    .ascii "\name"
+3:
+    .p2align 2, 0x20	
+\label:
+.endm
+*/
+ 
 .macro header name, label, flags=0x0
 is_\label:
     .p2align 1, 0x00
@@ -599,7 +623,7 @@ header "CELLS", "cells",
 
 //----------------------------------------------------------------------
 // CELL is 4, add a CELL size
-header "CELL+", "cellp", 
+header "CELL+", "cellplus", 
     .word 0x0
     addi Top, Top, CELL
     jal zero, _link
@@ -614,11 +638,10 @@ header "CHARS", "chars",
 
 //----------------------------------------------------------------------
 // CHAR is one byte, add a char size
-header "CHAR+", "cellp", 
+header "CHAR+", "charplus", 
     .word 0x0
     addi Top, Top, BYTE
     jal zero, _link
-
 
 
 //----------------------------------------------------------------------

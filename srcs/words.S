@@ -67,7 +67,7 @@ header  "DEFINITIONS", "definitions",
 //---------------------------------------------------------------------- 
 // ok  SOURCE
 header  "SOURCE", "source",
-    .word dolit, TIBX, dolit, BUFFER, ends
+    .word dolit, XTIB, dolit, BUFFER, ends
 
 //---------------------------------------------------------------------- 
 // ok  must continue later
@@ -126,7 +126,7 @@ header  ".\"", "dotquote",
 
 //---------------------------------------------------------------------- 
 // ok  
-header  ".("", "dotparen",
+header  ".(", "dotparen",
     .word zzzz, ends
 
 //---------------------------------------------------------------------- 
@@ -134,8 +134,6 @@ header  ".("", "dotparen",
 header  "REFILL", "refill", 
     .word zzzz, ends
 
-<<<<<<< HEAD
-=======
 //----------------------------------------------------------------------
 // ok parse, as forth 94 std  "sssss<c>"  (c c-addr -- c-addr n )
 // 
@@ -149,8 +147,6 @@ header "PARSE", "parse"
 4:  // zzzzzz
 6:  // zero 
     .word drop, drop, drop, drop, nil, ends
->>>>>>> cfba4a7f1c2975da50101d3a4a6b23c402b879d7
-
     
 //----------------------------------------------------------------------
 // ok accept, as forth 94 std ( a n -- )
@@ -166,23 +162,12 @@ header "ACCEPT", "accept"
     // verify  
     .word dup, dolit, CR_, minus, zbranch, 10f - .
     .word dup, dolit, LF_, minus, zbranch, 10f - .
-<<<<<<< HEAD
-    .word dup, dolit, BS_, minus, zbranch, 4f -.
-    .word dup, dolit, ESC_, minus, zbranch, 6f - .
-    .word dup, dolit, TB_, minus, zbranch, 8f - .
-    .word dup, dolit, BL_, gth, zbranch, 2f - .
-    .word dup, dolit, TL_, lth, zbranch, 2f - .
-8:  // do tab 
-=======
     .word dup, dolit, BS_, minus, zbranch, 8f -.
     .word dup, dolit, TB_, minus, zbranch, 6f - .
     .word dup, dolit, ESC_, minus, zbranch, 2b - .
-    // try BL_
     .word dup, dolit, BL_, gth, zbranch, 2b - .
-    // try TL_
     .word dup, dolit, TL_, lth, zbranch, 2b - .
 6:  // do tab 
->>>>>>> cfba4a7f1c2975da50101d3a4a6b23c402b879d7
     .word drop, dolit, BL_
     // do valid
     .word over, to 
@@ -194,22 +179,14 @@ header "ACCEPT", "accept"
     .word one, plus, branch, 1b - .
 10: // cr-lf ( a n c)
     .word drop
-<<<<<<< HEAD
     .word one, minus
-    .word swap, one, plus, branch, 1b - .
-6:  // do escape 
-    .word drop, branch, 2b - .
-10: // append a null    
-    .word swap, dup, nil, to
-=======
 12: // append a null 
-    .word drop, dolit, NIL_, to
->>>>>>> cfba4a7f1c2975da50101d3a4a6b23c402b879d7
+    .word drop, nil, swap, to
     .word ends
     
 //----------------------------------------------------------------------
 header "QUERY", "query"
-    .word dolit, XTIB, dolit, BUFFER, expect, 0, toin, to, ends
+    .word dolit, XTIB, dolit, BUFFER, accept, 0, toin, to, ends
 
 //---------------------------------------------------------------------- 
 // ok  receive a string from terminal input buffer, always. ( n -- a u )
@@ -244,12 +221,6 @@ header  "FIND-NAME", "findname",
 //
 header "FIND", "find",
     .word parsename, findname, ends
-
-//---------------------------------------------------------------------- 
-// ok  get a string from tib, and search it at dictionary 
-//
-header "ACCEPT", "accept",
-    .word dolit, LENGTH, zzzz, ends 
 
 //---------------------------------------------------------------------- 
 // ok  create a dictionary entry with next word in 'tib', 
@@ -624,12 +595,12 @@ header	"2OVER", "twoover"
 //---------------------------------------------------------------------- 
 // ok 2TO (w1 w2 a -- )
 header	"2!", "twoto"
-	.word swap, to, cell+, to, ends
+	.word swap, to, cellplus, to, ends
 
 //---------------------------------------------------------------------- 
 // ok 2AT (a -- w1 w2 a)
 header	"2@", "twoat"
-	.word dup, cell+, at, swap, at, ends  
+	.word dup, cellplus, at, swap, at, ends  
 
 //---------------------------------------------------------------------- 
 // ok 2>R (S:w1 w2 -- ) (R: -- w1 w2)
