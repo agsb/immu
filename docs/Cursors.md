@@ -1,6 +1,6 @@
 # Cursors
 
-Forth lives in an array, a sequential set of cells, and has four cursors. The parameter stack index S, the return stack index R, the instruction pointer I, and the dictionary index D. Each cursor  points a cell which value is represented by (S), (R), (I), and (D).
+Forth lives in an array, a sequential set of cells, and have four cursors. The parameter stack index S, the return stack index R, the instruction pointer I, and the dictionary index D. Each cursor points a cell, which values is represented by (S), (R), (I), and (D).
   
 The S and R are sequential access indexes for cells and their values are limited to reserved ranges. By convention S cells are used for keep parameters and R cells are used to keep for return indexes.
       
@@ -25,13 +25,13 @@ To describe and evaluate how this works, we need to investigate the possible com
 
 Some of these operations are well know, examples are:
 
-    v reset s (I) -> S, v reset r (I) -> R, v reset d (I) -> D
+    v reset s (I) -> S, v reset r (I) -> R, v reset d (I) -> D  //  reset pointers
     
-    v next (I) -> I,  v nest I -> (R), v unnest (R) -> I, 
+    v next (I) -> I,  v nest I -> (R), v unnest (R) -> I,       // the inner interpreter of Forth
 
-    v s@ S -> (S), v r@ R -> (S), v s! (S) -> S, v r! (S) -> R, 
+    v s@ S -> (S), v r@ R -> (S), v s! (S) -> S, v r! (S) -> R, // load and save stacks
     
-    v >r (S) -> (R), v r> (R) -> (S)
+    v >r (S) -> (R), v r> (R) -> (S)                            
 
     v dovar I -> (S), v dodoes I -> (D), v dolit (I) -> (D)
 
@@ -44,7 +44,7 @@ Some of these operations are well know, examples are:
 
 Some of these operations are non-sense, examples are:
 
-    To move over self:
+    To move over self: // maybe as no operation :?
     x S -> S, x R -> R, x I -> I, x D -> D, x (S) -> (S), x (R) -> (R), x (I) -> (I), x (D) -> (D) 
 
     To move random contents (D) to :
@@ -57,7 +57,12 @@ Some of these operations are non-sense, examples are:
     To copy absolute values to:
     z R -> (R), z R -> (I), z R -> (D), z S -> (R), z S -> (I), z S -> (D), z D -> (R),z D -> (I), z D -> (D)
 
-    Not used
-    z (R) -> S, z (R) -> R, z (R) -> D, z (R) -> (D), z (R) -> (I), z  I -> (I)
+    Not used ???
+    
+    z (R) -> S, z (R) -> R, 
+    
+    z (R) -> D, z (R) -> (D), 
+    
+    z (R) -> (I), z  I -> (I)
 
 
