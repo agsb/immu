@@ -105,37 +105,37 @@ header  "FLAGGED", "flagged",
     still no assembler
 ***********************************************************************/
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  "CODE", "code",
     .word zzzz, ends
 
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  "END-CODE", "endcode",
     .word zzzz, ends
 
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  ";CODE", "semicode",
     .word zzzz, ends
 
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  ".\"", "dotquote",
     .word zzzz, ends
 
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  ".(", "dotparen",
     .word zzzz, ends
 
 //---------------------------------------------------------------------- 
-// ok  receive a string to terminal input buffer, always. ( n -- a u )
+//   receive a string to terminal input buffer, always. ( n -- a u )
 header  "REFILL", "refill", 
     .word zzzz, ends
 
 //----------------------------------------------------------------------
-// ok parse, as forth 94 std  "sssss<c>"  (c c-addr -- c-addr n )
+//  parse, as forth 94 std  "sssss<c>"  (c c-addr -- c-addr n )
 // 
 header "PARSE", "parse"
 2:  //
@@ -149,7 +149,7 @@ header "PARSE", "parse"
     .word drop, drop, drop, drop, nil, ends
     
 //----------------------------------------------------------------------
-// ok accept, as forth 94 std ( a n -- )
+//  accept, as forth 94 std ( a n -- )
 // always place a nil at end, no edit capable
 header "ACCEPT", "accept"
     // append a space
@@ -179,17 +179,17 @@ header "ACCEPT", "accept"
     .word one, plus, branch, 1b - .
 10: // cr-lf ( a n c)
     .word drop
-    .word one, minus
-12: // append a null 
+12: // append a null ( a n )
     .word drop, nil, swap, to
     .word ends
     
 //----------------------------------------------------------------------
+//
 header "QUERY", "query"
     .word dolit, XTIB, dolit, BUFFER, accept, 0, toin, to, ends
 
 //---------------------------------------------------------------------- 
-// ok  receive a string from terminal input buffer, always. ( n -- a u )
+//   receive a string from terminal input buffer, always. ( n -- a u )
 header  "PARSE-NAME", "parsename", 
      .word tor
 1:   .word dolit, BL_, toin, at, sscan 
@@ -205,7 +205,7 @@ header  "PARSE-NAME", "parsename",
 2:  .word zzzz, refill, branch, 1b - .  
 
 //---------------------------------------------------------------------- 
-// ok   find
+//    find
 header  "FIND-NAME", "findname", 
     .word sfind, dup, zbranch, 3f - . 
 // ( a1 a3 -- xt -1|1 )
@@ -217,13 +217,13 @@ header  "FIND-NAME", "findname",
 3:  .word ends
 
 //---------------------------------------------------------------------- 
-// ok  get a string from tib, and search it at dictionary 
+//   get a string from tib, and search it at dictionary 
 //
 header "FIND", "find",
     .word parsename, findname, ends
 
 //---------------------------------------------------------------------- 
-// ok  create a dictionary entry with next word in 'tib', 
+//   create a dictionary entry with next word in 'tib', 
 // update latest to safe restore DP
 //
 header "CREATE", "create",
@@ -246,18 +246,18 @@ header "CREATE", "create",
     .word ends 
  
 //---------------------------------------------------------------------- 
-// ok  ends a dictionary entry
+//   ends a dictionary entry
 // hook for debug
 header  "FINITE", "finite", 
     .word ends 
 
 //---------------------------------------------------------------------- 
-// ok  ZZZZ
+//   ZZZZ
 header  "INTERPRET", "interpret", 
     .word evals, ends
 
 //---------------------------------------------------------------------- 
-// ok ZZZZ  
+//  ZZZZ  
 header  "ABORT", "abort", 
     .word dolit, XRSP, rsto
     .word dolit, XPSP, psto
@@ -265,40 +265,40 @@ header  "ABORT", "abort",
     .word ends
         
 //---------------------------------------------------------------------- 
-// ok  tick, returns cfa of next word in input buffer in Top
+//   tick, returns cfa of next word in input buffer in Top
 // not safe for not found word
 header  "'", "tick", 
     .word find, drop, ends 
 
 //---------------------------------------------------------------------- 
-// ok  as tick, but forces execute next word
+//   as tick, but forces execute next word
 header  "'[", "tickexec", F_IMMEDIATE 
     .word tick, exec, ends
 
 //---------------------------------------------------------------------- 
-// ok  as tick, but forces compile next word 
+//   as tick, but forces compile next word 
 header  "']", "tickcomp", F_IMMEDIATE 
     .word tick, comma, ends
 
 //---------------------------------------------------------------------- 
-// ok  tick, returns cfa of next word in input buffer in Top, zzzz still
+//   tick, returns cfa of next word in input buffer in Top, zzzz still
 header  "POSTPONE", "postpone", F_IMMEDIATE 
     .word tickcomp, ends
 
 //---------------------------------------------------------------------- 
-// ok  compile
+//   compile
 // also a hook for debug
 header  "docompile", "docompile", 
     .word comma, ends 
 
 //---------------------------------------------------------------------- 
-// ok  execute
+//   execute
 // also a hook for debug
 header  "doexecute", "doexecute", 
     .word exec, ends 
 
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  "iscompile", "iscompile",
 // ( xt f ) immediate is 1, else -1
     .word zgth, zbranch, 2f - . 
@@ -306,7 +306,7 @@ header  "iscompile", "iscompile",
 2:  .word docompile, ends
 
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  "isword", "isword",
 // ( xt f  )
     .word state, at 
@@ -316,12 +316,12 @@ header  "isword", "isword",
 2:  .word doexecute, ends 
 
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  "isnumber", "isnumber", 
     .word zzzz, ends
 
 //---------------------------------------------------------------------- 
-// ok  evals
+//   evals
 header  "EVALS", "evals", 
     .word find, zdup, zbranch, 2f - . 
     .word isword, ends
@@ -348,62 +348,62 @@ header "EXECUTE", "exec",
     .word tor, ends
 
 //----------------------------------------------------------------------
-// ok  dodoes (?), interpreter continues at contents of cell
+//   dodoes (?), interpreter continues at contents of cell
 header "DODOES", "dodoes", 
     .word rto, at, tor, ends
     
 //---------------------------------------------------------------------- 
-// ok  ( w -- )
+//   ( w -- )
 header  "CONSTANT", "constant", 
     .word create, comp, dolit, comma, finite, ends 
  
 //---------------------------------------------------------------------- 
-// ok  ( -- )
+//   ( -- )
 header  "VARIABLE", "variable", 
     .word create, comp, dolit, 0, comma, finite, ends 
 
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  "SMUDGED", "smudged", 
     .word latest, at, cell, plus, dolit, F_HIDDEN, toggle, ends
 
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  "IMMEDIATE", "immediate", 
     .word latest, at, cell, plus, dolit, F_IMMEDIATE, toggle, ends
 
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  "COMPILE_ONLY", "compileonly", 
     .word latest, at, cell, plus, dolit, F_COMPILE_ONLY, toggle, ends
 
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  ":", "colon", 
     .word create, smudged, rbrac, ends 
  
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  ";", "semmi", 
     .word finite, comp, ends, smudged, lbrac, ends 
   
 //---------------------------------------------------------------------- 
-// ok  ZZZZ
+//   ZZZZ
 header  "COLD", "cold", 
     .word ends
 
 //---------------------------------------------------------------------- 
-// ok  ZZZZ
+//   ZZZZ
 header  "WARM", "warm", 
     .word ends
 
 //---------------------------------------------------------------------- 
-// ok  ZZZZ
+//   ZZZZ
 header  "BYE", "bye", 
     .word ends
 
 //---------------------------------------------------------------------- 
-// ok  
+//   
 header  "QUIT", "quit", 
     .word dolit, XRSP, rsto, lbrac, ends
 
@@ -431,7 +431,7 @@ header  "TYPE", "type",
 2:  .word drop, ends
 
 //---------------------------------------------------------------------- 
-// ok  (a n -- )
+//   (a n -- )
 header  "VOCABULARY", "vocabulary",
     .word zzzz, ends
 
@@ -521,11 +521,11 @@ header	"OCTAL", "oct",
 
 //---------------------------------------------------------------------- 
 
-// ok <builds
+//  <builds
 header	"<BUILDS", "builds"
 	.word dolit, 0, ends
 
-// ok does> 
+//  does> 
 header	"DOES>", "does"
 	.word dolit, 0, ends
 
