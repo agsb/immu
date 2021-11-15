@@ -65,6 +65,11 @@ header  "DEFINITIONS", "definitions",
     .word context, at, current, to, ends
 
 //---------------------------------------------------------------------- 
+// ok  SOURCE
+header  "SOURCE", "source",
+    .word dolit, TIBX, dolit, BUFFER, ends
+
+//---------------------------------------------------------------------- 
 // ok  must continue later
 header  "ALLOT", "allot",
     .word dp, plusto, ends
@@ -114,46 +119,92 @@ header  "END-CODE", "endcode",
 header  ";CODE", "semicode",
     .word zzzz, ends
 
+//---------------------------------------------------------------------- 
+// ok  
+header  ".\"", "dotquote",
+    .word zzzz, ends
+
+//---------------------------------------------------------------------- 
+// ok  
+header  ".("", "dotparen",
+    .word zzzz, ends
 
 //---------------------------------------------------------------------- 
 // ok  receive a string to terminal input buffer, always. ( n -- a u )
 header  "REFILL", "refill", 
     .word zzzz, ends
 
-
+<<<<<<< HEAD
+=======
 //----------------------------------------------------------------------
-// ok expect, as forth 79 std ( a n -- )
-header "EXPECT", "expect"
+// ok parse, as forth 94 std  "sssss<c>"  (c c-addr -- c-addr n )
+// 
+header "PARSE", "parse"
+2:  //
+    .word swap, over
+    .word over, over
+    .word at, dup, zbranch, 6f - .
+    .word equ, zbranch, 4f - .
+    .word one, plus, branch, 2b
+4:  // zzzzzz
+6:  // zero 
+    .word drop, drop, drop, drop, nil, ends
+>>>>>>> cfba4a7f1c2975da50101d3a4a6b23c402b879d7
+
+    
+//----------------------------------------------------------------------
+// ok accept, as forth 94 std ( a n -- )
+// always place a nil at end, no edit capable
+header "ACCEPT", "accept"
     // append a space
     // .word over, dolit, BL_, swap, to
-1:
-    
-    .word dup, zbranch, 10f - .
+1:  // last in 
+    .word dup, zbranch, 12f - .
     .word swap
 2:  // getch
     .word key
     // verify  
     .word dup, dolit, CR_, minus, zbranch, 10f - .
     .word dup, dolit, LF_, minus, zbranch, 10f - .
+<<<<<<< HEAD
     .word dup, dolit, BS_, minus, zbranch, 4f -.
     .word dup, dolit, ESC_, minus, zbranch, 6f - .
     .word dup, dolit, TB_, minus, zbranch, 8f - .
     .word dup, dolit, BL_, gth, zbranch, 2f - .
     .word dup, dolit, TL_, lth, zbranch, 2f - .
 8:  // do tab 
+=======
+    .word dup, dolit, BS_, minus, zbranch, 8f -.
+    .word dup, dolit, TB_, minus, zbranch, 6f - .
+    .word dup, dolit, ESC_, minus, zbranch, 2b - .
+    // try BL_
+    .word dup, dolit, BL_, gth, zbranch, 2b - .
+    // try TL_
+    .word dup, dolit, TL_, lth, zbranch, 2b - .
+6:  // do tab 
+>>>>>>> cfba4a7f1c2975da50101d3a4a6b23c402b879d7
     .word drop, dolit, BL_
     // do valid
     .word over, to 
-    .word one, plus
-    .word swap, one, minus, branch, 1b - .
-4:  // do backspace
+    .word one, plus, swap
+    .word one, minus, branch, 1b - .
+8:  // do backspace
     .word drop
+    .word one, minus, swap
+    .word one, plus, branch, 1b - .
+10: // cr-lf ( a n c)
+    .word drop
+<<<<<<< HEAD
     .word one, minus
     .word swap, one, plus, branch, 1b - .
 6:  // do escape 
     .word drop, branch, 2b - .
 10: // append a null    
     .word swap, dup, nil, to
+=======
+12: // append a null 
+    .word drop, dolit, NIL_, to
+>>>>>>> cfba4a7f1c2975da50101d3a4a6b23c402b879d7
     .word ends
     
 //----------------------------------------------------------------------
@@ -570,4 +621,28 @@ header	"2SWAP", "twoswap"
 header	"2OVER", "twoover"
 	.word zzzz, ends
 
+//---------------------------------------------------------------------- 
+// ok 2TO (w1 w2 a -- )
+header	"2!", "twoto"
+	.word swap, to, cell+, to, ends
+
+//---------------------------------------------------------------------- 
+// ok 2AT (a -- w1 w2 a)
+header	"2@", "twoat"
+	.word dup, cell+, at, swap, at, ends  
+
+//---------------------------------------------------------------------- 
+// ok 2>R (S:w1 w2 -- ) (R: -- w1 w2)
+header	"2>R", "twotor"
+	.word swap, tor, tor, ends  
+
+//---------------------------------------------------------------------- 
+// ok 2R> (S: -- w1 w2) (R: w1 w2 --)
+header	"2R>", "tworto"
+	.word rto, rto, swap, ends  
+
+//---------------------------------------------------------------------- 
+// ok 2R@ (S: -- w1 w2) (R: -- w1 w2)
+header	"2R@", "tworat"
+	.word rto, rto, twodup, tor, tor, swap, ends  
 
