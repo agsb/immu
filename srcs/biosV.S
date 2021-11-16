@@ -40,9 +40,11 @@ s11 ~X27~ as T1, temporary extra
 
 # adapted from https://github.com/theandrew168/derzforth/tree/main/boards/longan_nano
 # include definitions related to the GigaDevice GD32VF103 family of chips
-#  (the --include-definitions flag to bronzebeard puts this on the path)
+# (the --include-definitions flag to bronzebeard puts this on the path)
 
-include GD32VF103.asm
+# ps. not safe for interrupts
+
+include GD32VF103.inc
 
 # 32KB @ 0x20000000
 RAM_BASE_ADDR = 0x20000000
@@ -57,76 +59,90 @@ CLOCK_FREQ = 8000000
 
 
 # Func: gpio_config
-# Arg: a0 = GPIO port base addr
-# Arg: a1 = GPIO pin number
-# Arg: a2 = GPIO config (4 bits)
-header "gpio_config", "gpio_config"
+# Arg: Top = GPIO port base addr
+# Arg: Nos = GPIO pin number
+# Arg: Wrk = GPIO config (4 bits)
+header "gpio_config", "gpio_config_do"
     spull Psp, Nos
-    spull Psp, Wrk
-    
+
 gpio_config:
     # advance to CTL0
-    addi t0, a0, GPIO_CTL0_OFFSET
+    addi Top, Top, GPIO_CTL0_OFFSET
+
     # if pin number is less than 8, CTL0 is correct
-    slti t1, a1, 8
+    slti t1, Nos, 8
     bnez t1, gpio_config_store
-    # else we need CTL1 and then subtract 8 from the pin number
-    addi t0, t0, 4
-    addi a1, a1, -8
+
+    # else we need CTL1 and 
+    addi Top, Top, 4
+	# then subtract 8 from the pin number
+    addi Nos, Nos, -8
+
 gpio_config_store:
     # multiply pin number by 4 to get shift amount
-    slli a1, a1, 2
+    slli Nos, Nos, 2
+
     # load current config
-    lw t1, 0(t0)
+    lw t1, 0(Top)
+
     # align and clear existing pin config
-    li t2, 0b1111
-    sll t2, t2, a1
-    not t2, t2
-    and t1, t1, t2
+    li Wrk, 0b1111
+    sll Wrk, Wrk, Nos
+    not Wrk, Wrk
+    and t1, t1, Wrk
+#zzzz
+    spull Psp, Wrk
     # align and apply new pin config
-    sll a2, a2, a1
-    or t1, t1, a2
+    sll Wrk, Wrk, Nos
+    or t1, t1, Wrk
+
     # store updated config
-    sw t1, 0(t0)
+    sw t1, 0(Top)
+
 gpio_config_done:
-    ret
+	spull Psp, Top
+	jal zero, _link
+    
 
 
 # Func: serial_init
-# Arg: a0 = baud rate
+# Arg: Top = baud rate
+header "serial_init", "serial_init_do"
 serial_init:
     # save return addr (since serial_init calls other funcs)
     mv s8, ra
 
-    # setup RCU base addr in t0
-    li t0, RCU_BASE_ADDR
+    # setup RCU base addr in Nos
+    li Nos, RCU_BASE_ADDR
 
-    # enable RCU (USART0, GPIOA, and AFIO)
-    li t1, RCU_APB2EN_USART0EN | RCU_APB2EN_PAEN | RCU_APB2EN_AFEN
-    sw t1, RCU_APB2EN_OFFSET(t0)
+    # enable RCU (USARNos, GPIOA, and AFIO)
+    li Wrk, RCU_APB2EN_USARNosEN | RCU_APB2EN_PAEN | RCU_APB2EN_AFEN
+    sw Wrk, RCU_APB2EN_OFFSET(Nos)
 
-    # setup USART0 base addr in t0
-    li t0, USART_BASE_ADDR_0
+    # setup USARNos base addr in Nos
+    li Nos, USART_BASE_ADDR_0
 
     # calculate and store clkdiv (CLKDIV = CLOCK // BAUD)
-    li t1, CLOCK_FREQ
-    div t1, t1, a0
-    sw t1, USART_BAUD_OFFSET(t0)
+    li Wrk, CLOCK_FREQ
+    div Wrk, Wrk, Top
+    sw Wrk, USART_BAUD_OFFSET(Nos)
 
     # enable USART (USART, TX, and RX)
-    li t1, USART_CTL0_UEN | USART_CTL0_TEN | USART_CTL0_REN
-    sw t1, USART_CTL0_OFFSET(t0)
+    li Wrk, USART_CTL0_UEN | USART_CTL0_TEN | USART_CTL0_REN
+    sw Wrk, USART_CTL0_OFFSET(Nos)
 
+#zzzz
     # configure TX pin
-    li a0, GPIO_BASE_ADDR_A
-    li a1, 9
-    li a2, GPIO_CONFIG_AF_PP_50MHZ
+    li Top, GPIO_BASE_ADDR_A
+    li Nos, 9
+    li Wrk, GPIO_CONFIG_AF_PP_50MHZ
     call gpio_config
 
+#zzzz
     # configure RX pin
-    li a0, GPIO_BASE_ADDR_A
-    li a1, 10
-    li a2, GPIO_CONFIG_IN_FLOAT
+    li Top, GPIO_BASE_ADDR_A
+    li Nos, 10
+    li Wrk, GPIO_CONFIG_IN_FLOAT
     call gpio_config
 
 serial_init_done:
@@ -136,30 +152,33 @@ serial_init_done:
 
 
 # Func: serial_getc
-# Ret: a0 = character received
+# Ret: Top = character received
+header "serial_getc", "serial_getc_do"
+    spush Psp, Tos
 serial_getc:
-    li t0, USART_BASE_ADDR_0      # load USART base addr into t0
+    li Nos, USART_BASE_ADDR_0		# load USART base addr into Nos
 serial_getc_loop:
-    lw t1, USART_STAT_OFFSET(t0)  # load status into t1
-    andi t1, t1, USART_STAT_RBNE  # isolate read buffer not empty (RBNE) bit
-    beqz t1, serial_getc_loop     # keep looping until ready to recv
-    lw a0, USART_DATA_OFFSET(t0)  # load char into a0
-    andi a0, a0, 0xff             # isolate bottom 8 bits
+    lw Wrk, USART_STAT_OFFSET(Nos)  # load status into Wrk
+    andi Wrk, Wrk, USART_STAT_RBNE  # isolate read buffer not empty (RBNE) bit
+    beqz Wrk, serial_getc_loop		# keep looping until ready to recv
+    lw Top, USART_DATA_OFFSET(Nos)	# load char into Top
+    andi Top, Top, 0xff				# isolate bottom 8 bits
 serial_getc_done:
-    ret
-
+    jal zero, _link	
 
 # Func: serial_putc
-# Arg: a0 = character to send
+# Arg: Top = character to send
+header "serial_putc", "serial_putc_do"
 serial_putc:
-    li t0, USART_BASE_ADDR_0      # load USART base addr into t0
+    li Nos, USART_BASE_ADDR_0		# load USART base addr into Nos
 serial_putc_loop:
-    lw t1, USART_STAT_OFFSET(t0)  # load status into t1
-    andi t1, t1, USART_STAT_TBE   # isolate transmit buffer empty (TBE) bit
-    beqz t1, serial_putc_loop     # keep looping until ready to send
-    andi a0, a0, 0xff             # isolate bottom 8 bits
-    sw a0, USART_DATA_OFFSET(t0)  # write char from a0
+    lw Wrk, USART_STAT_OFFSET(Nos)  # load status into Wrk
+    andi Wrk, Wrk, USART_STAT_TBE   # isolate transmit buffer empty (TBE) bit
+    beqz Wrk, serial_putc_loop		# keep looping until ready to send
+    andi Top, Top, 0xff				# isolate bottom 8 bits
+    sw Top, USART_DATA_OFFSET(Nos)	# write char from Top
 serial_putc_done:
-    ret
+	spull Psp, Top
+    jal zero, _link	
     
     

@@ -542,7 +542,8 @@ header  "DO", "do", //f_immediate
 // loop
 header  "LOOP", "loop", //f_immediate 
     .word rto, oneplus, rto, over, over, lth, zbranch, 4f - .
-	.word comp, "xloop", back, ends 
+	.word comp, "xloop", back, 
+4:	.word ends 
  
 //---------------------------------------------------------------------- 
 // 
@@ -621,7 +622,7 @@ header	"HANDLER", "handler"
 //---------------------------------------------------------------------- 
 // ok CATCH (xt -- exception | 0), forth-94
 header	"CATCH", "catch"
-    .word spat, tor, handler, at, tor, rpat handler, to, execute
+    .word spat, tor, handler, at, tor, rpat, handler, to, exec
     .word rto, handler, to, rto, handler, to, rto, drop, dolit, nil, ends
 
 //---------------------------------------------------------------------- 
@@ -682,10 +683,6 @@ header	"2R>", "tworto"
 header	"2R@", "tworat"
 	.word rto, rto, twodup, tor, tor, swap, ends  
 
-<<<<<<< HEAD
-//---------------------------------------------------------------------- 
-=======
-
 //---------------------------------------------------------------------- 
 //   ZZZZ
 header  "COLD", "cold", 
@@ -705,4 +702,5 @@ header  "BYE", "bye",
 //   
 header  "QUIT", "quit", 
     .word dolit, XRSP, rsto, lbrac, ends
->>>>>>> 1677c157c6094d60c2e811faa73c5eb13de45743
+
+
