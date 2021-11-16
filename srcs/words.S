@@ -440,12 +440,12 @@ header  "VOCABULARY", "vocabulary",
 **********************************************************************/
 
 //---------------------------------------------------------------------- 
-// ok back 
+// ok back, resolves a backward branch
 header  "BACK", "back", //f_immediate 
     .word here, swap, minus, comma, ends 
  
 //---------------------------------------------------------------------- 
-// ok mark 
+// ok mark, marks for a branch 
 header  "MARK", "mark", //f_immediate 
     .word here, 0, comma, ends 
  
@@ -505,8 +505,41 @@ header  "WHILE", "while", //f_immediate
 header  "REPEAT", "repeat", //f_immediate 
     .word tor, tor, again, rat, rat, minus, endif, ends 
  
-//---------------------------------------------------------------------- 
 
+//---------------------------------------------------------------------- 
+// 
+// for 
+header  "FOR", "for", //f_immediate 
+    .word tor, here, ends 
+ 
+//---------------------------------------------------------------------- 
+// 
+// next
+header  "NEXT", "next", //f_immediate 
+    .word rto, oneminus, zequ, zbranch, 4f - .
+	.word tor, comp, back 
+4:  .word ends 
+
+//---------------------------------------------------------------------- 
+// 
+// do 
+header  "DO", "do", //f_immediate 
+    .word tor, tor, here, ends 
+ 
+//---------------------------------------------------------------------- 
+// 
+// loop
+header  "LOOP", "loop", //f_immediate 
+    .word rto, oneplus, rto, over, over, lth, zbranch, 4f - .
+	.word comp, "xloop", back, ends 
+ 
+//---------------------------------------------------------------------- 
+// 
+// loopplus
+header  "LOOP+", "looplus", //f_immediate 
+    .word comp, "xlooplus", back, ends 
+ 
+//---------------------------------------------------------------------- 
 // ok hex
 header	"HEX", "hex",
 	.word dolit, 16, base, to, ends
@@ -617,3 +650,4 @@ header	"2R>", "tworto"
 header	"2R@", "tworat"
 	.word rto, rto, twodup, tor, tor, swap, ends  
 
+//---------------------------------------------------------------------- 
