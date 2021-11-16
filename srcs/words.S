@@ -284,7 +284,7 @@ header  "FINITE", "finite",
 //---------------------------------------------------------------------- 
 //   ZZZZ
 header  "INTERPRET", "interpret", 
-    .word evals, ends
+    .word evaluate, ends
 
 //---------------------------------------------------------------------- 
 //  ZZZZ  
@@ -527,10 +527,11 @@ header  "FOR", "for", //f_immediate
 // 
 // next
 header  "NEXT", "next", //f_immediate 
-    .word rto, oneminus, zequ, zbranch, 4f - .
+    .word rto, one, minus, zequ, zbranch, 4f - .
 	.word tor, comp, back 
 4:  .word ends 
 
+/*
 //---------------------------------------------------------------------- 
 // 
 // do 
@@ -541,7 +542,7 @@ header  "DO", "do", //f_immediate
 // 
 // loop
 header  "LOOP", "loop", //f_immediate 
-    .word rto, oneplus, rto, over, over, lth, zbranch, 4f - .
+    .word rto, dolit, one, plus,, rto, over, over, lth, zbranch, 4f - .
 	.word comp, "xloop", back, 
 4:	.word ends 
  
@@ -550,6 +551,7 @@ header  "LOOP", "loop", //f_immediate
 // loopplus
 header  "LOOP+", "looplus", //f_immediate 
     .word comp, "xlooplus", back, ends 
+*/
  
 //---------------------------------------------------------------------- 
 // ok hex
@@ -622,15 +624,15 @@ header	"HANDLER", "handler"
 //---------------------------------------------------------------------- 
 // ok CATCH (xt -- exception | 0), forth-94
 header	"CATCH", "catch"
-    .word spat, tor, handler, at, tor, rpat, handler, to, exec
+    .word psat, tor, handler, at, tor, rsat, handler, to, exec
     .word rto, handler, to, rto, handler, to, rto, drop, dolit, nil, ends
 
 //---------------------------------------------------------------------- 
 // ok THROW (exception -- exception | 0), forth-94
 header	"THROW", "throw"
-   .word qdup, zbranch, 2f - . 
-   .word handler, at, rpto, rto, handler, to 
-   .word rto, swap, tor, spto, drop, rto 
+   .word zdup, zbranch, 2f - . 
+   .word handler, at, rsto, rto, handler, to 
+   .word rto, swap, tor, psto, drop, rto 
 2: .word ends
 
 //---------------------------------------------------------------------- 

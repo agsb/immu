@@ -467,22 +467,6 @@ header "@", "at",
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( -- rsp )
-header "RS@", "rsat",
-    .word 0x0
-    spush Psp, Top 
-    add Top, Rsp, zero
-    jal zero, _link
-
-//----------------------------------------------------------------------
-// ( -- psp )
-header "PS@", "psat",
-    .word 0x0
-    spush Psp, Top 
-    add Top, Psp, zero
-    jal zero, _link
-
-//----------------------------------------------------------------------
 // ( u v -- u+v )
 header "+", "plus",
     .word 0x0
@@ -667,16 +651,32 @@ header "R@", "rat",
 
 //----------------------------------------------------------------------
 //   ( rs -- )
-header "R!", "rsto", 
+header "RS!", "rsto", 
     .word 0x0
     add Rsp, Top, zero 
     jal zero, _drop
     
 //----------------------------------------------------------------------
 //   ( ps -- )
-header "P!", "psto", 
+header "PS!", "psto", 
     .word 0x0
     add Psp, Top, zero
+    jal zero, _drop
+
+//----------------------------------------------------------------------
+//   ( rs -- )
+header "RS@", "rsat", 
+    .word 0x0
+	spush Psp, Top
+    add Top, Rsp, zero 
+    jal zero, _drop
+    
+//----------------------------------------------------------------------
+//   ( ps -- )
+header "PS@", "psat", 
+    .word 0x0
+	spush Psp, Top
+    add Top, Psp, zero
     jal zero, _drop
 
 //----------------------------------------------------------------------
@@ -1259,6 +1259,7 @@ header  "CFA", "cfa",
 header "_EOW_", "_eoW_"
     .word 0x0
 
+#include "biosv.S"
 #include "words.S"
 
 header "_EOF_", "_eof_"
