@@ -1,3 +1,29 @@
+/*
+ *  DISCLAIMER
+ *
+ *  Copyright © 2020, Alvaro Gomes Sobral Barcellos,
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining
+ *  a copy of this software and associated documentation files (the
+ *  "Software"), to deal in the Software without restriction, including
+ *  without limitation the rights to use, copy, modify, merge, publish,
+ *  distribute, sublicense, and/or sell copies of the Software, and to
+ *  permit persons to whom the Software is furnished to do so, subject to
+ *  the following conditions"
+ *
+ *  The above copyright notice and this permission notice shall be
+ *  included in all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ *  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *  NON INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ *  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ *
+ *  //-\--/\-//-\/-/\\\\/-\--\\\-///\-/-/\/--/\\\\/-\-//-/\//-/\//--//-///--\\\-///\-/-/\/
+ */
+
 /*********************************************************************
 
 pre-compiled words, for be minimal interactive 
@@ -6,7 +32,7 @@ if-else-then with double ends, skips non sense branches to jump
 
 0 is called nil, because zero is reserved for the x0 riscv register
 
-some words from fig-forth pdp-11 "classic"
+some words from fig-forth, pdp-11, 1980, "classic"
 
 no complex listings
 
@@ -129,17 +155,15 @@ header  ".\"", "dotquote",
 header  ".(", "dotparen",
     .word zzzz, ends
 
-//---------------------------------------------------------------------- 
-//   receive a string to terminal input buffer, always. ( n -- a u )
-header  "REFILL", "refill", 
-    .word zzzz, ends
-
+//----------------------------------------------------------------------
+//   
+header "CHAR", "char"
+    .word 
 //----------------------------------------------------------------------
 //  parse, as forth 94 std  "sssss<c>"  (c c-addr -- c-addr n )
 // 
 header "PARSE", "parse"
 2:  //
-    .word swap, over
     .word over, over
     .word at, dup, zbranch, 6f - .
     .word equ, zbranch, 4f - .
@@ -147,11 +171,17 @@ header "PARSE", "parse"
 4:  // zzzzzz
 6:  // zero 
     .word drop, drop, drop, drop, nil, ends
-    
+
 //----------------------------------------------------------------------
 //  accept, as forth 94 std ( a n -- )
 // always place a nil at end, no edit capable
-header "ACCEPT", "accept"
+header "accept", "accept"
+    .word source, refill, ends
+
+//----------------------------------------------------------------------
+//  refill, as forth 94 std ( a n -- )
+// always place a nil at end, no edit capable
+header "refill", "refill"
     // append a space
     // .word over, dolit, BL_, swap, to
 1:  // last in 
@@ -322,7 +352,7 @@ header  "isnumber", "isnumber",
 
 //---------------------------------------------------------------------- 
 //   evals
-header  "EVALS", "evals", 
+header  "EVALUATE", "evaluate", 
     .word find, zdup, zbranch, 2f - . 
     .word isword, ends
 2:  .word isnumber, ends 
@@ -338,7 +368,7 @@ header  "]", "rbrac",
     .word dolit, 1, state, to, ends 
 
 //---------------------------------------------------------------------- 
-// ok  comp, 
+// ok  comp, classic
 header  "COMPILE,", "comp", 
     .word rto, dup, at, comma, cell, plus, tor, ends 
 
@@ -354,12 +384,12 @@ header "DODOES", "dodoes",
     
 //---------------------------------------------------------------------- 
 //   ( w -- )
-header  "CONSTANT", "constant", 
+header  "CONSTANT", "constant", F_IMMEDIATE
     .word create, comp, dolit, comma, finite, ends 
  
 //---------------------------------------------------------------------- 
 //   ( -- )
-header  "VARIABLE", "variable", 
+header  "VARIABLE", "variable", F_IMMEDIATE
     .word create, comp, dolit, 0, comma, finite, ends 
 
 //---------------------------------------------------------------------- 
@@ -387,25 +417,6 @@ header  ":", "colon",
 header  ";", "semmi", 
     .word finite, comp, ends, smudged, lbrac, ends 
   
-//---------------------------------------------------------------------- 
-//   ZZZZ
-header  "COLD", "cold", 
-    .word ends
-
-//---------------------------------------------------------------------- 
-//   ZZZZ
-header  "WARM", "warm", 
-    .word ends
-
-//---------------------------------------------------------------------- 
-//   ZZZZ
-header  "BYE", "bye", 
-    .word ends
-
-//---------------------------------------------------------------------- 
-//   
-header  "QUIT", "quit", 
-    .word dolit, XRSP, rsto, lbrac, ends
 
 //---------------------------------------------------------------------- 
 // ok  ( -- )
@@ -436,7 +447,7 @@ header  "VOCABULARY", "vocabulary",
     .word zzzz, ends
 
 /**********************************************************************
-    forth control words
+    forth control words, forth-79
 **********************************************************************/
 
 //---------------------------------------------------------------------- 
@@ -556,11 +567,11 @@ header	"OCTAL", "oct",
 
 //  <builds
 header	"<BUILDS", "builds"
-	.word dolit, 0, ends
+	.word zzzz, ends
 
 //  does> 
 header	"DOES>", "does"
-	.word dolit, 0, ends
+	.word zzzz, ends
 
 /*
         head    210,constant,240,con,docol              ; ***** constant
@@ -599,6 +610,27 @@ THEN
 ... 
 
 */
+
+
+
+//---------------------------------------------------------------------- 
+// ok HANDLER \last exception handler, forth-94
+header	"HANDLER", "handler"
+    .word dovar, nil, ends
+
+//---------------------------------------------------------------------- 
+// ok CATCH (xt -- exception | 0), forth-94
+header	"CATCH", "catch"
+    .word spat, tor, handler, at, tor, rpat handler, to, execute
+    .word rto, handler, to, rto, handler, to, rto, drop, dolit, nil, ends
+
+//---------------------------------------------------------------------- 
+// ok THROW (exception -- exception | 0), forth-94
+header	"THROW", "throw"
+   .word qdup, zbranch, 2f - . 
+   .word handler, at, rpto, rto, handler, to 
+   .word rto, swap, tor, spto, drop, rto 
+2: .word ends
 
 //---------------------------------------------------------------------- 
 // ok PICK (A -- N)
@@ -650,4 +682,27 @@ header	"2R>", "tworto"
 header	"2R@", "tworat"
 	.word rto, rto, twodup, tor, tor, swap, ends  
 
+<<<<<<< HEAD
 //---------------------------------------------------------------------- 
+=======
+
+//---------------------------------------------------------------------- 
+//   ZZZZ
+header  "COLD", "cold", 
+    .word ends
+
+//---------------------------------------------------------------------- 
+//   ZZZZ
+header  "WARM", "warm", 
+    .word ends
+
+//---------------------------------------------------------------------- 
+//   ZZZZ
+header  "BYE", "bye", 
+    .word ends
+
+//---------------------------------------------------------------------- 
+//   
+header  "QUIT", "quit", 
+    .word dolit, XRSP, rsto, lbrac, ends
+>>>>>>> 1677c157c6094d60c2e811faa73c5eb13de45743

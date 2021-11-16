@@ -1,12 +1,12 @@
 # Cursors
 
-Forth lives in an array, a sequential set of cells, and has four cursors. The parameter stack index S, the return stack index R, the instruction pointer I, and the dictionary index D. Each cursor  points a cell which value is represented by (S), (R), (I), and (D).
+Forth lives in an array, a sequential set of cells, and have four cursors. The parameter stack index S, the return stack index R, the instruction pointer I, and the dictionary index D. Each cursor points a cell, which contents are represented by (S), (R), (I), and (D).
   
-The S and R are sequential access indexes for cells and their values are limited to reserved ranges. By convention S cells are used for keep parameters and R cells are used to keep for return indexes.
+The S and R are sequential access indexes for cells and their values are limited to reserved ranges. By convention S cells are used for keep parameters and R cells are used to keep for return indexes. All stacks are last in, first out.
       
-The I and D are random access indices for the array of cells, usually I points to a cell to be interpreted and the D points to the next free cell in the set.
+The I and D are random access indexes for the array of cells, usually I points to a any cell to be interpreted and the D always points to the next free cell at the set.
 
-Also is used a cursor T, for a terminal input buffer whith only two operations (I) -> T, (T) -> (S).
+Also is used a cursor T, for a terminal input buffer whith only two operations: reset T (I) -> T, load value (T) -> (S).
 
 ## Combinations
      
@@ -25,39 +25,43 @@ To describe and evaluate how this works, we need to investigate the possible com
 
 Some of these operations are well know, examples are:
 
-    v reset s (I) -> S, v reset r (I) -> R, v reset d (I) -> D
+    reset s (I) -> S, reset r (I) -> R, reset d (I) -> D  // reset pointers
+   
+    safe s S -> (I), safe r R -> (I), safe d D -> (I)     // safe state 
     
-    v next (I) -> I,  v nest I -> (R), v unnest (R) -> I, 
+    next (I) -> I,  nest I -> (R), unnest (R) -> I,       // the inner interpreter of Forth
 
-    v s@ S -> (S), v r@ R -> (S), v s! (S) -> S, v r! (S) -> R, 
+    s@ S -> (S), r@ R -> (S), s! (S) -> S, r! (S) -> R, // load and save stacks
     
-    v >r (S) -> (R), v r> (R) -> (S)
+    >r (S) -> (R), r> (R) -> (S)                            
 
-    v dovar I -> (S), v dodoes I -> (D), v dolit (I) -> (D)
+    dovar I -> (S), dodoes I -> (D), dolit (I) -> (D)
 
-    v store ! (S) -> (I), v fetch @ (I) -> (S)
+    store ! (S) -> (I), fetch @ (I) -> (S)
 
-    v here D -> (S), v allot (S) -> D, v comma (S) -> (D)
+    here D -> (S), allot (S) -> D, comma (S) -> (D)
 
-    v branch (I) -> (R), v exec (S) -> I
+    branch (I) -> (R), exec (S) -> I
     
 
 Some of these operations are non-sense, examples are:
 
-    To move over self:
-    x S -> S, x R -> R, x I -> I, x D -> D, x (S) -> (S), x (R) -> (R), x (I) -> (I), x (D) -> (D) 
+    To move over self: // maybe usefull as no operation :?
+    x S -> S, R -> R, I -> I, D -> D, (S) -> (S), (R) -> (R), (I) -> (I), (D) -> (D) 
 
     To move random contents (D) to :
-    x (D) -> S, x (D) -> R, x (D) -> I, x (D) -> D, x (D) -> (S), x (D) -> (R), x (D) -> (I)
+    x (D) -> S, (D) -> R, (D) -> I, (D) -> D, (D) -> (S), (D) -> (R), (D) -> (I)
 
     To move absolute values between :
-    z S -> R, z S -> I, z S -> D, z R -> S, z R -> I, z R -> D, 
-    z I -> S, z I -> R, z I -> D, z D -> S, z D -> R, z D -> I
+    S -> R, S -> I, S -> D, R -> S, R -> I, R -> D, 
+    I -> S, I -> R, I -> D, D -> S, D -> R, D -> I
 
     To copy absolute values to:
-    z R -> (R), z R -> (I), z R -> (D), z S -> (R), z S -> (I), z S -> (D), z D -> (R),z D -> (I), z D -> (D)
+    
+    R -> (R), R -> (D), S -> (R), S -> (D), D -> (R), D -> (D)
 
-    Not used
-    z (R) -> S, z (R) -> R, z (R) -> D, z (R) -> (D), z (R) -> (I), z  I -> (I)
+    Not used ???
+    
+    (R) -> S, (R) -> R, (R) -> D, (R) -> (D), (R) -> (I), I -> (I)
 
-
+ 

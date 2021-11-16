@@ -270,6 +270,10 @@ https://muforth.nimblemachines.com/threaded-code/
 
 https://muforth.nimblemachines.com/call-versus-branch-and-link/
 
+https://github.com/cesarblum/sectorforth
+
+https://github.com/theandrew168/derzforth
+
 https://riscv.org/specifications/
 
 ## Disclaimer
