@@ -23,6 +23,9 @@
  *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  *
  *  //-\--/\-//-\/-/\\\\/-\--\\\-///\-/-/\/--/\\\\/-\-//-/\//-/\//--//-///--\\\-///\-/-/\/
+ *
+ *  licensed with GPL 2.0
+ *
  */
 
 /*
@@ -35,7 +38,7 @@ simetric division, floored to zero
 
 // RISCV considerations 
 
-Using R32I, 32 bits cell, 
+Using R32IM, 32 bits cell, 
 
 must be saved by subroutines (calee)
 
@@ -50,13 +53,6 @@ s9 ~X25~ as Wrk, temporary scratch register
 ( extras )
 s10 ~X26~ as T0, temporary extra
 s11 ~X27~ as T1, temporary extra
-
-https://github.com/riscv-non-isa/riscv-asm-manual/blame/master/riscv-asm.md
-
-The following example shows how to load an absolute address:
-
-    lui  a0, %hi(msg + 1)
-    addi a0, a0, %lo(msg + 1)
 
 ```
 */
@@ -78,16 +74,14 @@ The following example shows how to load an absolute address:
 #define F_IMMEDIATE 0x80
 #define F_COMPILE_ONLY 0x40
 #define F_HIDDEN  0x20
-#define F_TOGGLE  0x10
-
-#define F_POSTPONE 0x02
-#define F_COMPILE  0x01
-#define F_EXECUTE  0x00
-
+#define F_TOGGLED  0x10
 #define F_COMMON  0x00
 
-F_TOMASK = 0xF0
-F_UNMASK = 0x0F
+#define F_TOMASK  0xF0
+#define F_UNMASK  0x0F
+
+#define IS_COMPILE  0x01
+#define IS_EXECUTE  0x00
 
 //---------------------------------------------------------------------
 // Flow Control
@@ -107,6 +101,7 @@ F_UNMASK = 0x0F
 
 #define BS_       0x08    //#; ascii backspace ^H
 #define TB_       0x09    //#; ascii horizontal ^I
+
 #define BL_       0x20    //#; ascii space
 #define TL_       0x7E    //#; ascii tilde
 
@@ -141,10 +136,6 @@ F_UNMASK = 0x0F
     lw \register, \index * CELL (\stack)
 .endm
 
-//----------------------------------------------------------------------
-// goto macros
-// could have hooks for debugs
-//
 .macro link address
     jal zero, \address
 .endm
@@ -177,25 +168,6 @@ F_UNMASK = 0x0F
 //;
 //; set start reverse linked list
 //;
-
-/*
-.set _link_, 0x0
-
-.macro HEADER name, label, flags
-is_\label:
-    .p2align 1, 0x00
-99:
-    .word _link_
-    .set _link_, 99b
-    .byte \flags
-    .byte (3f - 2f) 
-2:
-    .ascii "\name"
-3:
-    .p2align 2, 0x20	
-\label:
-.endm
-*/
  
 .macro header name, label, flags=0x0
 is_\label:
@@ -211,7 +183,13 @@ is_\label:
 \label:
 .endm
 
-//----------------------------------------------------------------------
+
+/***********************************************************************
+
+    forth inner constants and variables
+
+***********************************************************************/
+
 .data
 
 // .fill <bytes> reserves and initializes
@@ -302,7 +280,6 @@ CURTXT:
 norvc
 norelax
 
-
 ***********************************************************************/
 .text
 
@@ -313,7 +290,6 @@ _start:
 _forth_:
 
 // set start reverse linked list
-//
 // trick adapted from amforth-6.9
 99:
 .word 0
@@ -347,21 +323,8 @@ _jump:
 //----------------------------------------------------------------------
 
 /*
-// adapted from https://github.com/ScannedInAvian/riscyforth/blob/main/boot.S
-
-KEY:
-    li Wrk, UART_BASE
-1:
-    lb Nos, 5(Wrk)
-    andi Nos, Nos, 0x1
-    bequ Nos, zero, 1b
-
-    spull Psp, Top
-    lb Top, 0(Wrk)
-    jal zero, _link
-
+// vide https://github.com/ScannedInAvian/riscyforth/blob/main/boot.S
 */
-
 //----------------------------------------------------------------------
 //   ( -- )
 header "KEY", "key", 
@@ -379,6 +342,7 @@ header "EMIT", "emit",
   basic primitives
   all primitives must have a 0x0 at start
   order is critical because beq/bne/blt/bgt does only +/- 2 Mib offsets
+
 ***********************************************************************/
 //----------------------------------------------------------------------
 //   ( -- )
@@ -386,7 +350,6 @@ header "NOOP", "noop",
     .word 0x0
 _noop: 
     jal zero, _link
-
 
 //----------------------------------------------------------------------
 //   ( -- FALSE)
@@ -417,15 +380,15 @@ header "0=", "zequ"
 // ( w -- FALSE | TRUE) xxxx
 header "0>", "zgth"    
     .word 0x0
-    blt Top, zero, _istrue
-    bge Top, zero, _isfalse 
+    blt zero, Top, _istrue
+    bge zero, Top, _isfalse 
 
 //----------------------------------------------------------------------
 // ( w -- FALSE | TRUE)
 header "0<", "zlth"    
     .word 0x0
-    blt Top, zero, _isfalse
-    bge Top, zero, _istrue 
+    blt Top, zero, _istrue
+    bge Top, zero, _isfalse 
 
 //----------------------------------------------------------------------
 header "=", "equ", 
@@ -471,7 +434,7 @@ header "@", "at",
 header "+", "plus",
     .word 0x0
     spull Psp, Nos
-    add Top, Top, Nos
+    add Top, Nos, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -479,7 +442,7 @@ header "+", "plus",
 header "-", "minus",
     .word 0x0
     spull Psp, Nos
-    add Top, Nos, Top
+    sub Top, Nos, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -498,10 +461,18 @@ header "NEGATE", "negate"
 
 //----------------------------------------------------------------------
 // ( u v -- u>>v )
-header "RSHIFT", "rshift"
+header "2*", "twostar"
     .word 0x0
     spull Psp, Nos
-    srl Top, Top, Nos
+    srli Top, Top, 1
+    jal zero, _link
+
+/----------------------------------------------------------------------
+// ( u v -- u>>v )
+header "2/", "twoslash"
+    .word 0x0
+    spull Psp, Nos
+    slli Top, Top, 1
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -509,7 +480,15 @@ header "RSHIFT", "rshift"
 header "LSHIFT", "lshift"
     .word 0x0
     spull Psp, Nos
-    sll Top, Top, Nos
+    sll Top, Nos, Top
+    jal zero, _link
+
+//----------------------------------------------------------------------
+// ( u v -- u>>v )
+header "RSHIFT", "rshift"
+    .word 0x0
+    spull Psp, Nos
+    srl Top, Nos, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -546,15 +525,15 @@ header "NAND", "nandf",
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( -- 0 )
-header "bl", "bl", 
+// ( -- 0x20 )
+header "BL", "bl", 
     .word 0x0
     spush Psp, Top 
     addi Top, zero, BL_
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( -- 0 )
+// ( -- 0x0 )
 header "0", "nil", 
     .word 0x0
     spush Psp, Top 
@@ -562,7 +541,7 @@ header "0", "nil",
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( -- 0 )
+// ( -- -1 )
 header "-1", "oneneg", 
     .word 0x0
     spush Psp, Top 
@@ -570,7 +549,7 @@ header "-1", "oneneg",
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( -- 0 )
+// ( -- -2 )
 header "-2", "twoneg", 
     .word 0x0
     spush Psp, Top 
@@ -578,6 +557,7 @@ header "-2", "twoneg",
     jal zero, _link
 
 //----------------------------------------------------------------------
+// ( -- +1 )
 header "1", "one", 
     .word 0x0
     spush Psp, Top 
@@ -585,6 +565,7 @@ header "1", "one",
     jal zero, _link
 
 //----------------------------------------------------------------------
+// ( -- +2 )
 header "2", "two", 
     .word 0x0
     spush Psp, Top 
@@ -592,6 +573,7 @@ header "2", "two",
     jal zero, _link
 
 //----------------------------------------------------------------------
+// ( -- CELL )
 header "CELL", "cell", 
     .word 0x0
     spush Psp, Top 
@@ -599,6 +581,7 @@ header "CELL", "cell",
     jal zero, _link
 
 //----------------------------------------------------------------------
+// ( u -- u*CELL )
 // CELL is 4, multiply by shift left
 header "CELLS", "cells", 
     .word 0x0
@@ -606,6 +589,7 @@ header "CELLS", "cells",
     jal zero, _link
 
 //----------------------------------------------------------------------
+// ( u -- u+CELL )
 // CELL is 4, add a CELL size
 header "CELL+", "cellplus", 
     .word 0x0
@@ -614,6 +598,7 @@ header "CELL+", "cellplus",
 
 //----------------------------------------------------------------------
 // CHAR is one byte, just add zero 
+// ( u -- u*BYTE )
 // hook 
 header "CHARS", "chars", 
     .word 0x0
@@ -622,11 +607,11 @@ header "CHARS", "chars",
 
 //----------------------------------------------------------------------
 // CHAR is one byte, add a char size
+// ( u -- u+BYTE )
 header "CHAR+", "charplus", 
     .word 0x0
     addi Top, Top, BYTE
     jal zero, _link
-
 
 //----------------------------------------------------------------------
 header ">R", "tor", 
@@ -724,9 +709,7 @@ header "TUCK", "tuck",
     .word 0x0
     spull Psp, Nos
     spush Psp, Top
-//  beq zero, zero, _dip
-    spush Psp, Nos
-    jal zero, _link
+    beq zero, zero, _dip
 
 //----------------------------------------------------------------------
 //   ( u w -- u w u )
@@ -744,9 +727,7 @@ header "SWAP", "swap",
     .word 0x0
     lw Nos, 0 (Psp)
     sw Top, 0 (Psp)
-//  beq zero, zero, _n2t
-    add Top, Nos, zero
-    jal zero, _link
+    beq zero, zero, _n2t
 
 //----------------------------------------------------------------------
 //   (v u w -- u w v)
@@ -756,9 +737,7 @@ header "ROT", "rot",
     lw Nos, CELL (Psp)
     sw Wrk, CELL (Psp)
     sw Top, 0 (Psp)
-//  beq zero, zero, _n2t
-    add Top, Nos, zero
-    jal zero, _link
+    beq zero, zero, _n2t
     
 //----------------------------------------------------------------------
 //   (v u w -- w v u)
@@ -768,9 +747,7 @@ header "-ROT", "nrot",
     lw Wrk, CELL (Psp)
     sw Top, CELL (Psp)
     sw Wrk, 0 (Psp)
-//  beq zero, zero, _n2t
-    add Top, Nos, zero
-    jal zero, _link
+    beq zero, zero, _n2t
     
 //----------------------------------------------------------------------
 //   (v u w -- w u v)
@@ -778,28 +755,8 @@ header "FLIP", "flip",
     .word 0x0
     lw Nos, CELL (Psp)
     sw Top, CELL (Psp)
-//  beq zero, zero, _n2t
-    add Top, Nos, zero
-    jal zero, _link
+    beq zero, zero, _n2t
     
-//----------------------------------------------------------------------
-header "MIN", "min", 
-    .word 0x0
-    spull Psp, Nos
-    blt Top, Nos, _noop 
-//  beq zero, zero, _n2t
-    add Top, Nos, zero
-    jal zero, _link
-
-//----------------------------------------------------------------------
-header "MAX", "max", 
-    .word 0x0
-    spull Psp, Nos
-    blt Nos, Top, _noop 
-//  beq zero, zero, _n2t
-    add Top, Nos, zero
-    jal zero, _link
-
 //----------------------------------------------------------------------
 //   ( v u w -- u v w )
 header "SWIP", "swip", 
@@ -810,6 +767,20 @@ header "SWIP", "swip",
     sw Wrk, 0 (Psp)
     jal zero, _link
 
+//----------------------------------------------------------------------
+header "MIN", "min", 
+    .word 0x0
+    spull Psp, Nos
+    blt Top, Nos, _noop 
+    beq zero, zero, _n2t
+  
+//----------------------------------------------------------------------
+header "MAX", "max", 
+    .word 0x0
+    spull Psp, Nos
+    blt Nos, Top, _noop 
+    beq zero, zero, _n2t
+  
 //----------------------------------------------------------------------
 // trick, load Top <- (IP)
 // used by constant, leaves the contents of next cell from dictionary onto Top, aka doLit
@@ -829,18 +800,14 @@ header "DOVAR", "dovar",
     .word 0x0
     spush Psp, Top 
     add Top, Ipt, zero
-//  beq zero, zero, _iic
-    addi Ipt, Ipt, CELL
-    jal zero, _link
-
+    beq zero, zero, _iic
+  
 //----------------------------------------------------------------------
 // trick, branch if Top is zero else skip next reference
 header "?BRANCH", "zbranch", 
     .word 0x0
     beq Top, zero, _branch
-//  beq zero, zero, _iic
-    addi Ipt, Ipt, CELL
-    jal zero, _link
+    beq zero, zero, _iic
     
 //----------------------------------------------------------------------
 // trick, a follow reference is always a offset to branch
@@ -851,8 +818,6 @@ _branch:
     add Ipt, Ipt, Wrk
     jal zero, _link
 
-//  ZZZZ >< ABS 
-
 //----------------------------------------------------------------------
 //   ( b a -- ) 
 // writes one byte at address, unsigned
@@ -860,10 +825,8 @@ header "C!", "cto",
     .word 0x0
     spull Psp, Nos
     sb Nos, 0 (Top)
-//  beq zero, zero, _drop
-    spull Psp, Top
-    jal zero, _link
-
+    beq zero, zero, _drop
+  
 //----------------------------------------------------------------------
 //   ( a -- b )
 // reads one byte from address, unsigned
@@ -874,17 +837,15 @@ header "C@", "cat",
 
 //----------------------------------------------------------------------
 //   ( w a --  )
-// reads one byte from address
+// add to contents of a address
 header "+!", "plusto", 
     .word 0x0
     spull Psp, Nos
     lw Wrk, 0 (Top)
     add Wrk, Wrk, Nos
     sw Wrk, 0 (Top)
-//  beq zero, zero, _drop
-    spull Psp, Top
-    jal zero, _link
-
+    beq zero, zero, _drop
+  
 //----------------------------------------------------------------------
 // from amforth 6.9
 //   ( a -- b )
@@ -897,28 +858,27 @@ header "ALIGNED", "aligned",
     add Top, Top, Wrk
     jal zero, _link
 
-
 // -----------------------------------------------------------------------------
 // ok multiply ( w1 w2 w3 -- ((w1 * w2) / w3) ) zzzz
-header "*/", "timesdivide", 
+header "*/", "starslash", 
     .word 0x0
+    spull Psp, Nos
+    mul Top, Top, Nos
+    spull Psp, Nos
+    div Top, Top, Nos
     jal zero, _link
-
-#define MULDIV
-
-#ifdef MULDIV
 
 // -----------------------------------------------------------------------------
 // ok multiply ( w1 w2 -- w1 * w2 )
-header "*", "multiply", 
+header "*", "star", 
     .word 0x0
     spull Psp, Nos
     mul Top, Top, Nos
     jal zero, _link
 
 // -----------------------------------------------------------------------------
-// ok unsigned multiply ( w1 w2 -- w1 * w2 )
-header "m*", "dmultiply", 
+ // ok unsigned multiply ( w1 w2 -- w1 * w2 )
+header "m*", "mstar", 
     .word 0x0
     lw Nos, 0 (Psp)
     mul Wrk, Top, Nos
@@ -928,7 +888,7 @@ header "m*", "dmultiply",
 
 // -----------------------------------------------------------------------------
 // ok unsigned multiply ( w1 w2 -- w1 * w2 )
-header "um*", "udmultiply", 
+header "um*", "umstar", 
     .word 0x0
     lw Nos, 0 (Psp)
     mul Wrk, Top, Nos
@@ -938,7 +898,7 @@ header "um*", "udmultiply",
 
 // -----------------------------------------------------------------------------
 // ok divide ( w1 w2 -- quotient )
-header "/", "divide", 
+header "/", "slash", 
     .word 0x0
     spull Psp, Nos
     div Top, Nos, Top
@@ -954,7 +914,7 @@ header "mod", "module",
 
 // -----------------------------------------------------------------------------
 // ok dual divide ( w1 w2 -- remainder quotient )
-header "/mod", "dualdiv", 
+header "/mod", "slashmod", 
     .word 0x0
     lw Nos, 0 (Psp)
     rem Wrk, Top, Nos
@@ -964,7 +924,7 @@ header "/mod", "dualdiv",
 
 // -----------------------------------------------------------------------------
 // ok unsigned dual divide  ( w1 w2 -- remainder quotient )
-header "u/mod", "udualdiv", 
+header "u/mod", "uslashmod", 
     .word 0x0
     lw Nos, 0 (Psp)
     remu Wrk, Top, Nos
@@ -983,17 +943,15 @@ header "MOVE", "move"
     .word 0x0
     spull Psp, Nos
     spull Psp, Wrk
-    spush Rsp, Psp
 1:
     beq Top, zero, 2f
-    lw Psp, 0(Wrk)
-    sw Psp, 0(Nos)
+    lw T0, 0(Wrk)
+    sw T0, 0(Nos)
     addi Wrk, Wrk, CELL
     addi Nos, Nos, CELL
     addi Top, Top, -1
     beq zero, zero, 1b
 2:
-    spull Rsp, Psp
     jal zero, _drop
 
 //----------------------------------------------------------------------
@@ -1005,17 +963,15 @@ header "CMOVE", "cmove"
     .word 0x0
     spull Psp, Nos
     spull Psp, Wrk
-    spush Rsp, Psp
 1:
     beq Top, zero, 2f
-    lb Psp, 0(Wrk)
-    sb Psp, 0(Nos)
+    lb T0, 0(Wrk)
+    sb T0, 0(Nos)
     addi Wrk, Wrk, 1
     addi Nos, Nos, 1
     addi Top, Top, -1
     beq zero, zero, 1b
 2:
-    spull Rsp, Psp
     jal zero, _drop
 
 //----------------------------------------------------------------------
@@ -1028,48 +984,42 @@ header "CMOVE>", "cmoveb"
     .word 0x0
     spull Psp, Nos
     spull Psp, Wrk
-    spush Rsp, Psp
-
+ 
 // do offsets    
     add Nos, Nos, Top 
     add Wrk, Wrk, Top 
 1:
     beq Top, zero, 2f
-    lb Psp, 0(Wrk)
-    sb Psp, 0(Nos)
+    lb T0, 0(Wrk)
+    sb T0, 0(Nos)
     addi Wrk, Wrk, -1
     addi Nos, Nos, -1
     addi Top, Top, -1
     beq zero, zero, 1b
 2:
-    spull Rsp, Psp
     jal zero, _drop
 
 //----------------------------------------------------------------------
 //   ( a1 a2 u --- FALSE | TRUE )
-// compare bytes from source++ to destination++, decrease count--
+// compare bytes, from a1 source++ to a2 destination++, decrease u count--
 // returns 0 if equal (no differ)
-// used most to compare names with less than 16 of length
 // 
 header "CSAME", "csame"
     .word 0x0
     spull Psp, Nos
     spull Psp, Wrk
-
-    add T0, zero, zero
 1:
-    beq Top, zero, 2f
+    beq Top, zero, 4f
     lb T0, 0 (Wrk)
     lb T1, 0 (Nos)
-    or T0, T1, T0
-    bne T0, zero, 2f
+    bne T0, T1, 2f
     addi Wrk, Wrk, 1
     addi Nos, Nos, 1
     addi Top, Top, -1
     beq zero, zero, 1b
 2:
-    // results
     add Top, T0, zero
+4:
     jal zero, _link
 
  //----------------------------------------------------------------------
@@ -1085,7 +1035,7 @@ header "CFILL", "cfill"
     sb Top, 0(Wrk)
     addi Wrk, Wrk, 1
     addi Nos, Nos, -1
-    jal zero, 1b
+    beq zero, zero, 1b
 2:
     spull Psp, Top 
     jal zero, drop
@@ -1135,14 +1085,15 @@ header "cfind", "cfind"
     jal zero, _link
 
 //----------------------------------------------------------------------
-//   ( c a1  --- 0 | a2 u )
-// point next between ccsssssssc
+// ( <ch> a1  --- 0 | a2 u )
+// point next word between <ch>sssssss<ch>
 // returns 0 at end of buffer
 //
 header "sscan", "sscan"
     .word 0x0
     // get the separator char
     spull Psp, Nos
+
 1:  // while (top) == c
     lb Wrk, 0 (Top)
     beq Wrk, zero, 6f
@@ -1161,7 +1112,7 @@ header "sscan", "sscan"
     beq zero, zero, 3b
 
 4:  // return lenght in Top
-    scopy Psp, Wrk, 0
+    lw Wrk, 0 (Psp)
     sub Top, Top, Wrk
     jal zero, _link
 
@@ -1224,23 +1175,29 @@ header "sfind", "sfind"
     jal zero, _link 
 //----------------------------------------------------------------------
 
+/***********************************************************************
+    
+    depends on dictionary linked list header structure
+
+***********************************************************************/
+
 //---------------------------------------------------------------------- 
 // ok  ( lfa -- flag )
-header  "FFA", "ffa", 
+header  ">FLAGS", "toflags", 
     .word 0x0
     lb Top, (CELL) (Top)
     jal zero, _link
     
 //---------------------------------------------------------------------- 
 // ok  ( lfa -- nfa )
-header  "NFA", "nfa", 
+header  ">NAME", "toname", 
     .word 0x0
     lb Top, (CELL+1) (Top)
     jal zero, _link
     
 //---------------------------------------------------------------------- 
 // ok  ( lfa -- cfa )
-header  "CFA", "cfa", 
+header  ">BODY", "tobody", 
     .word 0x0
     // for sake all code must be CELL aligned, must use .p2align 2 
     // get length
@@ -1254,7 +1211,6 @@ header  "CFA", "cfa",
     add Top, Top, Wrk
     jal zero, _link
 
-        
 //----------------------------------------------------------------------
 header "_EOW_", "_eoW_"
     .word 0x0

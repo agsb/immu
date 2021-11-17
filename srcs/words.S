@@ -22,6 +22,9 @@
  *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  *
  *  //-\--/\-//-\/-/\\\\/-\--\\\-///\-/-/\/--/\\\\/-\-//-/\//-/\//--//-///--\\\-///\-/-/\/
+ *
+ *  licensed with GPL 2.0
+ *
  */
 
 /*********************************************************************
@@ -158,7 +161,7 @@ header  ".(", "dotparen",
 //----------------------------------------------------------------------
 //   
 header "CHAR", "char"
-    .word 
+    .word zzzz, ends
 //----------------------------------------------------------------------
 //  parse, as forth 94 std  "sssss<c>"  (c c-addr -- c-addr n )
 // 
@@ -183,7 +186,7 @@ header "accept", "accept"
 // always place a nil at end, no edit capable
 header "refill", "refill"
     // append a space
-    // .word over, dolit, BL_, swap, to
+    .word over, bl, swap, to
 1:  // last in 
     .word dup, zbranch, 12f - .
     .word swap
