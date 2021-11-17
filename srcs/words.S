@@ -177,9 +177,9 @@ header "PARSE", "parse"
 
 //----------------------------------------------------------------------
 //  accept, as forth 94 std ( a n -- )
-// always place a nil at end, no edit capable
+// 
 header "accept", "accept"
-    .word source, refill, ends
+    .word source, refill, nil, toin, to, ends
 
 //----------------------------------------------------------------------
 //  refill, as forth 94 std ( a n -- )
@@ -215,7 +215,17 @@ header "refill", "refill"
 12: // append a null ( a n )
     .word drop, nil, swap, to
     .word ends
-    
+
+//----------------------------------------------------------------------
+//
+header "WORD", "word"
+    // see buffer
+    .word dolit, XTIB, dolit, TOIN, 
+    .word dup, dolit, BUFFER, lessth, 4f - .
+    .word zzzz
+    .word ends
+
+
 //----------------------------------------------------------------------
 //
 header "QUERY", "query"

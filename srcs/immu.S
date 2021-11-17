@@ -399,7 +399,7 @@ header "=", "equ",
 
 //----------------------------------------------------------------------
 // (n1 n2 -- n1 > n2)
-header ">", "gth", 
+header ">", "greaterth", 
     .word 0x0
     spull Psp, Nos
     blt Top, Nos, _istrue
@@ -407,7 +407,7 @@ header ">", "gth",
     
 //----------------------------------------------------------------------
 // (n1 n2 -- n1 < n2)
-header "<", "lth", 
+header "<", "lessth", 
     .word 0x0
     spull Psp, Nos
     blt Nos, Top, _istrue
