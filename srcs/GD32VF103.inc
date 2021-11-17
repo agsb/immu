@@ -95,99 +95,33 @@ USART_BAUD_OFFSET = 0x08
 # GD32VF103 Manual: Section 16.4.4
 
 USART_CTL0_OFFSET = 0x0c
+
+# receive 0: disable 1:enable
 USART_CTL0_REN_BIT = 2
+
+# transmit 0: disable 1:enable
 USART_CTL0_TEN_BIT = 3
+
+# usart 0: disable 1:enable
 USART_CTL0_UEN_BIT = 13
   
-RCU_BASE_ADDR      = 0x40021000 # GD32VF103 Manual: Section 5.3 
-RCU_CTL_OFFSET     = 0x00  
-RCU_CFG0_OFFSET    = 0x04
-RCU_INT_OFFSET     = 0x08
-RCU_APB2RST_OFFSET = 0x0c
-RCU_APB1RST_OFFSET = 0x10
-RCU_AHBEN_OFFSET   = 0x14
-RCU_APB2EN_OFFSET  = 0x18  # GD32VF103 Manual: Section 5.3.7
-RCU_APB1EN_OFFSET  = 0x1c
-RCU_BDCTL_OFFSET   = 0x20
-RCU_RSTSCK_OFFSET  = 0x24
-RCU_AHBRST_OFFSET  = 0x28
-RCU_CFG1_OFFSET    = 0x2c 
-RCU_APB2RST_SPI0RST = (1<<12) #SPI0 reset 
+# use default values 
 
-RCU_APB2EN_AFEN = (1<<0) #AF enable reset 
+# data length default 0: 8 data bits 1: 9 data bits
+USART_CTL0_WL_BIT = 12
 
-RCU_CFG0_PLLMF_Msk      = 0x203c0000
-RCU_CFG0_AHBPSC_Msk     = 0xf0
-RCU_CFG0_APB2PSC_Msk    = 0x3800
-RCU_CFG0_APB1PSC_Msk    = 0x700
-RCU_CFG0_SCS_Msk        = 0x3
-RCU_CFG0_SCSS_Msk       = 0xc
+# check parity default 0: parity disable 1: parity enable
+USART_CTL0_PCEN_BIT = 10
 
-RCU_CFG0_APB1PSC_Pos    = 8
-RCU_CFG0_PLLMF_Pos      = 18
-RCU_CFG0_PLLMF_4_Pos    = 29
-RCU_CFG0_SCSS_Pos       = 2
+# check parity default 0: even parity 1: odd  parity
+USART_CTL0_PM_BIT = 9
 
-RCU_CFG0_SCSS_PLL       = (2 << RCU_CFG0_SCSS_Pos)
-RCU_CFG0_PLLMF_MUL24    = ( ((23 & 0xf) << RCU_CFG0_PLLMF_Pos) | (( 23 >> 4) << RCU_CFG0_PLLMF_4_Pos ))
-RCU_CFG0_PLLMF_MUL27    = ( ((26 & 0xf) << RCU_CFG0_PLLMF_Pos) | (( 26 >> 4) << RCU_CFG0_PLLMF_4_Pos ))
-RCU_CFG0_PLLSEL         = ( 1 << 13)
-RCU_CTL_PLLEN           = ( 1 << 24 )
-RCU_CFG0_APB1PSC_DIV2   = (4 << RCU_CFG0_APB1PSC_Pos)
-RCU_CFG0_SCS_PLL        = 2
-    
-SPI0_BASE_ADDR          = 0x40013000
-SPI1_BASE_ADDR          = 0x40003800  # GD32VF103 Manual: Section 18.11
-SPI_STAT_TBE_BIT        = 1
-SPI_STAT_TBE            = (1 << SPI_STAT_TBE_BIT)
-SPI_STAT_TRANS_BIT      = 7
-SPI_STAT_TRANS          = (1 << SPI_STAT_TRANS_BIT)
-SPI_CTL0_OFFSET         = 0x00  # GD32VF103 Manual: Section 18.11.1
-SPI_CTL1_OFFSET         = 0x04  # GD32VF103 Manual: Section 18.11.2
-SPI_STAT_OFFSET         = 0x08  # GD32VF103 Manual: Section 18.11.3
-SPI_DATA_OFFSET         = 0x0c  # GD32VF103 Manual: Section 18.11.4
+# send break 0: none 1: sent
+USART_CTL0_SBKCMD_BIT = 9
 
-SPI_CTL0_BDEN_BIT       = 15
-SPI_CTL0_BDOEN_BIT      = 14
-SPI_CTL0_SWNSSEN_BIT    =  9
-SPI_CTL0_SWNSS_BIT      =  8
-SPI_CTL0_SPIEN_BIT      =  6
-SPI_CTL0_MSTMOD_BIT     =  2
-SPI_CTL0_CKPL_BIT       =  1
-SPI_CTL0_CKPH_BIT       =  0
-SPI_CTL0_PSC_Pos        =  3
+USART_CTL1_OFFSET = 0x10
 
-SPI_CTL0_BDEN       = (1 << SPI_CTL0_BDEN_BIT)
-SPI_CTL0_BDOEN      = (1 << SPI_CTL0_BDOEN_BIT)
-SPI_CTL0_SWNSSEN    = (1 << SPI_CTL0_SWNSSEN_BIT)
-SPI_CTL0_SWNSS      = (1 << SPI_CTL0_SWNSS_BIT)
-SPI_CTL0_SPIEN      = (1 << SPI_CTL0_SPIEN_BIT)
-SPI_CTL0_MSTMOD     = (1 << SPI_CTL0_MSTMOD_BIT)
-SPI_CTL0_CKPL       = (1 << SPI_CTL0_CKPL_BIT)
-SPI_CTL0_CKPH       = (1 << SPI_CTL0_CKPH_BIT)
+# stop bits, default 00: 1 stop bit 10: 2 stop bit
+USART_CTL1_STB1_BIT = 13
+USART_CTL0_STB1_BIT = 12
 
-DP_CLOCKDIV_WRITE   =  (2 << SPI_CTL0_PSC_Pos)
-
-MTIMER_BASE     = 0xD1000000
-
-MTIMER_MTIME_LO_OFFSET      = 0x00
-MTIMER_MTIME_HI_OFFSET      = 0x04
-MTIMER_MTIMECMP_LO_OFFSET   = 0x08
-MTIMER_MTIMECMP_HO_OFFSET   = 0x0c
-
-# GD32VF103 Manual: page 111 
-# LCD protocol
-
-# PORT B
-DP_DC_BIT   = 0 
-DP_RST_BIT  = 1
-DP_CS_BIT   = 2
-DP_DC       = (1 << DP_DC_BIT) 
-DP_RST      = (1 << DP_RST_BIT) 
-DP_CS       = (1 << DP_CS_BIT) 
-
-# PORT A
-DP_SDA_BIT  = 7
-DP_SCL_BIT  = 5
-DP_SDA      = (1 << DP_SDA_BIT)
-DP_SCL      = (1 << DP_SCL_BIT)

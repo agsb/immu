@@ -91,17 +91,22 @@ s11 ~X27~ as T1, temporary extra
 
 #include "GD32VF103.asm"
 
-	// 32KB @ 0x20000000
-RAM_BASE_ADDR = 0x20000000
-RAM_SIZE = 32 * 1024
-
-	// 128KB @ 0x08000000
+// 128KB @ 0x08000000
 ROM_BASE_ADDR = 0x08000000
 ROM_SIZE = 128 * 1024
 
-	// 8MHz is the default GD32VF103 clock freq
+// 32KB @ 0x20000000
+RAM_BASE_ADDR = 0x20000000
+RAM_SIZE = 32 * 1024
+
+// 8MHz is the default GD32VF103 clock freq
 CLOCK_FREQ = 8000000
 
+
+//---------------------------------------------------------------------
+// void gpio_init(uint32_t gpio_periph, uint32_t mode, uint32_t speed, uint32_t pin)
+// ( gpio_periph mode speed pin )
+//---------------------------------------------------------------------
 
 //---------------------------------------------------------------------
 // Func: gpio_config
@@ -164,8 +169,36 @@ gpio_config_done:
 	jal zero, _link
 
 //---------------------------------------------------------------------
+//gpio_init(GPIOA, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, GPIO_PIN_10);
+// configure TX pin
+header "configure_tx_pin", "configure_default_tx_pin_do"
+	.word dup, zbranch, 2f - .
+	.word dolit, GPIO_CONFIG_AF_PP_50MHZ
+	.word dolit, 9
+    .word dolit, GPIO_BASE_ADDR_A
+	.word gpio_config_pin_do
+    .word ends
+
+//---------------------------------------------------------------------
+// configure RX pin
+header "configure_rx_pin", "configure_rx_pin_do"
+	.word dolit, GPIO_CONFIG_IN_FLOAT
+	.word dolit, 10
+    .word dolit, GPIO_BASE_ADDR_A
+	.word gpio_config_pin_do
+    .word ends
+
+//	from: https://github.com/riscv-mcu/GD32VF103_Firmware_Library/
+//	blob/master/Firmware/GD32VF103_standard_peripheral/Source/gd32vf103_usart.c
+
+//---------------------------------------------------------------------
 // Func: serial_init
 // Arg: Top = baud rate
+//       reset USART0 
+//        rcu_periph_reset_enable(RCU_USART0RST);
+//        rcu_periph_reset_disable(RCU_USART0RST);
+//        break;
+    
 header "serial_init", "serial_init_do"
 serial_init:
 
@@ -197,47 +230,31 @@ serial_init_done:
     Jal zero, _link
 		
 //---------------------------------------------------------------------
-// Func: serial_parity
-header "serial_parity", "serial_parity"
-	
-//zzzz
-    /* clear USART_CTL0 PM,PCEN bits */
-    USART_CTL0(usart_periph) &= ~(USART_CTL0_PM | USART_CTL0_PCEN);
-    /* configure USART parity mode */
-    USART_CTL0(usart_periph) |= paritycfg ;
-
+// Func: serial_config
+// default at boot is 8-N-1 fixed
+// USART_WL_8BIT: 8 bits
+// USART_PM_NONE: no parity
+// USART_STB_1BIT:   1 bit
+//
+// todo: (stop_bit_length parity_flag bits_length -- )
+header "serial_config", "serial_config_do"
 serial_parity_done:
-    spull Psp, Top
-    Jal zero, _link
-
-//---------------------------------------------------------------------
-// Func: serial_length
-header "serial_length", "serial_length_do"
+	jal zero, _link
+/*
 	
-//zzzz
-   /* clear USART_CTL0 WL bit */
+    // clear USART_CTL0 WL bit 
     USART_CTL0(usart_periph) &= ~USART_CTL0_WL;
-    /* configure USART word length */
-    USART_CTL0(usart_periph) |= wlen;
-
-serial_length_done:
-    spull Psp, Top
-    Jal zero, _link
-
-//---------------------------------------------------------------------
-// Func: serial_stop_bit_length
-header "serial_stop_bit_length", "serial_stop_bit_length_do"
-	
-//zzzz
-    /* clear USART_CTL1 STB bits */
+    // configure USART word length
+    USART_CTL0(usart_periph) |= USART_WL_8BIT;
+    // clear USART_CTL0 PM,PCEN bits 
+    USART_CTL0(usart_periph) &= ~(USART_CTL0_PM | USART_CTL0_PCEN);
+    // configure USART parity mode 
+    USART_CTL0(usart_periph) |= USART_PM_NONE;
+    // clear USART_CTL1 STB bits 
     USART_CTL1(usart_periph) &= ~USART_CTL1_STB; 
-    /* configure USART stop bits */
-    USART_CTL1(usart_periph) |= stblen;
-
-serial_stop_bit_length_done:
-    spull Psp, Top
-    Jal zero, _link
-
+    // configure USART stop bits 
+    USART_CTL1(usart_periph) |= USART_STB_1BIT;
+*/
 
 //---------------------------------------------------------------------
 // Func: serial_getc
@@ -274,22 +291,4 @@ serial_putc_done:
     jal zero, _link	
     
     
-//---------------------------------------------------------------------
-// configure TX pin
-header "configure_tx_pin", "configure_tx_pin_do"
-	.word dolit, GPIO_CONFIG_AF_PP_50MHZ
-	.word dolit, 9
-    .word dolit, GPIO_BASE_ADDR_A
-	.word gpio_config_pin_do
-    .word ends
-
-//---------------------------------------------------------------------
-// configure RX pin
-header "configure_rx_pin", "configure_rx_pin_do"
-	.word dolit, GPIO_CONFIG_IN_FLOAT
-	.word dolit, 10
-    .word dolit, GPIO_BASE_ADDR_A
-	.word gpio_config_pin_do
-    .word ends
-
 

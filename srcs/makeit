@@ -1,7 +1,7 @@
 
 source=main
 
-rm ${source}.o ${source}.map ${source}.lst ${source}.lot ${source}.elf
+rm ${source}.o ${source}.map ${source}.lst ${source}.obj ${source}.elf
 
 export PATH=/opt/riscv/bin:$PATH
 

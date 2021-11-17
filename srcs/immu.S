@@ -181,7 +181,7 @@ F_UNMASK = 0x0F
 /*
 .set _link_, 0x0
 
-.macro HEADER name, label, flags=0x0
+.macro HEADER name, label, flags
 is_\label:
     .p2align 1, 0x00
 99:
@@ -1260,9 +1260,10 @@ header "_EOW_", "_eoW_"
     .word 0x0
 
 #include "biosv.S"
+
 #include "words.S"
 
-header "_EOF_", "_eof_"
+header "_EOF_", "_eoF_"
     .word 0x0
 
 /*

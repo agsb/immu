@@ -452,81 +452,81 @@ header  "VOCABULARY", "vocabulary",
 
 //---------------------------------------------------------------------- 
 // ok back, resolves a backward branch
-header  "BACK", "back", //f_immediate 
+header  "BACK", "back",  F_IMMEDIATE 
     .word here, swap, minus, comma, ends 
  
 //---------------------------------------------------------------------- 
 // ok mark, marks for a branch 
-header  "MARK", "mark", //f_immediate 
+header  "MARK", "mark",  F_IMMEDIATE 
     .word here, 0, comma, ends 
  
 //---------------------------------------------------------------------- 
 // ok begin 
-header  "BEGIN", "begin", //f_immediate 
+header  "BEGIN", "begin",  F_IMMEDIATE 
     .word here, ends 
  
 //---------------------------------------------------------------------- 
 // ok again resolves a backward branch 
-header  "AGAIN", "again", //f_immediate 
+header  "AGAIN", "again",  F_IMMEDIATE 
     .word comp, branch, back, ends 
  
 //---------------------------------------------------------------------- 
 // ok until 
-header  "UNTIL", "until", //f_immediate 
+header  "UNTIL", "until",  F_IMMEDIATE 
     .word comp, zbranch, back, ends 
  
 //---------------------------------------------------------------------- 
 // ok unless 
-header  "UNLESS", "unless", //f_immediate 
+header  "UNLESS", "unless",  F_IMMEDIATE 
     .word invert, until, ends 
  
 //---------------------------------------------------------------------- 
 // 
 // ok if 
-header  "IF", "if", //f_immediate 
+header  "IF", "if", F_IMMEDIATE
     .word comp, zbranch, mark, ends 
  
 //---------------------------------------------------------------------- 
 // 
 // ok endif resolves a forward branch 
-header  "ENDIF", "endif", //f_immediate 
+header  "ENDIF", "endif",  F_IMMEDIATE 
     .word dup, here, minus, swap, to, ends 
  
 //---------------------------------------------------------------------- 
 // 
 // ok then 
-header  "THEN", "then", //f_immediate 
+header  "THEN", "then",  F_IMMEDIATE 
     .word endif, ends 
  
 //---------------------------------------------------------------------- 
 // 
 // ok else 
-header  "ELSE", "else", //f_immediate 
+header  "ELSE", "else",  F_IMMEDIATE 
     .word comp, branch, mark, swap, endif, ends 
  
 //---------------------------------------------------------------------- 
 // 
 // ok while 
-header  "WHILE", "while", //f_immediate 
+header  "WHILE", "while",  F_IMMEDIATE 
     .word if, ends 
  
 //---------------------------------------------------------------------- 
 // 
 // ok repeat 
-header  "REPEAT", "repeat", //f_immediate 
+header  "REPEAT", "repeat",  F_IMMEDIATE 
     .word tor, tor, again, rat, rat, minus, endif, ends 
  
 
 //---------------------------------------------------------------------- 
 // 
 // for 
-header  "FOR", "for", //f_immediate 
+header  "FOR", "for",  F_IMMEDIATE 
     .word tor, here, ends 
  
 //---------------------------------------------------------------------- 
 // 
 // next
-header  "NEXT", "next", //f_immediate 
+header  "NEXT", "next",  F_IMMEDIATE 
     .word rto, one, minus, zequ, zbranch, 4f - .
 	.word tor, comp, back 
 4:  .word ends 
@@ -535,13 +535,13 @@ header  "NEXT", "next", //f_immediate
 //---------------------------------------------------------------------- 
 // 
 // do 
-header  "DO", "do", //f_immediate 
+header  "DO", "do",  F_IMMEDIATE 
     .word tor, tor, here, ends 
  
 //---------------------------------------------------------------------- 
 // 
 // loop
-header  "LOOP", "loop", //f_immediate 
+header  "LOOP", "loop",  F_IMMEDIATE 
     .word rto, dolit, one, plus,, rto, over, over, lth, zbranch, 4f - .
 	.word comp, "xloop", back, 
 4:	.word ends 
@@ -549,7 +549,7 @@ header  "LOOP", "loop", //f_immediate
 //---------------------------------------------------------------------- 
 // 
 // loopplus
-header  "LOOP+", "looplus", //f_immediate 
+header  "LOOP+", "looplus",  F_IMMEDIATE 
     .word comp, "xlooplus", back, ends 
 */
  
