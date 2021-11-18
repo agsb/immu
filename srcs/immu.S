@@ -54,6 +54,13 @@ s9 ~X25~ as Wrk, temporary scratch register
 s10 ~X26~ as T0, temporary extra
 s11 ~X27~ as T1, temporary extra
 
+Why T0 and T1 ? 
+
+To make a memcmp needs five registers 
+two for address sources, two for contents bytes, 
+and maybe a counter.
+else many stack operations are need
+
 ```
 */
 
@@ -90,6 +97,9 @@ s11 ~X27~ as T1, temporary extra
 // works as a screen or block, just receives a line till a CR or CR LF
 // uses BS, ESC, CAN, XON, XOFF, for control
 //
+
+#define EOF_      0x05    //#; ascii eof ^D
+
 #define XON_      0x11    //#; ascii DC1 ^Q
 #define XOFF_     0x13    //#; ascii DC3 ^S
 
@@ -1086,7 +1096,7 @@ header "cfind", "cfind"
 
 //----------------------------------------------------------------------
 // ( <ch> a1  --- 0 | a2 u )
-// point next word between <ch>sssssss<ch>
+// point next word between <ch><ch><ch>sssssss<ch>
 // returns 0 at end of buffer
 //
 header "sscan", "sscan"

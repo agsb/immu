@@ -178,42 +178,69 @@ header "PARSE", "parse"
 //----------------------------------------------------------------------
 //  accept, as forth 94 std ( a n -- )
 // 
-header "accept", "accept"
+head
+er "accept", "accept"
     .word source, refill, nil, toin, to, ends
 
 //----------------------------------------------------------------------
 //  refill, as forth 94 std ( a n -- )
-// always place a nil at end, no edit capable
+// always receive from key
+// always place a space at start, to serve as placeholder of length of a word
+// always place a nil at end, to mark end of buffer
+// no edit capable
 header "refill", "refill"
-    // append a space
+    // append a space at start, and advance to next
     .word over, bl, swap, to
-1:  // last in 
-    .word dup, zbranch, 12f - .
-    .word swap
-2:  // getch
+    // keep lenght, start counter at zero
+    .word rto, nil
+1:   // last in ?
+    .word dup, rat, zgth, zbranch, 20f -.
+2:  // getch, blocks while
+
+ZZZZ
+
     .word key
     // verify  
-    .word dup, dolit, CR_, minus, zbranch, 10f - .
-    .word dup, dolit, LF_, minus, zbranch, 10f - .
-    .word dup, dolit, BS_, minus, zbranch, 8f -.
-    .word dup, dolit, TB_, minus, zbranch, 6f - .
-    .word dup, dolit, ESC_, minus, zbranch, 2b - .
-    .word dup, dolit, BL_, gth, zbranch, 2b - .
-    .word dup, dolit, TL_, lth, zbranch, 2b - .
-6:  // do tab 
+    // normal end of line
+    .word dup, dolit, CR_, minus, zbranch, 18f - .
+    .word dup, dolit, LF_, minus, zbranch, 18f - .
+    // unexpected end of file
+    .word dup, dolit, EOF_, minus, zbranch, 18f - .
+    // unexpected cancel
+    .word dup, dolit, CAN_, minus, zbranch, 16f - .
+    // do ESC
+    .word dup, dolit, ESC_, minus, zbranch, 14f - .
+    // minimal edits
+    .word dup, dolit, BS_, minus, zbranch, 10f -.
+    .word dup, dolit, TB_, minus, zbranch, 8f - .
+    // accept valid characters
+    .word dup, dolit, BL_ - 1, gth, zbranch, 12f - .
+    .word dup, dolit, TL_ + 1, lth, zbranch, 12f - .
+4:   // check if space
+    .word dup, dolit, BL_, equ, zbranch, 6f - .
+    .word   
+6:   // do valid
+    .word tor, over, over, plus, rto, swap, to
+    .word one, plus
+    .word branch, 1b - .
+8:  // do tab 
     .word drop, dolit, BL_
-    // do valid
-    .word over, to 
-    .word one, plus, swap
-    .word one, minus, branch, 1b - .
-8:  // do backspace
+    .word branch, 4b - .
+10:  // do backspace
     .word drop
-    .word one, minus, swap
-    .word one, plus, branch, 1b - .
-10: // cr-lf ( a n c)
+    .word dup, zgth, zbranch, 2b - .
+    .word one, minus
+    .word branch, 2b - .
+12: // no valid
+14: // ESC
+16: // CAN
     .word drop
-12: // append a null ( a n )
+    .word branch, 2b - .
+18: // cr-lf ( a n c)
+    .word drop
+20: // append a null ( a n )
     .word drop, nil, swap, to
+    .word rto, drop
     .word ends
 
 //----------------------------------------------------------------------
