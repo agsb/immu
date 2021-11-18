@@ -575,14 +575,15 @@ header  "NEXT", "next",  F_IMMEDIATE
 //---------------------------------------------------------------------- 
 // 
 // do 
-header  "DO", "do",  F_IMMEDIATE 
-    .word tor, tor, here, ends 
+header  "DO", "do", 
+    .word tor, tor, comp, begin, ends 
  
 //---------------------------------------------------------------------- 
 // 
 // loop
 header  "LOOP", "loop",  F_IMMEDIATE 
-    .word rto, dolit, one, plus,, rto, over, over, lth, zbranch, 4f - .
+    .word rto, one, plus, rto, 
+    .word over, over, lth, zbranch, 4f - .
 	.word comp, "xloop", back, 
 4:	.word ends 
  

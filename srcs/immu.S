@@ -799,7 +799,7 @@ header "DOCON", "docon",
 dolit:
     spush Psp, Top 
     lw Top, 0 (Ipt)
-_iic:
+_nobranch:
     addi Ipt, Ipt, CELL
     jal zero, _link
 
@@ -810,14 +810,14 @@ header "DOVAR", "dovar",
     .word 0x0
     spush Psp, Top 
     add Top, Ipt, zero
-    beq zero, zero, _iic
+    beq zero, zero, _nobranch
   
 //----------------------------------------------------------------------
 // trick, branch if Top is zero else skip next reference
 header "?BRANCH", "zbranch", 
     .word 0x0
     beq Top, zero, _branch
-    beq zero, zero, _iic
+    beq zero, zero, _nobranch
     
 //----------------------------------------------------------------------
 // trick, a follow reference is always a offset to branch
@@ -942,7 +942,61 @@ header "u/mod", "uslashmod",
     divu Top, Top, Nos
     jal zero, _link
 
-#endif
+//----------------------------------------------------------------------
+// special case, always do a 0 to index
+// dofor S:(limit -- ) R:(limit 0 -- )
+header "FOR", "dofor"
+    .word 0x0
+    spush Rsp, Top
+    spull Psp, Top
+    spush Rsp, zero
+    jal zero, _link
+
+//----------------------------------------------------------------------
+// really do a loop
+// donext R:(limit index --)
+    header "NEXT", "donext"
+    .word 0x0
+    beq zero, zero, _loopme
+
+//----------------------------------------------------------------------
+// generic case, any value to index
+// dodo S:(index limit -- ) R:(limit index -- )
+header "DO", "dodo"
+    .word 0x0
+    spush Rsp, Top
+    spull Psp, Top
+    spush Rsp, Top
+    spull Psp, Top
+    jal zero, _link
+
+//----------------------------------------------------------------------
+// increase index by one, loops while index less than limit
+// doloop R:(limit index --)
+    header "LOOP", "doloop"
+    .word 0x0
+_loopme:
+    lw Nos, 0 (Rsp)
+    lw Wrk, CELL (Rsp)
+    addi Nos, Nos, 1
+_loops:
+    bge Nos, Wrk, 2f
+    sw Nos, 0 (Rsp)
+    beq zero, zero, _branch
+2:
+    addi Rsp, Rsp, -2*CELL
+    beq zero, zero, _nobranch
+
+//----------------------------------------------------------------------
+// increase index by Top, loops while index less than limit
+// dolooplus R:(limit index --)
+    header "LOOP+", "dolooplus"
+    .word 0x0
+    lw Nos, 0 (Rsp)
+    lw Wrk, CELL (Rsp)
+    addi Nos, Nos, Top
+    spull Psp, Top
+    beq zero, zero, _loops
 
 //----------------------------------------------------------------------
 //   ( a1 a2 u --- )
