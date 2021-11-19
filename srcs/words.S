@@ -487,7 +487,9 @@ header  "VOCABULARY", "vocabulary",
     .word zzzz, ends
 
 /**********************************************************************
-    forth control words, forth-79
+    forth control words, as in forth-79
+
+    added FOR, a index 0 do
 **********************************************************************/
 
 //---------------------------------------------------------------------- 
@@ -514,6 +516,11 @@ header  "AGAIN", "again",  F_IMMEDIATE
 // ok until 
 header  "UNTIL", "until",  F_IMMEDIATE 
     .word comp, zbranch, back, ends 
+ 
+//---------------------------------------------------------------------- 
+// ok end 
+header  "END", "end",  F_IMMEDIATE 
+    .word until, ends 
  
 //---------------------------------------------------------------------- 
 // ok unless 
@@ -556,44 +563,36 @@ header  "WHILE", "while",  F_IMMEDIATE
 header  "REPEAT", "repeat",  F_IMMEDIATE 
     .word tor, tor, again, rat, rat, minus, endif, ends 
  
+//---------------------------------------------------------------------- 
+// S:( limit -- ) R:( -- limit 0)
+// for -- loop  
+header  "FOR", "for", 
+    .word xfor, here, ends 
 
 //---------------------------------------------------------------------- 
-// 
-// for 
-header  "FOR", "for",  F_IMMEDIATE 
-    .word tor, here, ends 
- 
-//---------------------------------------------------------------------- 
-// 
-// next
-header  "NEXT", "next",  F_IMMEDIATE 
-    .word rto, one, minus, zequ, zbranch, 4f - .
-	.word tor, comp, back 
-4:  .word ends 
-
-/*
-//---------------------------------------------------------------------- 
-// 
-// do 
+// S:( index limit -- ) R:( -- limit index)
+// do -- loop
 header  "DO", "do", 
-    .word tor, tor, comp, begin, ends 
+    .word xdo, here, ends 
  
 //---------------------------------------------------------------------- 
-// 
+// S:( index limit -- ) R:( -- limit index)
+// as continue from C
+header  "?REPEAT", "continue", 
+    .word dup, again, ends 
+ 
+//---------------------------------------------------------------------- 
+// increase index by one, loop while index less than limit
 // loop
 header  "LOOP", "loop",  F_IMMEDIATE 
-    .word rto, one, plus, rto, 
-    .word over, over, lth, zbranch, 4f - .
-	.word comp, "xloop", back, 
-4:	.word ends 
+    .word xloop, back, ends
  
 //---------------------------------------------------------------------- 
-// 
+// increase index by Top, loop while index less than limit
 // loopplus
-header  "LOOP+", "looplus",  F_IMMEDIATE 
-    .word comp, "xlooplus", back, ends 
-*/
- 
+header  "+LOOP", "looplus",  F_IMMEDIATE 
+    .word xlooplus, back, ends
+
 //---------------------------------------------------------------------- 
 // ok hex
 header	"HEX", "hex",

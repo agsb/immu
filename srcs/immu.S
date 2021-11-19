@@ -943,9 +943,9 @@ header "u/mod", "uslashmod",
     jal zero, _link
 
 //----------------------------------------------------------------------
-// special case, always do a 0 to index
-// dofor S:(limit -- ) R:(limit 0 -- )
-header "FOR", "dofor"
+// does for limit to 0
+// do for S:(limit -- ) R:(limit 0 -- )
+header "(FOR)", "xfor", F_COMPILER_ONLY
     .word 0x0
     spush Rsp, Top
     spull Psp, Top
@@ -953,16 +953,9 @@ header "FOR", "dofor"
     jal zero, _link
 
 //----------------------------------------------------------------------
-// really do a loop
-// donext R:(limit index --)
-    header "NEXT", "donext"
-    .word 0x0
-    beq zero, zero, _loopme
-
-//----------------------------------------------------------------------
 // generic case, any value to index
-// dodo S:(index limit -- ) R:(limit index -- )
-header "DO", "dodo"
+// do do S:(index limit -- ) R:(limit index -- )
+header "(DO)", "xdo", F_COMPILER_ONLY
     .word 0x0
     spush Rsp, Top
     spull Psp, Top
@@ -971,32 +964,52 @@ header "DO", "dodo"
     jal zero, _link
 
 //----------------------------------------------------------------------
-// increase index by one, loops while index less than limit
-// doloop R:(limit index --)
-    header "LOOP", "doloop"
+// really do a loop
+// do next R:(limit index --)
+    header "(NEXT)", "xnext", F_COMPILER_ONLY
     .word 0x0
-_loopme:
     lw Nos, 0 (Rsp)
-    lw Wrk, CELL (Rsp)
-    addi Nos, Nos, 1
-_loops:
-    bge Nos, Wrk, 2f
-    sw Nos, 0 (Rsp)
-    beq zero, zero, _branch
-2:
-    addi Rsp, Rsp, -2*CELL
-    beq zero, zero, _nobranch
+    addi Nos, Nos, -1
+    beq zero, zero, _loopsdown
 
+
+//----------------------------------------------------------------------
+// increase index by one, loops while index less than limit
+// do loop R:(limit index --)
+    header "(LOOP)", "xloop", F_COMPILER_ONLY
+    .word 0x0
+    lw Nos, 0 (Rsp)
+    addi Nos, Nos, 1
+    beq zero, zero, _loopsup
+    
 //----------------------------------------------------------------------
 // increase index by Top, loops while index less than limit
 // dolooplus R:(limit index --)
-    header "LOOP+", "dolooplus"
+    header "(+LOOP)", "xlooplus", F_COMPILER_ONLY
     .word 0x0
     lw Nos, 0 (Rsp)
-    lw Wrk, CELL (Rsp)
     addi Nos, Nos, Top
     spull Psp, Top
-    beq zero, zero, _loops
+    beq zero, zero, _loopsup
+
+//----------------------------------------------------------------------
+// copy limit to  index 
+// leave R:(limit index --)
+    header "(UNLOOP)", "xunloop", F_COMPILER_ONLY
+    .word 0x0
+_unloop:
+    addi Rsp, Rsp, -2*CELL
+    beq zero, zero, _nobranch
+_loopsup:
+    lw Wrk, CELL (Rsp)
+    bge Nos, Wrk, _unloop
+    sw Nos, 0 (Rsp)
+    beq zero, zero, _branch
+_loopsdown:
+    lw Wrk, CELL (Rsp)
+    bge Wrk, Nos, _unloop
+    sw Nos, 0 (Rsp)
+    beq zero, zero, _branch
 
 //----------------------------------------------------------------------
 //   ( a1 a2 u --- )
