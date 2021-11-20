@@ -486,6 +486,12 @@ header  "TYPE", "type",
 header  "VOCABULARY", "vocabulary",
     .word zzzz, ends
 
+
+//---------------------------------------------------------------------- 
+// ok exit, exits immediately :)
+header  "EXIT", "exit",  F_IMMEDIATE 
+    .word comp, ends, ends
+
 /**********************************************************************
     forth control words, as in forth-79
 
@@ -500,7 +506,7 @@ header  "BACK", "back",  F_IMMEDIATE
 //---------------------------------------------------------------------- 
 // ok mark, marks for a branch 
 header  "MARK", "mark",  F_IMMEDIATE 
-    .word here, 0, comma, ends 
+    .word here, nil, comma, ends 
  
 //---------------------------------------------------------------------- 
 // ok begin 
@@ -561,8 +567,52 @@ header  "WHILE", "while",  F_IMMEDIATE
 // 
 // ok repeat 
 header  "REPEAT", "repeat",  F_IMMEDIATE 
-    .word tor, tor, again, rat, rat, minus, endif, ends 
+    .word again, minus, endif, ends 
  
+//---------------------------------------------------------------------- 
+// S:( index limit -- ) R:( -- limit index)
+// as continue from C, forth-94 as ?REPEAT
+header  "CONTINUE", "continue", F_IMMEDIATE 
+    .word dup, again, ends 
+
+//---------------------------------------------------------------------- 
+// ok 
+header	"chain,", "chaincomma",
+	.word dup, at, comma, to, ends
+
+//---------------------------------------------------------------------- 
+// ok 
+// solve leave chain
+header	"chain&", "chainamper",
+  	.word at, 
+1:  .word zdup, zbranch, 2f - .
+    .word dup, at, here, rot, to
+    .word branch, 1b - .
+2:  .word ends
+
+//---------------------------------------------------------------------- 
+// ok 
+header	"new_leaves", "new_leaves",
+   // save old leave onto stack
+    .word dolit, LEAV, at, 
+    // init a new leave chain
+    .word nil, dolit, LEAV, to
+    .word ends
+
+//---------------------------------------------------------------------- 
+// ok 
+header	"old_leaves", "old_leaves",
+    // resolve leaves chain
+    .word dolit, LEAV, chain&    
+    // load old leave from stack 
+    .word dolit, LEAV, to, ends
+    .word ends
+ 
+//---------------------------------------------------------------------- 
+// as break from C, chain forward references 
+header	"LEAVE", "leave",
+	.word comp, branch, here, dolit, LEAV, chaincomma, ends
+
 //---------------------------------------------------------------------- 
 // S:( limit -- ) R:( -- limit 0)
 // for -- loop  
@@ -570,29 +620,38 @@ header  "FOR", "for",
     .word xfor, here, ends 
 
 //---------------------------------------------------------------------- 
-// S:( index limit -- ) R:( -- limit index)
+// S:( limit index -- ) R:( -- index limit )
 // do -- loop
-header  "DO", "do", 
-    .word xdo, here, ends 
- 
-//---------------------------------------------------------------------- 
-// S:( index limit -- ) R:( -- limit index)
-// as continue from C
-header  "?REPEAT", "continue", 
-    .word dup, again, ends 
- 
+header  "DO", "do", F_COMPILE_ONLY
+    // save old leave onto stack
+    .word new_leaves
+    // place limit and index on return stack, and go on
+    .word tor, tor, here, nil, ends 
+
 //---------------------------------------------------------------------- 
 // increase index by one, loop while index less than limit
 // loop
-header  "LOOP", "loop",  F_IMMEDIATE 
-    .word xloop, back, ends
+header  "LOOP", "oneloop",  F_COMPILE_ONLY 
+    .word one, loop, ends
  
+//---------------------------------------------------------------------- 
+// drop index and limit
+// unloop
+header  "UNLOOP", "unloop",  F_COMPILE_ONLY 
+    .word rto, drop, rto, drop
+    .word old_leaves, ends
+    
 //---------------------------------------------------------------------- 
 // increase index by Top, loop while index less than limit
 // loopplus
-header  "+LOOP", "looplus",  F_IMMEDIATE 
-    .word xlooplus, back, ends
-
+header  "+LOOP", "loop",  F_COMPILE_ONLY
+    .word rto, swap, rto, plus    // (limit incr+index)
+    .word over, over, gth, zbranch, 2f - .
+    .word tor, tor, again
+2: 
+    .word unloop
+    .word ends    
+    
 //---------------------------------------------------------------------- 
 // ok hex
 header	"HEX", "hex",

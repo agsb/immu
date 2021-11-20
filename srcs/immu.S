@@ -272,6 +272,10 @@ REST:
 PAGE:
 .word 0x0
 
+// link for chain of leave, used inside a do loop
+LEAV:
+.word 0x0
+
 // context, where to search a word, reference of vocabulary
 CONTXT:
 .word 0x0
@@ -424,7 +428,7 @@ header "<", "lessth",
     bge Nos, Top, _isfalse
     
 //----------------------------------------------------------------------
-// ( w a -- )
+// ( w a -- ) store
 header "!", "to", 
     .word 0x0
     spull Psp, Nos
@@ -433,7 +437,7 @@ header "!", "to",
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( a -- w )
+// ( a -- w ) fetch
 header "@", "at", 
     .word 0x0
     lw Top, 0 (Top)
@@ -868,6 +872,11 @@ header "ALIGNED", "aligned",
     add Top, Top, Wrk
     jal zero, _link
 
+//******************************************************************************
+
+    arithmetic functions using riscv instructions
+
+*******************************************************************************/
 // -----------------------------------------------------------------------------
 // ok multiply ( w1 w2 w3 -- ((w1 * w2) / w3) ) zzzz
 header "*/", "starslash", 
@@ -942,6 +951,12 @@ header "u/mod", "uslashmod",
     divu Top, Top, Nos
     jal zero, _link
 
+//******************************************************************************
+
+    iterative loops
+
+*******************************************************************************/
+
 //----------------------------------------------------------------------
 // does for limit to 0
 // do for S:(limit -- ) R:(limit 0 -- )
@@ -950,6 +965,33 @@ header "(FOR)", "xfor", F_COMPILER_ONLY
     spush Rsp, Top
     spull Psp, Top
     spush Rsp, zero
+    jal zero, _link
+
+//----------------------------------------------------------------------
+// really do a loop
+// do next R:(limit index --)
+    header "(NEXT)", "xnext", F_COMPILER_ONLY
+    .word 0x0
+    lw Nos, 0 (Rsp)
+    addi Nos, Nos, -1
+    beq zero, zero, _loopsdown
+
+//----------------------------------------------------------------------
+// 
+// copy first index R:(limit index -- )
+header "I", "xi", F_COMPILER_ONLY
+    .word 0x0
+    spush Rsp, Top
+    lw Top, 0 (Rsp)
+    jal zero, _link
+
+//----------------------------------------------------------------------
+// 
+// copy second index R:(limit j-index limit i-index -- )
+header "J", "xj", F_COMPILER_ONLY
+    .word 0x0
+    spush Rsp, Top
+    lw Top, 2 * CELL (Rsp)
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -962,30 +1004,11 @@ header "(DO)", "xdo", F_COMPILER_ONLY
     spush Rsp, Top
     spull Psp, Top
     jal zero, _link
-
-//----------------------------------------------------------------------
-// really do a loop
-// do next R:(limit index --)
-    header "(NEXT)", "xnext", F_COMPILER_ONLY
-    .word 0x0
-    lw Nos, 0 (Rsp)
-    addi Nos, Nos, -1
-    beq zero, zero, _loopsdown
-
-
-//----------------------------------------------------------------------
-// increase index by one, loops while index less than limit
-// do loop R:(limit index --)
-    header "(LOOP)", "xloop", F_COMPILER_ONLY
-    .word 0x0
-    lw Nos, 0 (Rsp)
-    addi Nos, Nos, 1
-    beq zero, zero, _loopsup
     
 //----------------------------------------------------------------------
 // increase index by Top, loops while index less than limit
 // dolooplus R:(limit index --)
-    header "(+LOOP)", "xlooplus", F_COMPILER_ONLY
+    header "(LOOP)", "xloop", F_COMPILER_ONLY
     .word 0x0
     lw Nos, 0 (Rsp)
     addi Nos, Nos, Top
@@ -993,25 +1016,43 @@ header "(DO)", "xdo", F_COMPILER_ONLY
     beq zero, zero, _loopsup
 
 //----------------------------------------------------------------------
-// copy limit to  index 
+// just copy limit to  index 
+// no jump ahead 
 // leave R:(limit index --)
+    header "(LEAVE)", "xleave", F_COMPILER_ONLY
+    .word 0x0
+    lw Nos, CELL (Rsp)
+    sw Nos, 0 (Rsp)
+    jal zero, _link
+
+//----------------------------------------------------------------------
+// 
+// unloop R:(limit index --)
     header "(UNLOOP)", "xunloop", F_COMPILER_ONLY
     .word 0x0
-_unloop:
+    addi Rsp, Rsp, -2*CELL
+    jal zero, _link
+
+//----------------------------------------------------------------------
+// exit the loop, called from loop to end
+// unloop R:(limit index --)
+    header "(UNDO)", "xundo", F_COMPILER_ONLY
+    .word 0x0
+_undo:
     addi Rsp, Rsp, -2*CELL
     beq zero, zero, _nobranch
 _loopsup:
     lw Wrk, CELL (Rsp)
-    bge Nos, Wrk, _unloop
+    bge Nos, Wrk, _undo
     sw Nos, 0 (Rsp)
     beq zero, zero, _branch
 _loopsdown:
     lw Wrk, CELL (Rsp)
-    bge Wrk, Nos, _unloop
+    bge Wrk, Nos, _undo
     sw Nos, 0 (Rsp)
     beq zero, zero, _branch
 
-//----------------------------------------------------------------------
+//---------------------------------------------------------------------
 //   ( a1 a2 u --- )
 // move cells (32bit) from a1 source++ to a2 destination++, decrease count--
 // returns 0 if equal (no differ)
