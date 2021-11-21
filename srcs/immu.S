@@ -132,11 +132,14 @@ else many stack operations are need
 // stack macros
 // could have hooks for check over/under
 //
+
+// pull decrements
 .macro spull stack, register
     lw \register, 0 (\stack)
     addi \stack, \stack, -1*CELL
 .endm
 
+// push increments
 .macro spush stack, register
     sw \register, 0 (\stack)
     addi \stack, \stack, CELL
@@ -958,99 +961,15 @@ header "u/mod", "uslashmod",
 *******************************************************************************/
 
 //----------------------------------------------------------------------
-// does for limit to 0
-// do for S:(limit -- ) R:(limit 0 -- )
-header "(FOR)", "xfor", F_COMPILER_ONLY
+// copy a cell from return stack
+// must be alredy converted to CELLs
+// copy a cell index ( n -- R:n )
+header "CS-PICK", "cspick", F_COMPILER_ONLY
     .word 0x0
     spush Rsp, Top
-    spull Psp, Top
-    spush Rsp, zero
+    add Wrk, Rsp, Top
+    lw Top, 0 (Wrk)
     jal zero, _link
-
-//----------------------------------------------------------------------
-// really do a loop
-// do next R:(limit index --)
-    header "(NEXT)", "xnext", F_COMPILER_ONLY
-    .word 0x0
-    lw Nos, 0 (Rsp)
-    addi Nos, Nos, -1
-    beq zero, zero, _loopsdown
-
-//----------------------------------------------------------------------
-// 
-// copy first index R:(limit index -- )
-header "I", "xi", F_COMPILER_ONLY
-    .word 0x0
-    spush Rsp, Top
-    lw Top, 0 (Rsp)
-    jal zero, _link
-
-//----------------------------------------------------------------------
-// 
-// copy second index R:(limit j-index limit i-index -- )
-header "J", "xj", F_COMPILER_ONLY
-    .word 0x0
-    spush Rsp, Top
-    lw Top, 2 * CELL (Rsp)
-    jal zero, _link
-
-//----------------------------------------------------------------------
-// generic case, any value to index
-// do do S:(index limit -- ) R:(limit index -- )
-header "(DO)", "xdo", F_COMPILER_ONLY
-    .word 0x0
-    spush Rsp, Top
-    spull Psp, Top
-    spush Rsp, Top
-    spull Psp, Top
-    jal zero, _link
-    
-//----------------------------------------------------------------------
-// increase index by Top, loops while index less than limit
-// dolooplus R:(limit index --)
-    header "(LOOP)", "xloop", F_COMPILER_ONLY
-    .word 0x0
-    lw Nos, 0 (Rsp)
-    addi Nos, Nos, Top
-    spull Psp, Top
-    beq zero, zero, _loopsup
-
-//----------------------------------------------------------------------
-// just copy limit to  index 
-// no jump ahead 
-// leave R:(limit index --)
-    header "(LEAVE)", "xleave", F_COMPILER_ONLY
-    .word 0x0
-    lw Nos, CELL (Rsp)
-    sw Nos, 0 (Rsp)
-    jal zero, _link
-
-//----------------------------------------------------------------------
-// 
-// unloop R:(limit index --)
-    header "(UNLOOP)", "xunloop", F_COMPILER_ONLY
-    .word 0x0
-    addi Rsp, Rsp, -2*CELL
-    jal zero, _link
-
-//----------------------------------------------------------------------
-// exit the loop, called from loop to end
-// unloop R:(limit index --)
-    header "(UNDO)", "xundo", F_COMPILER_ONLY
-    .word 0x0
-_undo:
-    addi Rsp, Rsp, -2*CELL
-    beq zero, zero, _nobranch
-_loopsup:
-    lw Wrk, CELL (Rsp)
-    bge Nos, Wrk, _undo
-    sw Nos, 0 (Rsp)
-    beq zero, zero, _branch
-_loopsdown:
-    lw Wrk, CELL (Rsp)
-    bge Wrk, Nos, _undo
-    sw Nos, 0 (Rsp)
-    beq zero, zero, _branch
 
 //---------------------------------------------------------------------
 //   ( a1 a2 u --- )

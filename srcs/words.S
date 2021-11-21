@@ -499,7 +499,7 @@ header  "EXIT", "exit",  F_IMMEDIATE
 **********************************************************************/
 
 //---------------------------------------------------------------------- 
-// ok back, resolves a backward branch
+// ok back, resolves a offset branch
 header  "BACK", "back",  F_IMMEDIATE 
     .word here, swap, minus, comma, ends 
  
@@ -576,13 +576,13 @@ header  "CONTINUE", "continue", F_IMMEDIATE
     .word dup, again, ends 
 
 //---------------------------------------------------------------------- 
-// ok 
+// ok link last reference
 header	"chain,", "chaincomma",
 	.word dup, at, comma, to, ends
 
 //---------------------------------------------------------------------- 
 // ok 
-// solve leave chain
+// link over reference chain
 header	"chain&", "chainamper",
   	.word at, 
 1:  .word zdup, zbranch, 2f - .
@@ -623,7 +623,7 @@ header  "FOR", "for",
 // S:( limit index -- ) R:( -- index limit )
 // do -- loop
 header  "DO", "do", F_COMPILE_ONLY
-    // save old leave onto stack
+    // init a leave chain
     .word new_leaves
     // place limit and index on return stack, and go on
     .word tor, tor, here, nil, ends 
@@ -639,6 +639,7 @@ header  "LOOP", "oneloop",  F_COMPILE_ONLY
 // unloop
 header  "UNLOOP", "unloop",  F_COMPILE_ONLY 
     .word rto, drop, rto, drop
+    // finish a leave chain
     .word old_leaves, ends
     
 //---------------------------------------------------------------------- 
@@ -651,7 +652,17 @@ header  "+LOOP", "loop",  F_COMPILE_ONLY
 2: 
     .word unloop
     .word ends    
-    
+
+//---------------------------------------------------------------------- 
+// 
+// I index
+header  "I", "indxi",  F_COMPILE_ONLY
+    .word one, cells, cs-pick, ends
+
+// J index
+header  "J", "indxj",  F_COMPILE_ONLY
+    .word one, two, plus, cells, cs-pick, ends
+
 //---------------------------------------------------------------------- 
 // ok hex
 header	"HEX", "hex",
