@@ -68,8 +68,8 @@ else many stack operations are need
 
 /* using a GCC compiler */
 
-#define  FALSE 0
 #define  TRUE -1
+#define  FALSE 0
 #define  BYTE  1
 #define  CELL  4
 #define  STACK 18
@@ -962,11 +962,12 @@ header "u/mod", "uslashmod",
 
 //----------------------------------------------------------------------
 // copy a cell from return stack
-// must be alredy converted to CELLs
+// number is  converted to CELLs
 // copy a cell index ( n -- R:n )
 header "CS-PICK", "cspick", F_COMPILER_ONLY
     .word 0x0
-    spush Rsp, Top
+    // CELL is 4 bytes
+    slli Top, Top, 2 
     add Wrk, Rsp, Top
     lw Top, 0 (Wrk)
     jal zero, _link

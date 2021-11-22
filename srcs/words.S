@@ -192,13 +192,10 @@ header "refill", "refill"
     // append a space at start, and advance to next
     .word over, bl, swap, to
     // keep lenght, start counter at zero
-    .word rto, nil
+    .word rto, one
 1:   // last in ?
-    .word dup, rat, zgth, zbranch, 20f -.
+    .word dup, rat, gth, zbranch, 20f -.
 2:  // getch, blocks while
-
-ZZZZ
-
     .word key
     // verify  
     // normal end of line
@@ -218,8 +215,11 @@ ZZZZ
     .word dup, dolit, TL_ + 1, lth, zbranch, 12f - .
 4:   // check if space
     .word dup, dolit, BL_, equ, zbranch, 6f - .
-    .word   
-6:   // do valid
+    // check duplicates
+    .word tor, over, rto, swap, 
+    .word at, dolit, BL_, equ, zbranch, 6f - .
+    .word branch, 16f - . 
+6:   // do valid ( a m k -- ) (a n )
     .word tor, over, over, plus, rto, swap, to
     .word one, plus
     .word branch, 1b - .
