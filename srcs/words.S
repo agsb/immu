@@ -50,42 +50,42 @@ header  "ZZZZ", "zzzz",
 
 //---------------------------------------------------------------------- 
 // ok STATE
-header "STATE", "state"
+header "STATE", "state",
     .word dolit, STATE, ends
     
 //---------------------------------------------------------------------- 
 // ok BASE
-header "BASE", "base"
+header "BASE", "base",
     .word dolit, BASE, ends
     
 //---------------------------------------------------------------------- 
 // ok LATEST
-header "LATEST", "latest"
+header "LATEST", "latest",
     .word dolit, LATEST, ends
     
 //---------------------------------------------------------------------- 
 // ok TOIN
-header ">IN", "toin"
+header ">IN", "toin",
     .word dolit, TOIN, ends
     
 //---------------------------------------------------------------------- 
 // ok DP
-header "DP", "dp"
+header "DP", "dp",
     .word dolit, FREEF, ends
     
 //---------------------------------------------------------------------- 
 // ok UP
-header "UP", "up"
+header "UP", "up",
     .word dolit, FRAMF, ends
 
 //---------------------------------------------------------------------- 
 // ok CONTEXT
-header "CONTEXT", "context"
+header "CONTEXT", "context",
     .word dolit, CONTXT, ends
 
 //---------------------------------------------------------------------- 
 // ok CURRENT
-header "CURRENT", "current"
+header "CURRENT", "current",
     .word dolit, CURTXT, ends
             
 //---------------------------------------------------------------------- 
@@ -160,17 +160,18 @@ header  ".(", "dotparen",
 
 //----------------------------------------------------------------------
 //   
-header "CHAR", "char"
+header "CHAR", "char",
     .word zzzz, ends
+
 //----------------------------------------------------------------------
 //  parse, as forth 94 std  "sssss<c>"  (c c-addr -- c-addr n )
 // 
-header "PARSE", "parse"
+header "PARSE", "parse",
 2:  //
     .word over, over
     .word at, dup, zbranch, 6f - .
     .word equ, zbranch, 4f - .
-    .word one, plus, branch, 2b
+    .word one, plus, branch, 2b - .
 4:  // zzzzzz
 6:  // zero 
     .word drop, drop, drop, drop, nil, ends
@@ -178,8 +179,7 @@ header "PARSE", "parse"
 //----------------------------------------------------------------------
 //  accept, as forth 94 std ( a n -- )
 // 
-head
-er "accept", "accept"
+header "accept", "accept",
     .word source, refill, nil, toin, to, ends
 
 //----------------------------------------------------------------------
@@ -188,13 +188,13 @@ er "accept", "accept"
 // always place a space at start, to serve as placeholder of length of a word
 // always place a nil at end, to mark end of buffer
 // no edit capable
-header "refill", "refill"
+header "refill", "refill",
     // append a space at start, and advance to next
     .word over, bl, swap, to
     // keep lenght, start counter at zero
     .word rto, one
 1:   // last in ?
-    .word dup, rat, gth, zbranch, 20f -.
+    .word dup, rat, greath, zbranch, 20f -.
 2:  // getch, blocks while
     .word key
     // verify  
@@ -211,12 +211,12 @@ header "refill", "refill"
     .word dup, dolit, BS_, minus, zbranch, 10f -.
     .word dup, dolit, TB_, minus, zbranch, 8f - .
     // accept valid characters
-    .word dup, dolit, BL_ - 1, gth, zbranch, 12f - .
-    .word dup, dolit, TL_ + 1, lth, zbranch, 12f - .
+    .word dup, dolit, BL_ - 1, greath, zbranch, 12f - .
+    .word dup, dolit, TL_ + 1, lessth, zbranch, 12f - .
 4:   // check if space
     .word dup, dolit, BL_, equ, zbranch, 6f - .
     // check duplicates
-    .word tor, over, rto, swap, 
+    .word tor, over, rto, swap
     .word at, dolit, BL_, equ, zbranch, 6f - .
     .word branch, 16f - . 
 6:   // do valid ( a m k -- ) (a n )
@@ -245,18 +245,18 @@ header "refill", "refill"
 
 //----------------------------------------------------------------------
 //
-header "WORD", "word"
+header "WORD", "word",
     // see buffer
-    .word dolit, XTIB, dolit, TOIN, 
+    .word dolit, XTIB, dolit, TOIN
     .word dup, dolit, BUFFER, lessth, 4f - .
     .word zzzz
-    .word ends
+4:  .word ends
 
 
 //----------------------------------------------------------------------
 //
-header "QUERY", "query"
-    .word dolit, XTIB, dolit, BUFFER, accept, 0, toin, to, ends
+header "QUERY", "query",
+    .word dolit, XTIB, dolit, BUFFER, accept, nil, toin, to, ends
 
 //---------------------------------------------------------------------- 
 //   receive a string from terminal input buffer, always. ( n -- a u )
@@ -268,7 +268,7 @@ header  "PARSE-NAME", "parsename",
     // update toin
     .word dup, toin, plusto 
     // verify length ( a u -- ) (n)
-    .word dup, rat, lth, zbranch, 3f - . 
+    .word dup, rat, lessth, zbranch, 3f - . 
     .word drop, rto, ends 
 3:  .word rto, drop, ends
     // else auto refill 
@@ -279,7 +279,7 @@ header  "PARSE-NAME", "parsename",
 header  "FIND-NAME", "findname", 
     .word sfind, dup, zbranch, 3f - . 
 // ( a1 a3 -- xt -1|1 )
-    .word swap, drop, dup, cfa, swap, ffa
+    .word swap, drop, dup, tobody, swap, toflags
     .word dolit, F_IMMEDIATE, andf, zbranch, 2f - . 
     .word one, ends
 2:  .word oneneg
@@ -584,7 +584,7 @@ header	"chain,", "chaincomma",
 // ok 
 // link over reference chain
 header	"chain&", "chainamper",
-  	.word at, 
+  	.word at 
 1:  .word zdup, zbranch, 2f - .
     .word dup, at, here, rot, to
     .word branch, 1b - .
@@ -594,7 +594,7 @@ header	"chain&", "chainamper",
 // ok 
 header	"new_leaves", "new_leaves",
    // save old leave onto stack
-    .word dolit, LEAV, at, 
+    .word dolit, LEAV, at
     // init a new leave chain
     .word nil, dolit, LEAV, to
     .word ends
@@ -603,7 +603,7 @@ header	"new_leaves", "new_leaves",
 // ok 
 header	"old_leaves", "old_leaves",
     // resolve leaves chain
-    .word dolit, LEAV, chain&    
+    .word dolit, LEAV, chainamper
     // load old leave from stack 
     .word dolit, LEAV, to, ends
     .word ends
@@ -617,7 +617,9 @@ header	"LEAVE", "leave",
 // S:( limit -- ) R:( -- limit 0)
 // for -- loop  
 header  "FOR", "for", 
-    .word xfor, here, ends 
+    // init a leave chain
+    .word new_leaves
+    .word tor, here, nil, ends 
 
 //---------------------------------------------------------------------- 
 // S:( limit index -- ) R:( -- index limit )
@@ -646,8 +648,9 @@ header  "UNLOOP", "unloop",  F_COMPILE_ONLY
 // increase index by Top, loop while index less than limit
 // loopplus
 header  "+LOOP", "loop",  F_COMPILE_ONLY
-    .word rto, swap, rto, plus    // (limit incr+index)
-    .word over, over, gth, zbranch, 2f - .
+	// (limit incr+index)
+    .word rto, swap, rto, plus    
+    .word over, over, greath, zbranch, 2f - .
     .word tor, tor, again
 2: 
     .word unloop
@@ -657,11 +660,11 @@ header  "+LOOP", "loop",  F_COMPILE_ONLY
 // 
 // I index
 header  "I", "indxi",  F_COMPILE_ONLY
-    .word one, cells, cs-pick, ends
+    .word one, cells, cspick, ends
 
 // J index
 header  "J", "indxj",  F_COMPILE_ONLY
-    .word one, two, plus, cells, cs-pick, ends
+    .word one, two, plus, cells, cspick, ends
 
 //---------------------------------------------------------------------- 
 // ok hex
@@ -728,18 +731,18 @@ THEN
 
 //---------------------------------------------------------------------- 
 // ok HANDLER \last exception handler, forth-94
-header	"HANDLER", "handler"
+header	"HANDLER", "handler",
     .word dovar, nil, ends
 
 //---------------------------------------------------------------------- 
 // ok CATCH (xt -- exception | 0), forth-94
-header	"CATCH", "catch"
+header	"CATCH", "catch",
     .word psat, tor, handler, at, tor, rsat, handler, to, exec
     .word rto, handler, to, rto, handler, to, rto, drop, dolit, nil, ends
 
 //---------------------------------------------------------------------- 
 // ok THROW (exception -- exception | 0), forth-94
-header	"THROW", "throw"
+header	"THROW", "throw",
    .word zdup, zbranch, 2f - . 
    .word handler, at, rsto, rto, handler, to 
    .word rto, swap, tor, psto, drop, rto 
@@ -747,52 +750,52 @@ header	"THROW", "throw"
 
 //---------------------------------------------------------------------- 
 // ok PICK (A -- N)
-header	"PICK", "pick"
+header	"PICK", "pick",
 	.word cells, psat, plus, at, ends
 
 //---------------------------------------------------------------------- 
 // ok 2DROP (A B -- )
-header	"2DROP", "twodrop"
+header	"2DROP", "twodrop",
 	.word drop, drop, ends
 
 //---------------------------------------------------------------------- 
 // ok 2DUP (A B -- A B A B)
-header	"2DUP", "twodup"
+header	"2DUP", "twodup",
 	.word over, over, ends
 
 //---------------------------------------------------------------------- 
 // ok 2SWAP (A B C D -- C D A B)
-header	"2SWAP", "twoswap"
+header	"2SWAP", "twoswap",
 	.word rot, tor, rot, rto, ends
 
 //---------------------------------------------------------------------- 
 // ok 2OVER (A B C D -- A B C D A B)
-header	"2OVER", "twoover"
+header	"2OVER", "twoover",
 	.word zzzz, ends
 
 //---------------------------------------------------------------------- 
 // ok 2TO (w1 w2 a -- )
-header	"2!", "twoto"
+header	"2!", "twoto",
 	.word swap, to, cellplus, to, ends
 
 //---------------------------------------------------------------------- 
 // ok 2AT (a -- w1 w2 a)
-header	"2@", "twoat"
+header	"2@", "twoat",
 	.word dup, cellplus, at, swap, at, ends  
 
 //---------------------------------------------------------------------- 
 // ok 2>R (S:w1 w2 -- ) (R: -- w1 w2)
-header	"2>R", "twotor"
+header	"2>R", "twotor",
 	.word swap, tor, tor, ends  
 
 //---------------------------------------------------------------------- 
 // ok 2R> (S: -- w1 w2) (R: w1 w2 --)
-header	"2R>", "tworto"
+header	"2R>", "tworto",
 	.word rto, rto, swap, ends  
 
 //---------------------------------------------------------------------- 
 // ok 2R@ (S: -- w1 w2) (R: -- w1 w2)
-header	"2R@", "tworat"
+header	"2R@", "tworat",
 	.word rto, rto, twodup, tor, tor, swap, ends  
 
 //---------------------------------------------------------------------- 

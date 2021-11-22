@@ -416,7 +416,7 @@ header "=", "equ",
 
 //----------------------------------------------------------------------
 // (n1 n2 -- n1 > n2)
-header ">", "greaterth", 
+header ">", "greath", 
     .word 0x0
     spull Psp, Nos
     blt Top, Nos, _istrue
@@ -484,7 +484,7 @@ header "2*", "twostar"
     srli Top, Top, 1
     jal zero, _link
 
-/----------------------------------------------------------------------
+//----------------------------------------------------------------------
 // ( u v -- u>>v )
 header "2/", "twoslash"
     .word 0x0
@@ -875,7 +875,7 @@ header "ALIGNED", "aligned",
     add Top, Top, Wrk
     jal zero, _link
 
-//******************************************************************************
+/******************************************************************************
 
     arithmetic functions using riscv instructions
 
@@ -954,7 +954,7 @@ header "u/mod", "uslashmod",
     divu Top, Top, Nos
     jal zero, _link
 
-//******************************************************************************
+/******************************************************************************
 
     iterative loops
 
@@ -964,7 +964,7 @@ header "u/mod", "uslashmod",
 // copy a cell from return stack
 // number is  converted to CELLs
 // copy a cell index ( n -- R:n )
-header "CS-PICK", "cspick", F_COMPILER_ONLY
+header "CS-PICK", "cspick", F_COMPILE_ONLY
     .word 0x0
     // CELL is 4 bytes
     slli Top, Top, 2 
