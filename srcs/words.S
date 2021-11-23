@@ -614,12 +614,22 @@ header	"LEAVE", "leave",
 	.word comp, branch, here, dolit, LEAV, chaincomma, ends
 
 //---------------------------------------------------------------------- 
-// S:( limit -- ) R:( -- limit 0)
+// S:( limit -- ) R:( -- limit )
 // for -- loop  
 header  "FOR", "for", 
     // init a leave chain
     .word new_leaves
     .word tor, here, nil, ends 
+
+//---------------------------------------------------------------------- 
+// S:(  -- ) R:( -- limit )
+// for -- loop  
+header  "NEXT", "next", F_COMPILE_ONLY 
+    .word new_leaves
+    .word rto, one, minus, zbranch, 6f - .
+    .word tor, again 
+6:  // finish a leave chain
+    .word old_leaves, ends
 
 //---------------------------------------------------------------------- 
 // S:( limit index -- ) R:( -- index limit )
@@ -635,15 +645,7 @@ header  "DO", "do", F_COMPILE_ONLY
 // loop
 header  "LOOP", "oneloop",  F_COMPILE_ONLY 
     .word one, loop, ends
- 
-//---------------------------------------------------------------------- 
-// drop index and limit
-// unloop
-header  "UNLOOP", "unloop",  F_COMPILE_ONLY 
-    .word rto, drop, rto, drop
-    // finish a leave chain
-    .word old_leaves, ends
-    
+     
 //---------------------------------------------------------------------- 
 // increase index by Top, loop while index less than limit
 // loopplus
@@ -656,6 +658,13 @@ header  "+LOOP", "loop",  F_COMPILE_ONLY
     .word unloop
     .word ends    
 
+//---------------------------------------------------------------------- 
+// drop index and limit
+// unloop
+header  "UNLOOP", "unloop",  F_COMPILE_ONLY 
+    .word rto, drop, rto, drop
+    // finish a leave chain
+    .word old_leaves, ends
 //---------------------------------------------------------------------- 
 // 
 // I index
