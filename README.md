@@ -12,7 +12,7 @@ I'm requesting for comments about immu, an extended indirect thread code for for
 
 I welcome your patience.
 
-There are some insights and documentation at (https://github.com/agsb/immu/docs 
+There are some insights and documentation at https://github.com/agsb/immu/tree/main/docs
 
 
 ![image](https://github.com/agsb/immu/blob/main/beach-g681c55cdd_640.jpg)
