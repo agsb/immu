@@ -5,10 +5,8 @@
 - from https://mecrisp-stellaris-folkdoc.sourceforge.io/gd32vf103.html
 
     USART 0 BASE $40013800
-    
-![image](https://user-images.githubusercontent.com/14941647/153716690-2b28e3d4-9a0f-4757-b5f1-1dd8c0a44867.png)
 
-BRAD NELSON
+Brad Nelson, 02/2022
     
     : ( 44 parse drop drop ; immediate
    
