@@ -2,11 +2,11 @@
 
 - found a asm coding style: http://www.sourceformat.com/pdf/asm-coding-standard-brown.pdf
 
-- from https://mecrisp-stellaris-folkdoc.sourceforge.io/gd32vf103.html
+- little RISC-V board from https://mecrisp-stellaris-folkdoc.sourceforge.io/gd32vf103.html
 
-    USART 0 BASE $40013800
+- in above board, USART 0 BASE $40013800
 
-Brad Nelson, 02/2022
+- Brad Nelson, 02/2022, mastered easy way
     
     : ( 44 parse drop drop ; immediate
    
