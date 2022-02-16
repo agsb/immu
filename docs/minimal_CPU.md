@@ -4,6 +4,7 @@ Define a CPU with only 4 registers and a program counter. A work register (W), a
 
 For this model the op-codes are:
 
-| op code | bits | operation |
-| :----: | :----: | :----: | :----: |
-| nop | 0 0 0 0 | W -> W | move contents of W to W |
+  | op code | bits | operation | does |
+  | :----: | :----: | :----: | :----: |
+  | nop | 0 0 0 0 | W -> W | move contents of W to W |
+  
