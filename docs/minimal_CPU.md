@@ -21,7 +21,7 @@ For this model the op-codes are:
   | nand | 1 1 0 0 | T - T nand W | nand T . W |
   | sum | 1 1 0 1 | T = T + W | increments T by W |
   | shft | 1 1 1 0 | T = T - 1 | shift right T |
-  | jmp | 1 1 1 1 | jump | jump  |
+  | jmp | 1 1 1 1 | jump | jump  | 
   
   
   
