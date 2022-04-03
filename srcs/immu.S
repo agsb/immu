@@ -56,7 +56,8 @@ s11 ~X27~ as T1, temporary extra
 
 Why T0 and T1 ? 
 
-To make a memcmp needs five registers 
+To make easy memmov, memcpy.
+A mem needs five registers 
 two for address sources, two for contents bytes, 
 and maybe a counter.
 else many stack operations are need
@@ -114,6 +115,7 @@ else many stack operations are need
 
 #define BL_       0x20    //#; ascii space
 #define TL_       0x7E    //#; ascii tilde
+#define DEL_      0x7F    //#; ascii del
 
 #define NUL_      0x00    //#; ascii NUL ^@
  
