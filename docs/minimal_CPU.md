@@ -1,6 +1,14 @@
-There are many essay about minimal CPU and so on, this is more one.
+minimal_CPU.md
 
-Define a CPU with 4 registers and a program counter. A work register (W), a hold register (N), a memory address latch register (A) and a operation register (T). 
+# Abstract
+
+There are many essays about minimum CPU, this is one more.
+
+Define a CPU with 6 latch registers, for simplicity, all registers have the same number of bits as memory addresses;
+
+The four operational registers are: a work register (W), a hold register (N), a memory address register (A), and an operation register (T).
+
+The two special registers are: a program counter  (P), it points to a memory address, after  readed, is incremented automatically, and a condition register (C) that holds flags from specific operations and is read only.  
 
 For this model the op-codes are:
 
@@ -24,5 +32,11 @@ For this model the op-codes are:
   | jmp | 1 1 1 1 | jump | jump to follow address | 
   | | | | | 
   
+PS.
+  
+  Only test and jump instructions can changes the value of  the program counter.
+  
+  The CPU has just four states, wait, read, write, execute.
+
   
   
