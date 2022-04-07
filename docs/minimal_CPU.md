@@ -14,7 +14,7 @@ For this model the op-codes are:
   | mov t, w | 0 1 0 1 | W -> T | move contents of T to W |
   | mov n, n | 0 1 1 0 | W -> N | move contents of N to W |
   | store | 0 1 1 1 | W -> [A] | move from W into [A] |
-  | tst | 1 0 0 0 | test T equal 0 | if T is zero, jump to follow address |
+  | tst | 1 0 0 0 | test T equal 0 | if T is not zero, jump to follow address |
   | inc | 1 0 0 1 | T = T + 1 | increments T by one |
   | dec | 1 0 1 0 | T = T - 1 | decrements T by one |
   | clr | 1 0 1 1 | T = 0 | clear T | 
