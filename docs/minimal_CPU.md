@@ -38,5 +38,12 @@ PS.
   
   The CPU has just four states, wait, read, write, execute.
 
+Updates:
+
+  Must re-think opcodes to attend:
+  
+  How load a value in A register ? that opcodes rely in repeat W++, W->A, not useful. ( att. Duane Sand note in fb, thanks)
+  
+  How jump to a address at register ? 
   
   
