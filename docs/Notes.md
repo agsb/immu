@@ -19,6 +19,7 @@
     \ also only to end of line
 
     : constant ( n 'name' -- ) create , does> @ ;
+    
     : variable ( 'name' -- ) create 0 , ;
     
 
