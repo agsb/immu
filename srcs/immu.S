@@ -323,21 +323,20 @@ _unnest:
     spull Rsp, Ipt
 
 _next: 
-    lw Wrk, 0 (Ipt)
+    lw Wrk, 0(Ipt)
     addi Ipt, Ipt, CELL
     beq Wrk, zero, _jump
 
 _nest: 
     spush Rsp, Ipt
     add Ipt, Wrk, zero
-
-_link:    
     jal zero, _next
 
 _jump:   
-    add Wrk, Ipt, zero
-    addi Ipt, Ipt, CELL
-    jalr zero, Wrk, 0
+    jalr zero, Ipt, 0
+
+_link:    
+    jal zero, _unnest
 
 //----------------------------------------------------------------------
 
