@@ -6,6 +6,8 @@ _Looking for a graal ? That's one._
 ## An list of atomic's was done by Mikael Patel as quoted in https://groups.google.com/g/comp.lang.forth/c/NS2icrCj1jQ/m/ohh9v4KphygJ
 
         S@ R@ @ ! nand plus 0= exit
+        
+        maybe include _lit_ and noop (0)
 
 ## <https://github.com/larsbrinkhoff/lbForth/blob/master/src/kernel.fth>, Lars Brinkhoff in 
 

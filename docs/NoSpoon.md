@@ -15,7 +15,7 @@ Better, there are a group of registers that must be saved before used, "callee" 
 
 Any register could be used as stack, and Forth uses a instruction pointer, a return stack, a parameter stack, and three for operations, maybe more two for temporary hold values.
 
-As common sense, never use processor stack pointer as parameter stack.
+As common sense, never use processor stack pointer as forth return or parameter stack.
 
 _"Organization And Design the hadware/software interface", David P. Patterson, John H. Hennessy, 2005, 3th Edition_
 
