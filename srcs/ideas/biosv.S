@@ -7,13 +7,12 @@
 ( a PDP-11 )
 s4 ~X20~ as Rsp, return stack pointer
 s5 ~X21~ as Psp, parameter stack pointer
-s6 ~X22~ as Ipt, return register for jump and link
-s7 ~X23~ as Top, Top on stack
-s8 ~X24~ as Nos, Next on stack, pull when need
-s9 ~X25~ as Wrk, temporary scratch register
+s6 ~X22~ as Top, hold Top on stack
+s7 ~X23~ as Nos, scratch, when need pull Next on stack
+s8 ~X24~ as Wrk, scratch, temporary register
 ( extras )
-s10 ~X26~ as T0, temporary extra
-s11 ~X27~ as T1, temporary extra
+s9  ~X25~ as T0, temporary extra
+s10 ~X26~ as T1, temporary extra
 */
 
 //
@@ -33,7 +32,7 @@ s11 ~X27~ as T1, temporary extra
 // push used registers
 // leave one extra cell at top, 
 .macro pushs_onto_stack
-	addi sp, sp, -12*CELL
+    addi sp, sp, -12*CELL
     sw  s4, 1*CELL(sp)
     sw  s5, 2*CELL(sp)
     sw  s6, 3*CELL(sp)
@@ -56,7 +55,7 @@ s11 ~X27~ as T1, temporary extra
     lw  s9, 6*CELL(sp)
     lw  s10, 7*CELL(sp)
     lw  s11, 8*CELL(sp)
-	addi sp, sp, +12*CELL
+    addi sp, sp, +12*CELL
 .endm
 
 //---------------------------------------------------------------------

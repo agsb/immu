@@ -16,9 +16,9 @@
  *
  *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  *  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- *  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *  MERCHANTABIlitY, FITNESS FOR A PARTICULAR PURPOSE AND
  *  NON INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- *  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ *  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABIlitY, WHETHER IN AN ACTION
  *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  *
  *  //-\--/\-//-\/-/\\\\/-\--\\\-///\-/-/\/--/\\\\/-\-//-/\//-/\//--//-///--\\\-///\-/-/\/
@@ -51,42 +51,42 @@ header  "ZZZZ", "zzzz",
 //---------------------------------------------------------------------- 
 // ok STATE
 header "STATE", "state",
-    .word dolit, STATE, ends
+    .word lit, STATE, ends
     
 //---------------------------------------------------------------------- 
 // ok BASE
 header "BASE", "base",
-    .word dolit, BASE, ends
+    .word lit, BASE, ends
     
 //---------------------------------------------------------------------- 
 // ok LATEST
 header "LATEST", "latest",
-    .word dolit, LATEST, ends
+    .word lit, LATEST, ends
     
 //---------------------------------------------------------------------- 
 // ok TOIN
 header ">IN", "toin",
-    .word dolit, TOIN, ends
+    .word lit, TOIN, ends
     
 //---------------------------------------------------------------------- 
 // ok DP
 header "DP", "dp",
-    .word dolit, FREEF, ends
+    .word lit, FREEF, ends
     
 //---------------------------------------------------------------------- 
 // ok UP
 header "UP", "up",
-    .word dolit, FRAMF, ends
+    .word lit, FRAMF, ends
 
 //---------------------------------------------------------------------- 
 // ok CONTEXT
 header "CONTEXT", "context",
-    .word dolit, CONTXT, ends
+    .word lit, CONTXT, ends
 
 //---------------------------------------------------------------------- 
 // ok CURRENT
 header "CURRENT", "current",
-    .word dolit, CURTXT, ends
+    .word lit, CURTXT, ends
             
 //---------------------------------------------------------------------- 
 // ok  DEFINITIONS
@@ -96,12 +96,12 @@ header  "DEFINITIONS", "definitions",
 //---------------------------------------------------------------------- 
 // ok  SOURCE
 header  "SOURCE", "source",
-    .word dolit, XTIB, dolit, BUFFER, ends
+    .word lit, XTIB, lit, BUFFER, ends
 
 //---------------------------------------------------------------------- 
 // ok  must continue later
 header  "ALLOT", "allot",
-    .word dp, plusto, ends
+    .word dp, plus, dp, to, ends
     
 //---------------------------------------------------------------------- 
 // ok  must continue later
@@ -202,32 +202,32 @@ header "refill", "refill",
     .word key
     // verify  
     // normal end of line
-    .word dup, dolit, CR_, minus, zbranch, 18f - .
-    .word dup, dolit, LF_, minus, zbranch, 18f - .
+    .word dup, lit, CR_, minus, zbranch, 18f - .
+    .word dup, lit, LF_, minus, zbranch, 18f - .
     // unexpected end of file
-    .word dup, dolit, EOF_, minus, zbranch, 18f - .
+    .word dup, lit, EOF_, minus, zbranch, 18f - .
     // unexpected cancel
-    .word dup, dolit, CAN_, minus, zbranch, 16f - .
+    .word dup, lit, CAN_, minus, zbranch, 16f - .
     // do ESC
-    .word dup, dolit, ESC_, minus, zbranch, 14f - .
+    .word dup, lit, ESC_, minus, zbranch, 14f - .
     // minimal edits
-    .word dup, dolit, BS_, minus, zbranch, 10f -.
-    .word dup, dolit, TB_, minus, zbranch, 8f - .
+    .word dup, lit, BS_, minus, zbranch, 10f -.
+    .word dup, lit, TB_, minus, zbranch, 8f - .
     // accept valid characters
-    .word dup, dolit, BL_ - 1, greath, zbranch, 12f - .
-    .word dup, dolit, TL_ + 1, lessth, zbranch, 12f - .
+    .word dup, lit, BL_ - 1, greath, zbranch, 12f - .
+    .word dup, lit, TL_ + 1, lessth, zbranch, 12f - .
 4:   // check if space
-    .word dup, dolit, BL_, equ, zbranch, 6f - .
+    .word dup, lit, BL_, equ, zbranch, 6f - .
     // check duplicates
     .word tor, over, rto, swap
-    .word at, dolit, BL_, equ, zbranch, 6f - .
+    .word at, lit, BL_, equ, zbranch, 6f - .
     .word branch, 16f - . 
 6:   // do valid ( a m k -- ) (a n )
     .word tor, over, over, plus, rto, swap, to
     .word one, plus
     .word branch, 1b - .
 8:  // do tab 
-    .word drop, dolit, BL_
+    .word drop, lit, BL_
     .word branch, 4b - .
 10:  // do backspace
     .word drop
@@ -250,8 +250,8 @@ header "refill", "refill",
 //
 header "WORD", "word",
     // see buffer
-    .word dolit, XTIB, dolit, TOIN
-    .word dup, dolit, BUFFER, lessth, 4f - .
+    .word lit, XTIB, lit, TOIN
+    .word dup, lit, BUFFER, lessth, 4f - .
     .word zzzz
 4:  .word ends
 
@@ -259,13 +259,13 @@ header "WORD", "word",
 //----------------------------------------------------------------------
 //
 header "QUERY", "query",
-    .word dolit, XTIB, dolit, BUFFER, accept, nil, toin, to, ends
+    .word lit, XTIB, lit, BUFFER, accept, nil, toin, to, ends
 
 //---------------------------------------------------------------------- 
 //   receive a string from terminal input buffer, always. ( n -- a u )
 header  "PARSE-NAME", "parsename", 
      .word tor
-1:   .word dolit, BL_, toin, at, sscan 
+1:   .word lit, BL_, toin, at, sscan 
     // test if not empty
      .word dup, zbranch, 2f - .
     // update toin
@@ -283,7 +283,7 @@ header  "FIND-NAME", "findname",
     .word sfind, dup, zbranch, 3f - . 
 // ( a1 a3 -- xt -1|1 )
     .word swap, drop, dup, tobody, swap, toflags
-    .word dolit, F_IMMEDIATE, andf, zbranch, 2f - . 
+    .word lit, F_IMMEDIATE, andf, zbranch, 2f - . 
     .word one, ends
 2:  .word oneneg
 // ( a1 0 )
@@ -332,9 +332,9 @@ header  "INTERPRET", "interpret",
 //---------------------------------------------------------------------- 
 //  ZZZZ  
 header  "ABORT", "abort", 
-    .word dolit, XRSP, rsto
-    .word dolit, XPSP, psto
-    .word dolit, XTIB, dolit, TIBF, to
+    .word lit, XRSP, rsto
+    .word lit, XPSP, psto
+    .word lit, XTIB, lit, TIBF, to
     .word ends
         
 //---------------------------------------------------------------------- 
@@ -403,12 +403,12 @@ header  "EVALUATE", "evaluate",
 //---------------------------------------------------------------------- 
 // ok  to execute
 header  "[", "lbrac", 
-    .word dolit, 0, state, to, ends 
+    .word lit, 0, state, to, ends 
  
 //---------------------------------------------------------------------- 
 // ok  to compile
 header  "]", "rbrac", 
-    .word dolit, 1, state, to, ends 
+    .word lit, 1, state, to, ends 
 
 //---------------------------------------------------------------------- 
 // ok  comp, classic
@@ -428,27 +428,27 @@ header "DODOES", "dodoes",
 //---------------------------------------------------------------------- 
 //   ( w -- )
 header  "CONSTANT", "constant", F_IMMEDIATE
-    .word create, comp, dolit, comma, finite, ends 
+    .word create, comp, lit, comma, finite, ends 
  
 //---------------------------------------------------------------------- 
 //   ( -- )
 header  "VARIABLE", "variable", F_IMMEDIATE
-    .word create, comp, dolit, 0, comma, finite, ends 
+    .word create, comp, lit, 0, comma, finite, ends 
 
 //---------------------------------------------------------------------- 
 //   
 header  "SMUDGED", "smudged", 
-    .word latest, at, cell, plus, dolit, F_HIDDEN, toggle, ends
+    .word latest, at, cell, plus, lit, F_HIDDEN, toggle, ends
 
 //---------------------------------------------------------------------- 
 //   
 header  "IMMEDIATE", "immediate", 
-    .word latest, at, cell, plus, dolit, F_IMMEDIATE, toggle, ends
+    .word latest, at, cell, plus, lit, F_IMMEDIATE, toggle, ends
 
 //---------------------------------------------------------------------- 
 //   
 header  "COMPILE_ONLY", "compileonly", 
-    .word latest, at, cell, plus, dolit, F_COMPILE_ONLY, toggle, ends
+    .word latest, at, cell, plus, lit, F_COMPILE_ONLY, toggle, ends
 
 //---------------------------------------------------------------------- 
 //   
@@ -464,7 +464,7 @@ header  ";", "semmi",
 //---------------------------------------------------------------------- 
 // ok  ( -- )
 header  "SPACE", "space", 
-    .word dolit, BL_, emit, ends
+    .word lit, BL_, emit, ends
 
 //---------------------------------------------------------------------- 
 // ok  ( n -- )
@@ -597,24 +597,24 @@ header	"chain&", "chainamper",
 // ok 
 header	"new_leaves", "new_leaves",
    // save old leave onto stack
-    .word dolit, LEAV, at
+    .word lit, LEAV, at
     // init a new leave chain
-    .word nil, dolit, LEAV, to
+    .word nil, lit, LEAV, to
     .word ends
 
 //---------------------------------------------------------------------- 
 // ok 
 header	"old_leaves", "old_leaves",
     // resolve leaves chain
-    .word dolit, LEAV, chainamper
+    .word lit, LEAV, chainamper
     // load old leave from stack 
-    .word dolit, LEAV, to, ends
+    .word lit, LEAV, to, ends
     .word ends
  
 //---------------------------------------------------------------------- 
 // as break from C, chain forward references 
 header	"LEAVE", "leave",
-	.word comp, branch, here, dolit, LEAV, chaincomma, ends
+	.word comp, branch, here, lit, LEAV, chaincomma, ends
 
 //---------------------------------------------------------------------- 
 // S:( limit -- ) R:( -- limit )
@@ -681,15 +681,15 @@ header  "J", "indxj",  F_COMPILE_ONLY
 //---------------------------------------------------------------------- 
 // ok hex
 header	"HEX", "hex",
-	.word dolit, 16, base, to, ends
+	.word lit, 16, base, to, ends
 
 // ok decimal
 header	"DECIMAL", "dec",
-	.word dolit, 10, base, to, ends
+	.word lit, 10, base, to, ends
 
 // ok hex
 header	"OCTAL", "oct",
-	.word dolit, 8, base, to, ends
+	.word lit, 8, base, to, ends
 
 //---------------------------------------------------------------------- 
 
@@ -750,7 +750,7 @@ header	"HANDLER", "handler",
 // ok CATCH (xt -- exception | 0), forth-94
 header	"CATCH", "catch",
     .word psat, tor, handler, at, tor, rsat, handler, to, exec
-    .word rto, handler, to, rto, handler, to, rto, drop, dolit, nil, ends
+    .word rto, handler, to, rto, handler, to, rto, drop, lit, nil, ends
 
 //---------------------------------------------------------------------- 
 // ok THROW (exception -- exception | 0), forth-94
@@ -828,6 +828,6 @@ header  "BYE", "bye",
 //---------------------------------------------------------------------- 
 //   
 header  "QUIT", "quit", 
-    .word dolit, XRSP, rsto, lbrac, ends
+    .word lit, XRSP, rsto, lbrac, ends
 
 

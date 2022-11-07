@@ -19,8 +19,8 @@ For this model the op-codes are:
   | mov w, n | 0 0 1 0 | N -> W | move contents of N to W |
   | load | 0 0 1 1 | [A] -> W | move from [A] into W |
   | mov a, w | 0 1 0 0 | W -> A | move contents of W to A |
-  | mov t, w | 0 1 0 1 | W -> T | move contents of T to W |
-  | mov n, n | 0 1 1 0 | W -> N | move contents of N to W |
+  | mov t, w | 0 1 0 1 | W -> T | move contents of W to T |
+  | mov n, w | 0 1 1 0 | W -> N | move contents of W to N |
   | store | 0 1 1 1 | W -> [A] | move from W into [A] |
   | tst | 1 0 0 0 | test T equal 0 | if T is not zero, jump to follow address |
   | inc | 1 0 0 1 | T = T + 1 | increments T by one |
@@ -46,4 +46,8 @@ Updates:
   
   How jump to a address at register ? 
   
-  
+# 07/11/2022
+
+    change "inc" for "lit", move contents of next address to A
+
+

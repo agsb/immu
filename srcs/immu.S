@@ -45,14 +45,13 @@ must be saved by subroutines (calee)
 ( a PDP-11 )
 s4 ~X20~ as Rsp, return stack pointer
 s5 ~X21~ as Psp, parameter stack pointer
-s6 ~X22~ as Ipt, return register for jump and link
-s7 ~X23~ as Top, Top on stack
-s8 ~X24~ as Nos, Next on stack, pull when need
-s9 ~X25~ as Wrk, temporary scratch register
+s6 ~X22~ as Top, Top on stack
+s7 ~X23~ as Nos, Next on stack, pull when need
+s8 ~X24~ as Wrk, temporary scratch register
 
 ( extras )
-s10 ~X26~ as T0, temporary extra
-s11 ~X27~ as T1, temporary extra
+s9  ~X25~ as T0, temporary extra
+s10 ~X26~ as T1, temporary extra
 
 Why T0 and T1 ? 
 
@@ -123,12 +122,11 @@ else many stack operations are need
  
 #define  Psp s4    //#   parameter stack
 #define  Rsp s5    //#   return stack 
-#define  Ipt s6    //#   reference pointer
-#define  Top s7    //#   Top on parameter stack
-#define  Nos s8    //#   Next on parameter stack
-#define  Wrk s9    //#   hold for
-#define  T0 s10    //#   temporary
-#define  T1 s11    //#   temporary
+#define  Top s6    //#   hold, the top on parameter stack
+#define  Nos s7    //#   work, pull for next on parameter stack 
+#define  Wrk s8    //#   work, scratch
+#define  T0  s9    //#   temporary
+#define  T1  s10   //#   temporary
 
 //----------------------------------------------------------------------
 // stack macros
@@ -315,25 +313,29 @@ _forth_:
 
 //----------------------------------------------------------------------
 //
+// Nos and Wrk are free for use, only Top hold values
+//
 header "ENDS", "ends"
 _inner: 
     .word 0x0
 
 _unnest:
-    spull Rsp, Ipt
+    spull Rsp, Nos
 
 _next: 
-    lw Wrk, 0(Ipt)
-    addi Ipt, Ipt, CELL
+    lw Wrk, 0(Nos)
+    addi Nos, Nos, CELL
     beq Wrk, zero, _jump
 
 _nest: 
-    spush Rsp, Ipt
-    add Ipt, Wrk, zero
+    spush Rsp, Nos
+    add Nos, Wrk, zero
     jal zero, _next
-
+//
+// real execute, also a place for extras
+// 
 _jump:   
-    jalr zero, Ipt, 0
+    jalr zero, Nos, 0
 
 _link:    
     jal zero, _unnest
@@ -802,38 +804,28 @@ header "MAX", "max",
 //----------------------------------------------------------------------
 // trick, load Top <- (IP)
 // used by constant, leaves the contents of next cell from dictionary onto Top, aka doLit
-header "DOCON", "docon", 
+header "LIT", "lit", 
     .word 0x0
 dolit:
     spush Psp, Top 
-    lw Top, 0 (Ipt)
-_nobranch:
-    addi Ipt, Ipt, CELL
+    spull Rsp, Top
     jal zero, _link
 
-//----------------------------------------------------------------------
-// trick, load Top <- IP
-// used by variable, leaves a reference onto Top,  
-header "DOVAR", "dovar", 
-    .word 0x0
-    spush Psp, Top 
-    add Top, Ipt, zero
-    beq zero, zero, _nobranch
-  
 //----------------------------------------------------------------------
 // trick, branch if Top is zero else skip next reference
 header "?BRANCH", "zbranch", 
     .word 0x0
     beq Top, zero, _branch
-    beq zero, zero, _nobranch
+    jal zero, _link
     
 //----------------------------------------------------------------------
-// trick, a follow reference is always a offset to branch
+// all absolut reference, no more offsets
 header "BRANCH", "branch", 
     .word 0x0
 _branch:    
-    lw Wrk, 0 (Ipt)
-    add Ipt, Ipt, Wrk
+    spull Rsp, Wrk
+    lbu Wrk, 0 (Wrk)
+    spush Rsp, Wrk
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -1080,7 +1072,7 @@ header "CFILL", "cfill"
     jal zero, drop
    
 //----------------------------------------------------------------------
-//   ( c a1  --- a2 )
+//   ( c a1  --- a2 | 0 )
 // point next non c
 // returns 0 at end of buffer
 //
@@ -1102,11 +1094,11 @@ header "cskip", "cskip"
     jal zero, _link
 
 //----------------------------------------------------------------------
-//   ( c a1  --- a2 )
+//   ( c a1  --- a2 | 0 )
 // point next c
 // returns 0 at end of buffer
 //
-header "cfind", "cfind"
+header "cscan", "cscan"
     .word 0x0
     // get the separator char
     spull Psp, Nos
@@ -1219,6 +1211,7 @@ header "sfind", "sfind"
     depends on dictionary linked list header structure
 
 ***********************************************************************/
+// lfa is the reference link word.
 
 //---------------------------------------------------------------------- 
 // ok  ( lfa -- flag )

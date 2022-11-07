@@ -1,0 +1,302 @@
+biosv.S:header "gpio_config_pin", "gpio_config_pin_do"
+biosv.S:header "configure_tx_pin", "configure_default_tx_pin_do"
+biosv.S:header "configure_rx_pin", "configure_rx_pin_do"
+biosv.S:header "serial_init", "serial_init_do"
+biosv.S:header "serial_config", "serial_config_do"
+biosv.S:header "serial_getc", "serial_getc_do"
+biosv.S:header "serial_putc", "serial_putc_do"
+immu.S:// header of word in dictionary
+immu.S:.macro header name, label, flags=0x0
+immu.S:header "ENDS", "ends"
+immu.S:header "KEY", "key", 
+immu.S:header "EMIT", "emit", 
+immu.S:header "NOOP", "noop", 
+immu.S:header "FALSE", "false", 
+immu.S:header "TRUE", "true", 
+immu.S:header "0=", "zequ"    
+immu.S:header "0>", "zgth"    
+immu.S:header "0<", "zlth"    
+immu.S:header "=", "equ", 
+immu.S:header ">", "greath", 
+immu.S:header "<", "lessth", 
+immu.S:header "!", "to", 
+immu.S:header "@", "at", 
+immu.S:header "+", "plus",
+immu.S:header "-", "minus",
+immu.S:header "INVERT", "invert"
+immu.S:header "NEGATE", "negate"
+immu.S:header "2*", "twostar"
+immu.S:header "2/", "twoslash"
+immu.S:header "LSHIFT", "lshift"
+immu.S:header "RSHIFT", "rshift"
+immu.S:header "AND", "andf"
+immu.S:header "OR", "orf"
+immu.S:header "XOR", "xorf"
+immu.S:header "NAND", "nandf",
+immu.S:header "BL", "bl", 
+immu.S:header "0", "nil", 
+immu.S:header "-1", "oneneg", 
+immu.S:header "-2", "twoneg", 
+immu.S:header "1", "one", 
+immu.S:header "2", "two", 
+immu.S:header "CELL", "cell", 
+immu.S:header "CELLS", "cells", 
+immu.S:header "CELL+", "cellplus", 
+immu.S:header "CHARS", "chars", 
+immu.S:header "CHAR+", "charplus", 
+immu.S:header ">R", "tor", 
+immu.S:header "R>", "rto", 
+immu.S:header "R@", "rat", 
+immu.S:header "RS!", "rsto", 
+immu.S:header "PS!", "psto", 
+immu.S:header "RS@", "rsat", 
+immu.S:header "PS@", "psat", 
+immu.S:header "DROP", "drop", 
+immu.S:header "NIP", "nip", 
+immu.S:header "?DUP", "zdup", 
+immu.S:header "DUP", "dup", 
+immu.S:header "DIP", "dip", 
+immu.S:header "TUCK", "tuck", 
+immu.S:header "OVER", "over", 
+immu.S:header "SWAP", "swap", 
+immu.S:header "ROT", "rot", 
+immu.S:header "-ROT", "nrot", 
+immu.S:header "FLIP", "flip", 
+immu.S:header "SWIP", "swip", 
+immu.S:header "MIN", "min", 
+immu.S:header "MAX", "max", 
+immu.S:header "DOCON", "docon", 
+immu.S:header "DOVAR", "dovar", 
+immu.S:header "?BRANCH", "zbranch", 
+immu.S:header "BRANCH", "branch", 
+immu.S:header "C!", "cto", 
+immu.S:header "C@", "cat", 
+immu.S:header "+!", "plusto", 
+immu.S:header "ALIGNED", "aligned", 
+immu.S:header "*/", "starslash", 
+immu.S:header "*", "star", 
+immu.S:header "m*", "mstar", 
+immu.S:header "um*", "umstar", 
+immu.S:header "/", "slash", 
+immu.S:header "mod", "module", 
+immu.S:header "/mod", "slashmod", 
+immu.S:header "u/mod", "uslashmod", 
+immu.S:header "CS-PICK", "cspick", F_COMPILE_ONLY
+immu.S:header "MOVE", "move"
+immu.S:header "CMOVE", "cmove"
+immu.S:header "CMOVE>", "cmoveb"
+immu.S:header "CSAME", "csame"
+immu.S:header "CFILL", "cfill"
+immu.S:header "cskip", "cskip"
+immu.S:header "cfind", "cfind"
+immu.S:header "sscan", "sscan"
+immu.S:header "sfind", "sfind"
+immu.S:    depends on dictionary linked list header structure
+immu.S:header  ">FLAGS", "toflags", 
+immu.S:header  ">NAME", "toname", 
+immu.S:header  ">BODY", "tobody", 
+immu.S:header "_EOW_", "_eoW_"
+immu.S:header "_EOF_", "_eoF_"
+main.S:// header of word in dictionary
+main.S:.macro header name, label, flags=0x0
+main.S:header "ENDS", "ends"
+main.S:header "KEY", "key", 
+main.S:header "EMIT", "emit", 
+main.S:header "NOOP", "noop", 
+main.S:header "FALSE", "false", 
+main.S:header "TRUE", "true", 
+main.S:header "0=", "zequ"    
+main.S:header "0>", "zgth"    
+main.S:header "0<", "zlth"    
+main.S:header "=", "equ", 
+main.S:header ">", "greath", 
+main.S:header "<", "lessth", 
+main.S:header "!", "to", 
+main.S:header "@", "at", 
+main.S:header "+", "plus",
+main.S:header "-", "minus",
+main.S:header "INVERT", "invert"
+main.S:header "NEGATE", "negate"
+main.S:header "2*", "twostar"
+main.S:header "2/", "twoslash"
+main.S:header "LSHIFT", "lshift"
+main.S:header "RSHIFT", "rshift"
+main.S:header "AND", "andf"
+main.S:header "OR", "orf"
+main.S:header "XOR", "xorf"
+main.S:header "NAND", "nandf",
+main.S:header "BL", "bl", 
+main.S:header "0", "nil", 
+main.S:header "-1", "oneneg", 
+main.S:header "-2", "twoneg", 
+main.S:header "1", "one", 
+main.S:header "2", "two", 
+main.S:header "CELL", "cell", 
+main.S:header "CELLS", "cells", 
+main.S:header "CELL+", "cellplus", 
+main.S:header "CHARS", "chars", 
+main.S:header "CHAR+", "charplus", 
+main.S:header ">R", "tor", 
+main.S:header "R>", "rto", 
+main.S:header "R@", "rat", 
+main.S:header "RS!", "rsto", 
+main.S:header "PS!", "psto", 
+main.S:header "RS@", "rsat", 
+main.S:header "PS@", "psat", 
+main.S:header "DROP", "drop", 
+main.S:header "NIP", "nip", 
+main.S:header "?DUP", "zdup", 
+main.S:header "DUP", "dup", 
+main.S:header "DIP", "dip", 
+main.S:header "TUCK", "tuck", 
+main.S:header "OVER", "over", 
+main.S:header "SWAP", "swap", 
+main.S:header "ROT", "rot", 
+main.S:header "-ROT", "nrot", 
+main.S:header "FLIP", "flip", 
+main.S:header "SWIP", "swip", 
+main.S:header "MIN", "min", 
+main.S:header "MAX", "max", 
+main.S:header "DOCON", "docon", 
+main.S:header "DOVAR", "dovar", 
+main.S:header "?BRANCH", "zbranch", 
+main.S:header "BRANCH", "branch", 
+main.S:header "C!", "cto", 
+main.S:header "C@", "cat", 
+main.S:header "+!", "plusto", 
+main.S:header "ALIGNED", "aligned", 
+main.S:header "*/", "starslash", 
+main.S:header "*", "star", 
+main.S:header "m*", "mstar", 
+main.S:header "um*", "umstar", 
+main.S:header "/", "slash", 
+main.S:header "mod", "module", 
+main.S:header "/mod", "slashmod", 
+main.S:header "u/mod", "uslashmod", 
+main.S:header "CS-PICK", "cspick", F_COMPILE_ONLY
+main.S:header "MOVE", "move"
+main.S:header "CMOVE", "cmove"
+main.S:header "CMOVE>", "cmoveb"
+main.S:header "CSAME", "csame"
+main.S:header "CFILL", "cfill"
+main.S:header "cskip", "cskip"
+main.S:header "cfind", "cfind"
+main.S:header "sscan", "sscan"
+main.S:header "sfind", "sfind"
+main.S:    depends on dictionary linked list header structure
+main.S:header  ">FLAGS", "toflags", 
+main.S:header  ">NAME", "toname", 
+main.S:header  ">BODY", "tobody", 
+main.S:header "_EOW_", "_eoW_"
+main.S:header "_EOF_", "_eoF_"
+words.S:header  "ZZZZ", "zzzz", 
+words.S:header "STATE", "state",
+words.S:header "BASE", "base",
+words.S:header "LATEST", "latest",
+words.S:header ">IN", "toin",
+words.S:header "DP", "dp",
+words.S:header "UP", "up",
+words.S:header "CONTEXT", "context",
+words.S:header "CURRENT", "current",
+words.S:header  "DEFINITIONS", "definitions",
+words.S:header  "SOURCE", "source",
+words.S:header  "ALLOT", "allot",
+words.S:header  "HERE", "here",
+words.S:header  ",", "comma",
+words.S:header  "C,", "ccomma",
+words.S:header  "TOGGLE", "toggle",
+words.S:header  "FLAGGED", "flagged", 
+words.S:header  "CODE", "code",
+words.S:header  "END-CODE", "endcode",
+words.S:header  ";CODE", "semicode",
+words.S:header  ".\"", "dotquote",
+words.S:header  ".(", "dotparen",
+words.S:header "CHAR", "char",
+words.S:header "PARSE", "parse",
+words.S:header "accept", "accept",
+words.S:header "refill", "refill",
+words.S:header "WORD", "word",
+words.S:header "QUERY", "query",
+words.S:header  "PARSE-NAME", "parsename", 
+words.S:header  "FIND-NAME", "findname", 
+words.S:header "FIND", "find",
+words.S:header "CREATE", "create",
+words.S:header  "FINITE", "finite", 
+words.S:header  "INTERPRET", "interpret", 
+words.S:header  "ABORT", "abort", 
+words.S:header  "'", "tick", 
+words.S:header  "'[", "tickexec", F_IMMEDIATE 
+words.S:header  "']", "tickcomp", F_IMMEDIATE 
+words.S:header  "POSTPONE", "postpone", F_IMMEDIATE 
+words.S:header  "docompile", "docompile", 
+words.S:header  "doexecute", "doexecute", 
+words.S:header  "iscompile", "iscompile",
+words.S:header  "isword", "isword",
+words.S:header  "isnumber", "isnumber", 
+words.S:header  "EVALUATE", "evaluate", 
+words.S:header  "[", "lbrac", 
+words.S:header  "]", "rbrac", 
+words.S:header  "COMPILE,", "comp", 
+words.S:header "EXECUTE", "exec", 
+words.S:header "DODOES", "dodoes", 
+words.S:header  "CONSTANT", "constant", F_IMMEDIATE
+words.S:header  "VARIABLE", "variable", F_IMMEDIATE
+words.S:header  "SMUDGED", "smudged", 
+words.S:header  "IMMEDIATE", "immediate", 
+words.S:header  "COMPILE_ONLY", "compileonly", 
+words.S:header  ":", "colon", 
+words.S:header  ";", "semmi", 
+words.S:header  "SPACE", "space", 
+words.S:header  "SPACES", "spaces", 
+words.S:header  "TYPE", "type", 
+words.S:header  "VOCABULARY", "vocabulary",
+words.S:header  "EXIT", "exit",  F_IMMEDIATE 
+words.S:header  "BACK", "back",  F_IMMEDIATE 
+words.S:header  "MARK", "mark",  F_IMMEDIATE 
+words.S:header  "BEGIN", "begin",  F_IMMEDIATE 
+words.S:header  "AGAIN", "again",  F_IMMEDIATE 
+words.S:header  "UNTIL", "until",  F_IMMEDIATE 
+words.S:header  "END", "end",  F_IMMEDIATE 
+words.S:header  "UNLESS", "unless",  F_IMMEDIATE 
+words.S:header  "IF", "if", F_IMMEDIATE
+words.S:header  "ENDIF", "endif",  F_IMMEDIATE 
+words.S:header  "THEN", "then",  F_IMMEDIATE 
+words.S:header  "ELSE", "else",  F_IMMEDIATE 
+words.S:header  "WHILE", "while",  F_IMMEDIATE 
+words.S:header  "REPEAT", "repeat",  F_IMMEDIATE 
+words.S:header  "CONTINUE", "continue", F_IMMEDIATE 
+words.S:header	"chain,", "chaincomma",
+words.S:header	"chain&", "chainamper",
+words.S:header	"new_leaves", "new_leaves",
+words.S:header	"old_leaves", "old_leaves",
+words.S:header	"LEAVE", "leave",
+words.S:header  "FOR", "for", 
+words.S:header  "NEXT", "next", F_COMPILE_ONLY 
+words.S:header  "DO", "do", F_COMPILE_ONLY
+words.S:header  "LOOP", "oneloop",  F_COMPILE_ONLY 
+words.S:header  "+LOOP", "loop",  F_COMPILE_ONLY
+words.S:header  "UNLOOP", "unloop",  F_COMPILE_ONLY 
+words.S:header  "I", "indxi",  F_COMPILE_ONLY
+words.S:header  "J", "indxj",  F_COMPILE_ONLY
+words.S:header	"HEX", "hex",
+words.S:header	"DECIMAL", "dec",
+words.S:header	"OCTAL", "oct",
+words.S:header	"<BUILDS", "builds"
+words.S:header	"DOES>", "does"
+words.S:header	"HANDLER", "handler",
+words.S:header	"CATCH", "catch",
+words.S:header	"THROW", "throw",
+words.S:header	"PICK", "pick",
+words.S:header	"2DROP", "twodrop",
+words.S:header	"2DUP", "twodup",
+words.S:header	"2SWAP", "twoswap",
+words.S:header	"2OVER", "twoover",
+words.S:header	"2!", "twoto",
+words.S:header	"2@", "twoat",
+words.S:header	"2>R", "twotor",
+words.S:header	"2R>", "tworto",
+words.S:header	"2R@", "tworat",
+words.S:header  "COLD", "cold", 
+words.S:header  "WARM", "warm", 
+words.S:header  "BYE", "bye", 
+words.S:header  "QUIT", "quit", 
