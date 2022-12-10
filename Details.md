@@ -1,6 +1,6 @@
 # An immutable Forth
 
- An implementation of Forth with inner interpreter using **extended indirect thread code** and a dictionary made of machine independent vocabularies. 
+ An implementation of Forth with inner interpreter using **minimal indirect thread code** and a dictionary made of machine independent vocabularies. 
   
  Only the inner interpreter and vocabularies related to systems, drives and primitives are machine dependent. 
   
@@ -73,6 +73,7 @@ UNNEST: (aka EXIT, SEMIS, at end of words)
 EXIT: ( at end of code )
   Execute NEXT
 ```
+
 All compound words, does two jumps and a call with return.
 
 All primitive words does three jumps.
@@ -80,7 +81,7 @@ All primitive words does three jumps.
 Also in optimized codes, NEXT is executed two times, and is placed between UNNEST and NEST.
 
 
-## A proposal for **extended indirect thread code**   
+## A proposal for **minimal indirect thread code**   
 
 _"Forth is free to reinvent the wheel, and I think that is a marvelous concept. No one should ever be afraid to reinvent the wheel, and we do it every day.", Chuck Moore, https://www.youtube.com/watch?v=xoyDNIcnpgc&t=9051s_
 
@@ -98,7 +99,7 @@ defcode:  ; a NULL and a jump, (where did self reference go ?)
 +-------+---+---+---+---+------+------+-------+-----+-----------+
 ```
 
-The operations of a **extended indirect thread code** inner interpreter, in non optimized pseudo code, are :
+The operations of a **minimal indirect thread code** inner interpreter, in non optimized pseudo code, are :
 
 ```
 NEXT: 
@@ -118,12 +119,10 @@ UNNEST:
   Execute NEXT
 
 JUMP:  
-  Copy IP to WR
-  Increment IP by address size
-  Jump to fetched address in WR
+  Jump to address in IP
 
 LINK: 
-  Execute NEXT
+  Execute UNNEST
 
 ```
 
@@ -228,23 +227,28 @@ jump (jal zero,) _link, ends all primitive words, also is a "hook" for debug bef
 
 header "ends","ends"
     .word 0x0
-_unnest: // pull
+    
+_unnest: ; pull
     lw s6, 0(s5)
     addi s5, s5, CELL
-_next: // cast
+    ; jal zero, _next
+    
+_next: ; cast
     lw s9, 0 (s6)
     addi s6, s6, CELL
- _void:
     beq s9, zero, _jump
-_nest: // push  
+    ; jal zero _nest
+    
+_nest: ; push  
     addi s5, s5, -1*CELL
     sw s6, 0(s5)
     add s6, s9, zero
-_link:  // link  
     jal zero, _next
-_jump:  // jump
-    add s9, s6, zero
-    addi s6, s6, CELL
+    
+_link:  ; link  
+    jal zero, _unnest
+    
+_jump:  ; jump
     jalr zero, s9, 0
 
 ```  
