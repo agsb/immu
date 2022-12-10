@@ -1,7 +1,7 @@
 
 @from: https://pastebin.com/qpZLFc6h
 
-
+```
 Forth Naming Conventions ('Thinking FORTH')
 -------------------------------------------
  
@@ -223,5 +223,5 @@ name?     Same as ?name                             B?
  
 name@     Fetch from name                           B@
  
- 
+``` 
  
