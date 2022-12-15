@@ -91,6 +91,9 @@ PS. Most ideas from eForth
 | BASE | radix for number conversion | reference for number digits |
 | DP | dictionary pointer | next cell for dictionary entry |
 | LATEST | link for last word defined | linked list entry |
+| BLK | block number | 1024 bytes |
+| SCR | screen number | 16 lines of 64 chars |
+| SOURCE | input/output source | -1 = buffer, 0 = usart, 1 = file, i2c, spi, bluetooth, wi-fi, etc... |
 
 ### if CPU have math: 
 
