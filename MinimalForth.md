@@ -66,6 +66,7 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 
 | word | does | obs |
 | -- | -- | -- |
+| BYE | standart ends the forth instance | ( c -- ) bios |
 | KEY? | check if have a char from standart usart | ( -- c ) bios |
 | KEY | get a char from standart usart | ( -- c ) bios |
 | EMIT | put a char into standart usart | ( c -- ) bios |
