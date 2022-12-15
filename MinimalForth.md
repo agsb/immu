@@ -52,11 +52,13 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 | PS! | place TOS at PS | ( w -- ; -- ) |
 | RS@ | place RS at TOS | ( w -- ; -- ) |
 | PS@ | place PS at TOS | ( w -- ; -- ) |
-| CELL | place the size of a cell at TOS | (  -- cell ) |
+| CHAR+ | add the size of a char to TOS | (  -- cell ) |
+| CELL+ | add the size of a cell to TOS | (  -- cell ) |
 | ALIGNED | align a address into cell size | ( w -- w+ ) |
 | 0 | place 0x0000 into TOS | ( -- 0 ) |
 | 1 | place 0x0001 into TOS | ( -- 1 ) |
 | 2 | place 0x0002 into TOS | ( -- 2 ) |
+| 4 | place 0x0004 into TOS | ( -- 4 ) |
 | JUMP | execute assembler code at TOS address | ( a -- ) |
 | CALL | execute a external assembler code at TOS address using system stack pointer | ( a -- ) |
 
