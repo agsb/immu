@@ -29,7 +29,7 @@
  */
 
 /*
-A Forth with extended indirect thread code
+A Forth with minimal indirect thread code
 
 (S: w1 w2 w3 -- w1 w3) parameter stack, before -- after, w3 at top
 (R: w1 w2 w3 -- w1 w3) return stack, before -- after, w3 at top
@@ -78,10 +78,10 @@ else many stack operations are need
 
 #define  FLASHPAGE 1024    # page of flash memory for flush in GD32VF103CBT6
 
-#define F_IMMEDIATE 0x80
-#define F_COMPILE_ONLY 0x40
-#define F_HIDDEN  0x20
-#define F_TOGGLED  0x10
+#define F_RESERVED 0x80
+#define F_IMMEDIATE 0x40
+#define F_COMPILE 0x20
+#define F_HIDDEN  0x10
 #define F_COMMON  0x00
 
 #define F_TOMASK  0xF0
@@ -95,26 +95,28 @@ else many stack operations are need
 // assumes that all line edit is done at remote!
 // no delete, no moving cursor, just a static line.
 // works as a screen or block, just receives a line till a CR or CR LF
-// uses BS, ESC, CAN, XON, XOFF, for control
+// uses ESC, CAN, XON, XOFF, for control
 //
 
-#define EOF_      0x05    //#; ascii eof ^D
+// #define EOF_      0x05    //#; ascii eof ^D
+// #define TB_       0x09    //#; ascii horizontal ^I
 
-#define XON_      0x11    //#; ascii DC1 ^Q
-#define XOFF_     0x13    //#; ascii DC3 ^S
+// #define XON_      0x11    //#; ascii DC1 ^Q
+// #define XOFF_     0x13    //#; ascii DC3 ^S
+
+// #define CAN_      0x18    //#; ascii cancel ^C
+// #define ESC_      0x1B    //#; ascii escape ^[
+
+// #define TL_       0x7E    //#; ascii tilde
+// #define DEL_      0x7F    //#; ascii del
 
 #define CR_       0x0d    //#; ascci carriage return ^M
+
 #define LF_       0x0a    //#; ascii line feed ^J
 
-#define CAN_      0x18    //#; ascii cancel ^C
-#define ESC_      0x1B    //#; ascii escape ^[
-
 #define BS_       0x08    //#; ascii backspace ^H
-#define TB_       0x09    //#; ascii horizontal ^I
 
 #define BL_       0x20    //#; ascii space
-#define TL_       0x7E    //#; ascii tilde
-#define DEL_      0x7F    //#; ascii del
 
 #define NUL_      0x00    //#; ascii NUL ^@
  
@@ -123,7 +125,7 @@ else many stack operations are need
 #define  Psp s4    //#   parameter stack
 #define  Rsp s5    //#   return stack 
 #define  Top s6    //#   hold, the top on parameter stack
-#define  Nos s7    //#   work, pull for next on parameter stack 
+#define  Nos s7    //#   work, scratch  
 #define  Wrk s8    //#   work, scratch
 #define  T0  s9    //#   temporary
 #define  T1  s10   //#   temporary
@@ -167,12 +169,13 @@ else many stack operations are need
 //----------------------------------------------------------------------
 //  Dictionary
 //
-//   compound	[ link,size+flags,name,pad?, ref, ..., ref , EXIT ]
+//   compound	[ link,size+flags,name,pad?, ref, ..., ref , ENDS ]
 //   primitives	[ link,size+flags,name,pad?, 0x0, code, (jal zero, link) ]
 //
 //----------------------------------------------------------------------
 
-// riscV are byte oriented, but address must be even, and word bounds for branch :)
+// riscV are byte oriented, but address must be even, 
+// and word bounds for branch :)
 // compiler only puts address at elf
 // exclusive bytes for size and flags, easy way
 // numeric labels only 0-99, 
@@ -223,22 +226,6 @@ XPSP:
 XTIB:
 .fill BUFFER, BYTE, 0x0
 
-// flash buffer for flush
-XFIF:
-.fill FLASHPAGE, BYTE, 0x0
-
-// next free flash address, for words
-FREEF:
-.word 0x0
-
-// next free sram address, for variables
-FRAMF:
-.word 0x0
-
-// source input address
-TIBF:
-.word 0x0
-
 // cursor in TIB
 TOIN:
 .word 0x0
@@ -255,12 +242,8 @@ STATE:
 LATEST:
 .word 0x0
 
-// system flags
-FLAGS:
-.word 0x0
-
-// seed for random
-SEED:
+// dictionary pointer
+XDP:
 .word 0x0
 
 // turn on routine after boot
@@ -269,14 +252,6 @@ TURN:
 
 // turn of routine before boot
 REST:
-.word 0x0
-
-// page of flash in sram 
-PAGE:
-.word 0x0
-
-// link for chain of leave, used inside a do loop
-LEAV:
 .word 0x0
 
 // context, where to search a word, reference of vocabulary
@@ -346,13 +321,19 @@ _link:
 // vide https://github.com/ScannedInAvian/riscyforth/blob/main/boot.S
 */
 //----------------------------------------------------------------------
-//   ( -- )
+//   ( -- F | T )
+header "KEY?", "keyq", 
+    .word 0x0
+    jal zero, _link
+
+//----------------------------------------------------------------------
+//   ( -- c )
 header "KEY", "key", 
     .word 0x0
     jal zero, _link
 
 //----------------------------------------------------------------------
-//   ( -- )
+//   ( c -- )
 header "EMIT", "emit", 
     .word 0x0
     jal zero, _link
@@ -634,24 +615,31 @@ header "CHAR+", "charplus",
     jal zero, _link
 
 //----------------------------------------------------------------------
+// put at 2nd to preserve the immediate next reference 
 header ">R", "tor", 
     .word 0x0
-    spush Rsp, Top 
+    spull Rsp, Nos
+    spush Rsp, Top
+    spush Rsp, Nos
     spull Psp, Top 
     jal zero, _link
 
 //----------------------------------------------------------------------
+// get at 2nd to preserve the immediate next reference 
 header "R>", "rto", 
     .word 0x0
     spush Psp, Top 
+    spull Rsp, Nos
     spull Rsp, Top 
+    spush Rsp, Nos
     jal zero, _link
 
 //----------------------------------------------------------------------
+// copy from 2nd to preserve the immediate next reference 
 header "R@", "rat", 
     .word 0x0
     spush Psp, Top 
-    lw Top, 0 (Rsp)
+    lw Top, 1 (Rsp)
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -802,13 +790,21 @@ header "MAX", "max",
     beq zero, zero, _n2t
   
 //----------------------------------------------------------------------
-// trick, load Top <- (IP)
-// used by constant, leaves the contents of next cell from dictionary onto Top, aka doLit
+// trick, 
 header "LIT", "lit", 
     .word 0x0
 dolit:
     spush Psp, Top 
     spull Rsp, Top
+    jal zero, _link
+
+//----------------------------------------------------------------------
+// trick,
+header "EXE", "exe", 
+    .word 0x0
+dolit:
+    spush Rsp, Top 
+    spull Psp, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
