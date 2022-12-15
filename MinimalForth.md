@@ -1,8 +1,6 @@
 # MinimalForth.md
 
-Those are not really minimal but adequate primitive words for make any standart or quasi Forth
-
-## As primitives, leafs
+Not really a minimal set of words but adequate primitive words for make any standart, or quasi, Forth
 
 Those need be assembled and uses as registers:
 
@@ -11,9 +9,13 @@ Those need be assembled and uses as registers:
       - TOS, top of parameter stack
       - NOS, next on parameter stack
       - WRK, scratch generic
+      
       - SP, system return stack reserved
-
+      - ZR, zero hardware register
+      
 PS. Most ideas from eForth
+
+### primitives
 
 | word | does | obs |
 | -- | -- | -- |
@@ -26,15 +28,14 @@ PS. Most ideas from eForth
 | OR | logical OR | ( u v -- w ) |
 | XOR | logical XOR | ( u v -- w ) |
 | NAND | logical NOT AND | ( u v -- w ) |
-| NEGATE | arithmetic inverse | ( u -- v ) |
-| INVERT | logic inverse | ( u -- v ) |
-| >< | exchanges lsb and msb | ( uv -- vu )
-| UM+ | unsigned word plus with carry | ( w1 w2 -- w1+w2 carry ) |
+| NEGATE | arithmetic inverse 0x02 ~ 0xFE | ( u -- v ) |
+| INVERT | logic inverse 0x00 ~ 0xFF | ( u -- v ) |
+| >< | exchanges lsb and msb, 0x0102 ~ 0x0201 | ( uv -- vu )
+| UM+ | unsigned word add with carry | ( w1 w2 -- w1+w2 carry ) |
 | 2/ | shift right one bit | ( w -- w >> 1 ) |
 | 2* | shift left one bit | ( w -- w << 1 ) |
 | BRANCH | branches to next absolute reference | ( -- ) |
 | ZBRANCH | if TOS == 0, branches to next absolute reference | ( -- ) |
-| JUMP | execute assembler code at TOS address | ( a -- ) |
 | ! | STORE word into a | ( w a -- ) |
 | @ | FETCH word from a | ( a -- w ) |
 | C! | C-STORE char into a | ( c a -- ) |
@@ -43,6 +44,7 @@ PS. Most ideas from eForth
 | DUP | duplicate TOS | ( w -- w w ) |
 | SWAP | exchange first and second | ( w1 w2 -- w2 w1 ) |
 | OVER | copy second to top | ( w1 w2 -- w1 w2 w1 ) |
+| ROT |  cycle order of stack | ( w1 w2 w3 -- w2 w3 w1 ) |
 | >R | place TOS at top of return stack | ( w -- ; -- w ) |
 | R> | place top of return stack at TOS | (  -- w ; w -- ) |
 | R@ | copy top of return stack to TOS | ( w -- ; -- w ) |
@@ -55,22 +57,20 @@ PS. Most ideas from eForth
 | 0 | place 0x0000 into TOS | ( -- 0 ) |
 | 1 | place 0x0001 into TOS | ( -- 1 ) |
 | 2 | place 0x0002 into TOS | ( -- 2 ) |
+| JUMP | execute assembler code at TOS address | ( a -- ) |
 | CALL | execute a external assembler code at TOS address using system stack pointer | ( a -- ) |
+
+### BIOS dependent
+
+| word | does | obs |
+| -- | -- | -- |
 | KEY? | check if have a char from standart usart | ( -- c ) bios |
 | KEY | get a char from standart usart | ( -- c ) bios |
 | EMIT | put a char into standart usart | ( c -- ) bios |
 | PEEK | get a byte from a I/O port | ( io -- c ) bios |
 | POKE | put a byte into a I/O port | ( c io -- ) bios |
 
-if cpu have math: 
-
-| word | does | obs |
-| -- | -- | -- |
-| + | arithimetic plus | ( w1 w2 -- w1+w2 ) |
-| - | arithimetic minus | ( w1 w2 -- w1+w2 ) |
-| * | arithimetic multiply | ( w1 w2 -- w1+w2 ) |
-| / | arithimetic quotient | ( w1 w2 -- w1/w2 ) |
-| /MOD | arithimetic remainder | ( w1 w2 -- w1/w2 ) |
+### Constants
 
 | constants | used for | reference |
 | -- | -- | -- |
@@ -82,7 +82,9 @@ if cpu have math:
 | #PS | size of paremeter stack in cells | |
 | #TIB | size of forth terminal input buffer in cells | |
 
-| variable | used for | reference |
+### Variables
+
+| variables | used for | reference |
 | -- | -- | -- |
 | >TIB | cursor at TIB | next char in TIB |
 | STATE | state of forth word interpreter | interpret, compiling, executing |
@@ -90,7 +92,17 @@ if cpu have math:
 | DP | dictionary pointer | next cell for dictionary entry |
 | LATEST | link for last word defined | linked list entry |
 
-if MCU/CPU have flash, eeprom and sram:
+### if CPU have math: 
+
+| word | does | obs |
+| -- | -- | -- |
+| + | arithimetic plus | ( w1 w2 -- w1+w2 ) |
+| - | arithimetic minus | ( w1 w2 -- w1+w2 ) |
+| * | arithimetic multiply | ( w1 w2 -- w1+w2 ) |
+| / | arithimetic quotient | ( w1 w2 -- w1/w2 ) |
+| /MOD | arithimetic remainder | ( w1 w2 -- w1/w2 ) |
+ 
+### if MCU/CPU have flash, eeprom and sram:
 
 | word | does | obs |
 | -- | -- | -- |
@@ -98,6 +110,9 @@ if MCU/CPU have flash, eeprom and sram:
 | flush | save a flash page from a sram address at TOS | CPU dependent |
 | eflash | load a eeprom page into sram address at TOS | CPU dependent |
 | eflush | save a eeprom page from sram address at TOS | CPU dependent |
+
+| constants | used for | reference |
+| -- | -- | -- |
 | #flash | size of a flash page | CPU dependent |
 | #eflash | size of a eeprom page | CPU dependent |
 
