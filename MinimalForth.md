@@ -13,7 +13,7 @@ Those need be assembled and uses as registers:
       - SP, system return stack reserved
       - ZR, zero hardware register
       
-PS. Most ideas from eForth
+PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting. 
 
 ### primitives
 
