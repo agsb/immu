@@ -1,6 +1,6 @@
 
 
-ca65 -W 2 -g -l main.lst -o main.o -mm near -v  \
+ca65 -W 1 -g -l main.lst -o main.o -mm near -v  \
     --cpu 6502 \
     --create-dep main.dep \
     --list-bytes 80 \
