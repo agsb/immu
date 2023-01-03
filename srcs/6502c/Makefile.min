@@ -1,0 +1,18 @@
+
+# Final output filename
+BINFILE = main.bin
+CFGFILE = main.cfg
+
+obj/%.o: src/%.asm
+    ca65 $< -W 1 -g -o $@ 
+
+clean:
+    - mkdir -p obj
+    - mkdir -p bin
+    - rm -f obj/*
+    - rm -f bin/*
+
+all: clean obj/main.o
+    ld65 -Ln L -C $(CFGFILE) -m obj/map -o bin/$(BINFILE) $^
+    @sed '1,/^$/ d' obj/map | sed -n '/Exports list/q;p
+

@@ -1,14 +1,12 @@
 ;
 ;   enable some as65 
 ;
-; enable C like comments
-.feature c_comments
 ; enable listing
 .list on
-; enable 6502 mode
-.p02
 ; lines per page
 .pagelength 66
+; enable 6502 mode
+.p02
 
 
 ; /*
@@ -16,12 +14,12 @@
 ;  *
 ;  *  Copyright © 2020, Alvaro Gomes Sobral Barcellos,
 ;  *
-;  *  Permission is hereby granted, free of charge, to any person obtaining
+;  *  Permission is hereby granted, free of charge, to any per0on obtaining
 ;  *  a copy of this software and associated documentation files (the
 ;  *  "Software"), to deal in the Software without restriction, including
 ;  *  without limitation the rights to use, copy, modify, merge, publish,
 ;  *  distribute, sublicense, and/or sell copies of the Software, and to
-;  *  permit persons to whom the Software is furnished to do so, subject to
+;  *  permit per0ons to whom the Software is furnished to do so, subject to
 ;  *  the following conditions"
 ;  *
 ;  *  The above copyright notice and this permission notice shall be
@@ -36,13 +34,12 @@
 ;  *
 ;  */
 ; 
-; /* Notes:
+; Notes:
 ; 
 ; -   source for used with cc65 in Linux
 ; -   almost adapted from fig-forth-6502, from W. B. Ragsdale
-; -   minimized use of pages, zero and one, for use external libraries
-; -   minimuzed use of page
-; -   all stuff use absolute address and jmps, 
+; -   minimized use of pages, zero and one, for easy use external libraries
+; -   all stuff use absolute address and jump, 
 ; -   bare minimal use real stack pointer SP 
 ; -   bare minimal use jsr/rts for relative BIOS
 ; -   16 bits pseudo registers as in SWEET16, DS, RS, T, N, W, C
@@ -60,14 +57,14 @@
 ; 
 ; 2. the 6502C pages:
 ; 
-; $0000 0x00FF page zero,  reserved for indexed acess
+; NULL 0x00FF page zero,  reserved for indexed acess
 ; $0100 0x01FF page one,   reserved for SP use
 ; 
-; $0200 0x02FF page two,   data parameter stack, indexed by X, offset wraps
-; $0300 0x03FF page three, return address/parameter stack, indexed by Y, offset wraps
+; $0200 0x02FF page two,   data parameter stack, indexed by X, offset wrap0
+; $0300 0x03FF page three, return address/parameter stack, indexed by Y, offset wrap0
 ; 
-; $0400 0x04FF page four, forth internal registers and buffers 
-; $0500 0x0FFF free 3072 bytes SRAM, BIOS buffers, 
+; $0400 0x04FF page four, forth internal register0 and buffer0 
+; $0500 0x0FFF free 3072 bytes SRAM, BIOS buffer0, 
 ; 
 ; $1000  page forth :)
 ; 
@@ -77,14 +74,16 @@
 ;     R> >R R@ must use the second cell at return stack to load/save values
 ; 
 ; 
-; */
+; 
  
  
 ;---------------------------------------------------------------------
 ; macros
 
 .define VERSION "0.01.02"
+
 .define EQU =
+
 ;.dword .time
 
 ;---------------------------------------------------------------------
@@ -93,12 +92,12 @@
 NULL    = $0000
 
 ; logical flags, forth 83
-FALSE   = $00
-TRUE    = $FF
+FALSE   = 0
+TRUE    = 255
 
 ; buffer sizes
-TIBZ    = 80
-PADZ    = 72
+TIB_SIZE    = 80
+PAD_SIZE    = 72
 
 ; cell is 16 bits, 2 bytes
 CELL_SIZE = 2
@@ -109,6 +108,7 @@ WORD_SIZE = 15
 ; default base
 BASE_DEFAULT = 16
 
+;---------------------------------------------------------------------
 ; forth words flags
 ;
 F_RESERVED = $80
@@ -128,11 +128,11 @@ F_CORE = $00   ; for core words
 ; minimal error codes from forth 2012
 ;
 NO_ERROR = 0
-INVALID_MEMORY = -9
-OUT_OF_RANGE = -11
-INVALID_WORD = -13
-TO_READ_ONLY = -20
-NOT_A_NUMBER = -24
+INVALID_MEMORY = 9
+OUT_OF_RANGE = 11
+INVALID_WORD = 13
+TO_READ_ONLY = 20
+NOT_A_NUMBER = 24
 
 ;---------------------------------------------------------------------
 ; ASCII constants
@@ -143,80 +143,131 @@ NOT_A_NUMBER = -24
 ; works as a screen or block, just receives a line till a CR or CR LF
 ; uses BS, for edit last char
 ;
-XON_    =   $11    ; ascii DC1 ^Q
-XOFF_   =   $13    ; ascii DC3 ^S
+ESC_    =   27    ; ascii escape ^[
+XON_    =   17    ; ascii DC1 ^Q
+XOFF_   =   19    ; ascii DC3 ^S
 
-CR_     =   $0d    ; ascci carriage return ^M
-LF_     =   $0a    ; ascii line feed ^J
-BS_     =   $08    ; ascii backspace ^H
+CR_     =   13    ; ascci carriage return ^M
+LF_     =   10    ; ascii line feed ^J
+BS_     =    8    ; ascii backspace ^H
 
-BL_     =   $20    ; ascii space
-QT_     =   $22    ; ascii double quotes \"
-
-
+BL_     =   32    ; ascii space
+QT_     =   34    ; ascii double quotes \"
 
 ;---------------------------------------------------------------------
 ; macros generic
 
-_link_ .set $0
-_last_ .set $0
+_link_ .set NULL
+_last_ .set NULL
+
+.macro makelabel arg1, arg2
+.ident(.concat(arg1, arg2)):
+.endmacro
 
 .macro HEADER name, label, flags
-.ident (.concat("is_",label)):
-    .align 2, $00
+
+.ifblank flags
+    .out " No flags "
+.endif
+.ifblank label
+    .error " No label "
+.endif
+.ifblank name
+    .error " No name "
+.endif
+
+makelabel "is_", label
+
+;.ident(.concat("is_",.string(label))):
+
+; cpu is byte unit
+;    .align 2, $00  
     _last_ .set *
     .word _link_
-    .byte .strlen(name) + flags
+    .byte .strlen(name) + flags + 0
     .byte name
-    .align 2, $20
+; cpu is byte unit
+;    .align 2, $20
     _link_ .set _last_
-label:
+
+makelabel "", label
+
+;.ident (.concat (label,":"))
+
 .endmacro
 
 .macro NOOP
-    .word $0000
+    .word NULL
 .endmacro
+
+.enum
+    HALT    = 0
+    IDLE    = 1
+    WAIT    = 2
+    BUSY    = 3
+.endenum
 
 ;---------------------------------------------------------------------
 ; need 8 bytes at page zero for indirect address
 ;
 .segment "PZ"
-.org $0000
+.org NULL
 
-none: .word
-ip: .word #$0000
-wk: .word #$0000
+reserved: .res 244
+
+; copycat
+x_save: .res 1
+y_save: .res 1
+a_save: .res 1
+s_save: .res 1
+p_save: .res 1
+h_save: .res 1
+
+; pseudo registers
+cnt:
+tos: .res 2     ; classic TOS
+
+nos:
+ptr: .res 2     ; classic IP
+
+wrk: 
+nxt: .res 2     ; classic W
 
 ;---------------------------------------------------------------------
 .segment "DATA"
-.org $0400
+.org $0200
+p0: .res $0100
+r0: .res $0100
+t0: .res TIB_SIZE
 
-void:   .word NULL
-stack:  .word $0100
-
-; pseudo registers
-ps:     .word $0200
-rs:     .word $0300
-tos:    .word NULL
-nos:    .word NULL
-wrk:    .word NULL
-cnt:    .word NULL
-
-; copycat
-ar:     .byte $00
-pr:     .byte $00
-sr:     .byte $00
-xr:     .byte $00
-yr:     .byte $00
+base:   .word $0010
+state:  .word $0000
+last:   .word NULL   ; link to dictionary latest word
+dp:     .word NULL   ; pointer to dicionary next free cell
+dsk:    .word NULL   ; disk number
+blk:    .word NULL   ; block number
+sct:    .word NULL   ; sector number
+scr:    .word NULL   ; screen number
+csp:    .word NULL
+hnd:    .word NULL
+hld:    .word NULL
 
 ;---------------------------------------------------------------------
-.segment "CODE"
+;
+.segment "VECTORS"
 
-.org $8000
+.addr      _nmi_int    ; NMI vector
+.addr      _init       ; Reset vector
+.addr      _irq_int    ; IRQ/BRK vector
 
-BOOT:
+;---------------------------------------------------------------------
+;
+.segment "STARTUP"
+
+_init:
     ; disable interrupts
     sei
+
     ; no BCD math
     cld
 
@@ -228,10 +279,10 @@ BOOT:
     sta $0100, x
     sta $0200, x
     sta $0300, x
-    sta $0400, x
-    sta $0500, x
-    sta $0600, x
-    sta $0700, x
+    ;sta $0400, x
+    ;sta $0500, x
+    ;sta $0600, x
+    ;sta $0700, x
     inx
     bne :-
 
@@ -243,22 +294,72 @@ BOOT:
     ; stack reference absolute
     ; high bytes
     lda $02
-    sta ps + 1
+    sta p0 + 1
     lda $03
-    sta rs + 1
+    sta r0 + 1
     ; low bytes
     lda $00
-    sta ps
-    sta rs
+    sta p0
+    sta r0
+
+    ; enable interrupts
+    cli
     
-nmi:
+    ;
+    jsr _main
+
+;---------------------------------------------------------------------
+;
+.segment "CODE"
+
+_nmi_int:
+    ; return
+    rti
+
+_irq_int:
     ; save registers
     pha
     txa
     pha
     tya
     pha
+    
+    ; verify status
+    tsx
+    inx
+    inx
+    lda $100, x
+    and #$10
+    bne _break
+    
+    ;
+    ; do something somewhere
+    ;
+
     ; load registers
+_irq:
+    pla
+    tay
+    pla
+    tax
+    pla
+
+    ; return 
+    rti
+
+_break:
+    jmp _halt
+
+    
+;---------------------------------------------------------------------
+irq:
+    ; save register
+    pha
+    txa
+    pha
+    tya
+    pha
+    ; load register
     pla
     tay
     pla
@@ -267,6 +368,8 @@ nmi:
     ; 
     rti
 
+;---------------------------------------------------------------------
+;
 COLD:
 WARM:
 TIME:
@@ -276,198 +379,255 @@ TURN:
 REST:
 QUIT:
 
+_main:
+
+_halt:
 
 ;---------------------------------------------------------------------
+; inner address interpreter, using MITC
+; classic  ptr == IP, nxt == WR
+; also ptr = nos, nxt = wrk
+;
 HEADER "ENDS", "ends", F_LEAP 
     NOOP
 unnest:
-    lda rs + 0, y
-    sta nos
-    lda rs + 1, y
-    sta nos + 1
+    ; pull from return stack
+    lda r0 + 0, y
+    sta ptr + 0
+    lda r0 + 1, y
+    sta ptr + 1
     iny
     iny
     ; jmp next
 
 next:
-    sty yr
-    pha
-    lda (nos)
-    sta wrk
-    
-    inc nos
+    ; as is, classic ITC from fig-forth 6502
+    sty y_save
+    ldy #0
+    lda (ptr), y
+    sta nxt + 0
+    iny
+    lda (ptr), y
+    sta nxt + 1
+    ldy y_save
+    ; pointer to next reference
+    clc
+    lda ptr + 0
+    adc #2
+    sta ptr + 0
     bne :+
-    inc nos + 1
-    :
-    lda (nos)
-    sta wrk + 1
-
-    inc nos
-    bne :+
-    inc nos + 1
+    inc ptr + 1
     :
 
-leaf:
+jump:
+    ; in MICT, all leafs start with NULL
     lda #0
-    cmp wrk + 1
-    bne next
+    cmp nxt + 1
+    bne nest
     ; none forth word at page zero
-    ; cmp W
-    ; bne next
-    ; all leafs start with $0000
-    jmp (nos)
+    jmp (ptr)
 
 nest:
+    ; push into return stack
     dey
     dey
-    lda nos
-    sta rs + 0, y
-    lda nos + 1
-    sta rs + 1, y
+    lda ptr
+    sta r0 + 0, y
+    lda ptr + 1
+    sta r0 + 1, y
 
-    lda wrk
-    sta nos 
-    lda wrk + 1
-    sta nos + 1
+    ; next reference
+    lda nxt + 0
+    sta ptr + 0
+    lda nxt + 1
+    sta ptr + 1
     jmp next
-
+; 
+; ok ( -- false )
+;
 HEADER "FALSE", "FFALSE", F_LEAP + F_CORE
     NOOP
     lda #0
     jmp fflag
 
+; 
+; ok ( -- true )
+;
 HEADER "TRUE", "FTRUE", F_LEAP + F_CORE
     NOOP
-    lda #$FF
+    lda #255
     jmp fflag
 
+; 
+; ok ( -- flag )
+;
 HEADER "(flag)", "fflag", F_LEAP + F_CORE
     NOOP
-    sta ps + 0, x
-    sta ps + 1, x
+    sta p0 + 0, x
+    sta p0 + 1, x
     jmp unnest
 
+; 
+; ok ( w -- false | true ) \ test w = 0
+;
 HEADER "0=", "zequ", F_LEAP + F_CORE
     NOOP
     lda #0
-    cmp ps + 0, x
+    cmp p0 + 0, x
     bne FFALSE
-    cmp ps + 1, x
+    cmp p0 + 1, x
     bne FFALSE
     beq FTRUE
 
+; 
+; ok ( w -- false | true ) \ test w < 0
+;
 HEADER "0<", "zless", F_LEAP + F_CORE
     NOOP
     lda #0
-    cmp ps + 0, x
+    cmp p0 + 0, x
     bcc FFALSE
-    cmp ps + 1, x
+    cmp p0 + 1, x
     bcc FFALSE
     beq FTRUE
 
+; 
+; ok ( w1 w2  -- false | true ) \ test w1 > w2
+;
 HEADER "<", "less", F_LEAP + F_CORE
     NOOP
-    lda ps + 2, x
-    cmp ps + 0, x
+    lda p0 + 2, x
+    cmp p0 + 0, x
     bcs FFALSE
-    lda ps + 3, x
-    cmp ps + 1, x
+    lda p0 + 3, x
+    cmp p0 + 1, x
     bcs FFALSE
     beq FTRUE
 
-HEADER "+", "plus", F_LEAP + F_CORE
-    NOOP
-    clc
-    lda ps + 2, x
-    adc ps + 0, x
-    sta ps + 2, x
-    lda ps + 3, x
-    adc ps + 1, x
-    sta ps + 3, x
-    jmp drop
-
-HEADER "-", "minus", F_LEAP + F_CORE
-    NOOP
-    sec
-    lda ps + 2, x
-    sbc ps + 0, x
-    sta ps + 2, x
-    lda ps + 3, x
-    sbc ps + 1, x
-    sta ps + 3, x
-    jmp drop
-
-HEADER "AND", "iand", F_LEAP + F_CORE
-    NOOP
-    lda ps + 2, x
-    and ps + 0, x
-    sta ps + 2, x
-    lda ps + 3, x
-    and ps + 1, x
-    sta ps + 3, x
-    jmp drop
-
-HEADER "OR", "ior", F_LEAP + F_CORE
-    NOOP
-    lda ps + 2, x
-    or ps + 0, x
-    sta ps + 2, x
-    lda ps + 3, x
-    or ps + 1, x
-    sta ps + 3, x
-    jmp drop
-
-HEADER "XOR", "ixor", F_LEAP + F_CORE
-    NOOP
-    lda ps + 2, x
-    eor ps + 0, x
-    sta ps + 2, x
-    lda ps + 3, x
-    eor ps + 1, x
-    sta ps + 3, x
-    jmp drop
-
+; 
+; ok ( w1 -- w2 ) \  rotate left
+;
 HEADER "2*", "shl", F_LEAP + F_CORE
     NOOP
     clc
-    rol ps + 0, x
-    rol ps + 1, x
+    rol p0 + 0, x
+    rol p0 + 1, x
     jmp unnest
 
+; 
+; ok ( w1 -- w2 ) \  rotate right
+;
 HEADER "2/", "shr", F_LEAP + F_CORE
     NOOP
     clc
-    ror ps + 1, x
-    ror ps + 0, x
+    ror p0 + 1, x
+    ror p0 + 0, x
     jmp unnest
 
+; 
+; ok ( w1 w2  -- w3 ) \  w1 + w2
+;
+HEADER "+", "plus", F_LEAP + F_CORE
+    NOOP
+    clc
+    lda p0 + 2, x
+    adc p0 + 0, x
+    sta p0 + 2, x
+    lda p0 + 3, x
+    adc p0 + 1, x
+    sta p0 + 3, x
+    jmp drop
+
+; 
+; ok ( w1 w2  -- w3 ) \  w1 - w2
+;
+HEADER "-", "minus", F_LEAP + F_CORE
+    NOOP
+    sec
+    lda p0 + 2, x
+    sbc p0 + 0, x
+    sta p0 + 2, x
+    lda p0 + 3, x
+    sbc p0 + 1, x
+    sta p0 + 3, x
+    jmp drop
+
+; 
+; ok ( w1 w2  -- w3 ) \  w1 AND w2
+;
+HEADER "AND", "iand", F_LEAP + F_CORE
+    NOOP
+    lda p0 + 2, x
+    and p0 + 0, x
+    sta p0 + 2, x
+    lda p0 + 3, x
+    and p0 + 1, x
+    sta p0 + 3, x
+    jmp drop
+
+; 
+; ok ( w1 w2  -- w3 ) \  w1 OR w2
+;
+HEADER "OR", "ior", F_LEAP + F_CORE
+    NOOP
+    lda p0 + 2, x
+    ora p0 + 0, x
+    sta p0 + 2, x
+    lda p0 + 3, x
+    ora p0 + 1, x
+    sta p0 + 3, x
+    jmp drop
+
+; 
+; ok ( w1 w2  -- w3 ) \  w1 XOR w2
+;
+HEADER "XOR", "ixor", F_LEAP + F_CORE
+    NOOP
+    lda p0 + 2, x
+    eor p0 + 0, x
+    sta p0 + 2, x
+    lda p0 + 3, x
+    eor p0 + 1, x
+    sta p0 + 3, x
+    jmp drop
+
+; 
+; ok ( w -- ) \  
+;
 HEADER "DROP", "drop", F_LEAP + F_CORE
     NOOP
     inx
     inx
     jmp unnest
 
+; 
+; ok ( w -- w w ) \  
+;
 HEADER "DUP", "dup", F_LEAP + F_CORE
     NOOP
     dex
     dex
-    lda ps + 2, x
-    sta ps + 0, x
-    lda ps + 3, x
-    sta ps + 1, x
+    lda p0 + 2, x
+    sta p0 + 0, x
+    lda p0 + 3, x
+    sta p0 + 1, x
     jmp unnest
 
+; 
+; ok ( w1 w2 -- w1 w2 w1 ) \  
+;
 HEADER "OVER", "over", F_LEAP + F_CORE
     NOOP
     dex
     dex
-    lda ps + 4, x
-    sta ps + 0, x
-    lda ps + 5, x
-    sta ps + 1, x
+    lda p0 + 4, x
+    sta p0 + 0, x
+    lda p0 + 5, x
+    sta p0 + 1, x
     jmp unnest
 
-;   ok  ( w1 -- ; -- w1 )
+;
+;   ok  ( w -- ; -- w )
 ;   yes, must be placed into second on stack
 ;
 HEADER ">R", "tor", F_LEAP + F_CORE
@@ -475,17 +635,20 @@ HEADER ">R", "tor", F_LEAP + F_CORE
     dey
     dey
     ; preserve return 
-    lda rs + 2, y
-    sta rs + 0, y
-    lda rs + 3, y
-    sta rs + 1, y
+    lda r0 + 2, y
+    sta r0 + 0, y
+    lda r0 + 3, y
+    sta r0 + 1, y
     ; move values
-    lda ps + 0, x
-    sta rs + 2, y
-    lda ps + 1, x
-    sta rs + 3, y
-    jmp drop
+    lda p0 + 0, x
+    sta r0 + 2, y
+    lda p0 + 1, x
+    sta r0 + 3, y
+    inx
+    inx
+    jmp unnest
 
+;
 ;   ok  (  -- w1 ; w1 -- )
 ;   yes, must be taken from second on stack
 ;
@@ -494,19 +657,20 @@ HEADER "R>", "rto", F_LEAP + F_CORE
     dex
     dex
     ; move values
-    lda rs + 2, y
-    sta ps + 0, x
-    lda rs + 3, y
-    sta ps + 1, x
+    lda r0 + 2, y
+    sta p0 + 0, x
+    lda r0 + 3, y
+    sta p0 + 1, x
     ; preserve return
-    lda rs + 0, x
-    sta rs + 2, y
-    lda rs + 1, x
-    sta rs + 3, y
+    lda r0 + 0, x
+    sta r0 + 2, y
+    lda r0 + 1, x
+    sta r0 + 3, y
     iny
     iny
     jmp unnest
-    
+
+;
 ;   ok  (  -- w1 ; w1 -- )
 ;   yes, must be taken from second on stack
 ;
@@ -515,43 +679,44 @@ HEADER "R@", "rat", F_LEAP + F_CORE
     dex
     dex
     ; move values
-    lda rs + 2, y
-    sta ps + 0, x
-    lda rs + 3, y
-    sta ps + 1, x
+    lda r0 + 2, y
+    sta p0 + 0, x
+    lda r0 + 3, y
+    sta p0 + 1, x
     jmp unnest
 
-
+;
 ;   ok  ( w1 w2 -- w3 carry )
 ;
-HEADER "UM+", "rat", F_LEAP + F_CORE
+HEADER "UM+", "umplus", F_LEAP + F_CORE
     NOOP
     clc
-    lda ps + 2, x
-    adc ps + 0, x
-    sta ps + 2, x
-    lda ps + 3, x
-    adc ps + 1, x
-    sta ps + 3, x
+    lda p0 + 2, x
+    adc p0 + 0, x
+    sta p0 + 2, x
+    lda p0 + 3, x
+    adc p0 + 1, x
+    sta p0 + 3, x
     ; save carry flag
     lda #0
-    sta ps + 1, x
+    sta p0 + 1, x
     adc #0
-    sta ps + 0, x
+    sta p0 + 0, x
     jmp unnest
 
-
-;   ok  ( -- w )
+;
+;   ok  ( -- w ) \ high byte always $00
 ;
 HEADER "(stor)", "stor", F_LEAP + F_CORE
     NOOP
     dex
     dex
-    sta ps + 0, x
+    sta p0 + 0, x
     lda #0
-    sta ps + 1, x
+    sta p0 + 1, x
     jmp unnest
 
+;
 ;   ok  ( -- w )
 ;
 HEADER "SP@", "psat", F_LEAP + F_CORE
@@ -559,13 +724,15 @@ HEADER "SP@", "psat", F_LEAP + F_CORE
     txa
     jmp stor
 
-;   ok  ( -- w )
+;
+;   ok  ( -- wrk )
 ;
 HEADER "RS@", "rsat", F_LEAP + F_CORE
     NOOP
     tya
     jmp stor
 
+;
 ;   ok  ( -- 0 )
 ;
 HEADER "0", "zero", F_LEAP + F_CORE
@@ -573,6 +740,7 @@ HEADER "0", "zero", F_LEAP + F_CORE
     lda #0
     jmp stor
 
+;
 ;   ok  ( -- 1 )
 ;
 HEADER "1", "one", F_LEAP + F_CORE
@@ -580,6 +748,7 @@ HEADER "1", "one", F_LEAP + F_CORE
     lda #1
     jmp stor
 
+;
 ;   ok  ( -- 2 )
 ;
 HEADER "2", "two", F_LEAP + F_CORE
@@ -587,6 +756,7 @@ HEADER "2", "two", F_LEAP + F_CORE
     lda #2
     jmp stor
 
+;
 ;   ok  ( -- 4 )
 ;
 HEADER "4", "four", F_LEAP + F_CORE
@@ -594,55 +764,78 @@ HEADER "4", "four", F_LEAP + F_CORE
     lda #4
     jmp stor
 
-;   ok  ( -- w )
+;
+;   ok  ( -- wrk )
 ;
 HEADER "SP!", "psto", F_LEAP + F_CORE
     NOOP
-    lda ps + 0, x
+    lda p0 + 0, x
     tax
     jmp unnest
 
-;   ok  ( -- w )
+;
+;   ok  ( -- wrk )
 ;
 HEADER "RP!", "rsto", F_LEAP + F_CORE
     NOOP
-    lda ps + 0, x
+    lda p0 + 0, x
     tay
     jmp unnest
 
-;   ok  ( -- ; w -- )
 ;
+;   ok  ( -- ; a -- a )
+;   tricky absolute 
 HEADER "BRANCH", "branch", F_LEAP + F_CORE
     NOOP
-    lda rs + 0, y
-    sta w
-    lda rs + 1, y
-    sta w + 1
-    jmp (w)
+    ; get reference
+    lda r0 + 0, y
+    sta wrk
+    lda r0 + 1, y
+    sta wrk + 1
+    ; load from
+    sty y_save
+    ldy #0
+    lda (wrk), y
+    sta nos
+    iny
+    lda (wrk), y
+    sta nos + 1
+    ldy y_save
+    ; put reference
+    lda nos
+    sta r0 + 0, y
+    lda nos + 1
+    sta r0 + 1, y
+    ; done
+    jmp unnest
 
-;   ok  ( -- ; w -- )
+;
+;   ok  ( w -- ; a -- a )
 ;
 HEADER "ZBRANCH", "zbranch", F_LEAP + F_CORE
-    NOOP
+    NOOP 
     lda #0
-    cmp ps + 0, x
+    cmp p0 + 0, x
     bne nobranch
-    cmp ps + 1, x
+    cmp p0 + 1, x
     bne nobranch
-    jmp brancah
+    jmp branch
 
-;   ok  ( -- ; w -- )
+;
+;   ok  ( -- ;  -- )
 ;
 HEADER "NOBRANCH", "nobranch", F_LEAP + F_CORE
     NOOP
     clc
-    lda rs + 0, y
+    lda r0 + 0, y
     adc CELL_SIZE
-    sta rs + 0, y
+    sta r0 + 0, y
     bcc @non
-    lda rs + 1, y
-    inc a
-    sta rs + 1, y
+    lda r0 + 1, y
+    adc #0
+    sta r0 + 1, y
 @non:
+    inx
+    inx
     jmp unnest
 
