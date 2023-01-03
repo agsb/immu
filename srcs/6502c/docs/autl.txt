@@ -1,0 +1,55 @@
+;Explanatory note for AUTL.AS, the autoloader for DIY6502
+;Copyright (c) 1996  Douglas Beattie Jr.
+;
+;
+;     A device driver for the 6522 VIA to receive
+;       parallel data from an IBM PC printer port.
+;
+;     This is a fast wire-to-wire interface for a printer port.
+;
+;     Assemble with MAS65 and load into EEPROM at $F800.  Hook
+;     printer lines BUSY, STROBE, and D0..D7 to Port B of the VIA.
+;
+;     To download Intel HEX files into the board, simply type
+;     at the DOS command prompt,  COPY S001.HEX LPT1:   and it is done.
+;
+;     Theory of operation:
+;
+;          This driver utilizes VIA port B as data,
+;           and CB1 as printer STROBE (active low) which
+;           should trigger the NMI. The data should be
+;           latched and recovered by the interrupt service
+;           routine.
+;
+;          Strangely enough, the port is configured entirely
+;           for input, yet proper emulation of a line printer
+;           is achieved using Handshake Output Mode.
+;
+;          The BUSY status line IS HELD HIGH by
+;           CB2 during processing due to OUTPUT handshaking.
+;           Just before exiting the interrupt service, port B
+;           is WRITTEN to, effectively clearing BUSY.
+;
+;          BUSY is needed to restrain further input while
+;           additional processing of received data takes place.
+;
+;     Additional processing includes translation from
+;       Intel HEX format and properly placing the object
+;       code within memory.
+;
+;     The Intel-format HEX load modules have the option of immediate
+;       execution if a transfer address was specified in the
+;       MAS65 assembler source file; e.g. END  START.
+;
+;     If the module executes, all registers are saved in a
+;       software stack.  This allows new programs to preempt
+;       currently running programs, nesting in execution, and
+;       returning to the 'caller'.
+;
+;     The actual return address was pushed into the stack before
+;       execution transfer and points to a register-restore routine
+;       which fetches the previous state of all registers, including
+;       processor status, from the software stack.  The next return
+;       address is that of the most-recently preempted program.
+;
+

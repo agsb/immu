@@ -1,0 +1,9 @@
+
+
+ca65 -W 2 -g -l main.lst -o main.o -mm near -v  \
+    --cpu 6502 \
+    --create-dep main.dep \
+    --list-bytes 80 \
+    --pagelength 36 \
+    main.S
+
