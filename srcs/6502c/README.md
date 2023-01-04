@@ -1,4 +1,4 @@
-# immu
+# IMMU 6502
 
 An implementation of Forth for 6502 ISA, with inner interpreter using minimal indirect thread code and a dictionary made of machine independent vocabularies. 
   
@@ -6,7 +6,7 @@ _Only the inner interpreter and vocabularies related to systems, drives and prim
 
 The minimal indirect thread code [MITC](https://github.com/agsb/f2u/blob/main/small%20MITC%20Forth%20en.pdf) gives to Forth inner interpreter the decision of when use "push and pull" or "jump and link".
 
-More information in [Details](https://github.com/agsb/immu/blob/main/Details.md)
+More IMMU information in [Details](https://github.com/agsb/immu/blob/main/Details.md)
 
 In 2023, the immu Forth was splitted for ISAs: 6502, Atmega328, RiscV
 
