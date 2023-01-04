@@ -23,7 +23,7 @@ changes:
         Still no DO LOOP +LOOP LEAVE CASE OF ENDOF ENDCASE
 
         
-More information in [Notes](https://github.com/agsb/immu/blob/main/Details.md)
+More information in [Notes](https://github.com/agsb/immu/blob/main/srcs/6502c/Notes.md)
 
 ![image](https://github.com/agsb/immu/blob/main/beach-g681c55cdd_640.jpg)
 
