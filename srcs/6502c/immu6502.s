@@ -1,20 +1,9 @@
-;
-;   enable some as65 
-;
-; enable listing
-.list on
-; lines per page
-.pagelength 66
-; enable 6502 mode
-.p02
-
-
 ; /*
 ;  *  DISCLAIMER"
 ;  *
 ;  *  Copyright © 2020, Alvaro Gomes Sobral Barcellos,
 ;  *
-;  *  Permission is hereby granted, free of charge, to any per0on obtaining
+;  *  Permission is hereby granted, free of charge, to any person obtaining
 ;  *  a copy of this software and associated documentation files (the
 ;  *  "Software"), to deal in the Software without restriction, including
 ;  *  without limitation the rights to use, copy, modify, merge, publish,
@@ -33,50 +22,23 @@
 ;  *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 ;  *
 ;  */
-; 
-; Notes:
-; 
-; -   source for used with cc65 in Linux
-; -   almost adapted from fig-forth-6502, from W. B. Ragsdale
-; -   minimized use of pages, zero and one, for easy use external libraries
-; -   all stuff use absolute address and jump, 
-; -   bare minimal use real stack pointer SP 
-; -   bare minimal use jsr/rts for relative BIOS
-; -   16 bits pseudo registers as in SWEET16, DS, RS, T, N, W, C
-; -   stacks goes downwards, uses X and Y for index
-; 
-; 
-; Notes:
-; 
-; 1. I know that will be not the most fastest code possible.
-;   
-;     Why ?
-;     Most of page zero indexed access uses 3 cycles and 
-;         absolute indexed access uses 4 cycles.
-;     Not using Accumulator as Top of Stack, just as accumulator (as is).
-; 
-; 2. the 6502C pages:
-; 
-; NULL 0x00FF page zero,  reserved for indexed acess
-; $0100 0x01FF page one,   reserved for SP use
-; 
-; $0200 0x02FF page two,   data parameter stack, indexed by X, offset wrap0
-; $0300 0x03FF page three, return address/parameter stack, indexed by Y, offset wrap0
-; 
-; $0400 0x04FF page four, forth internal register0 and buffer0 
-; $0500 0x0FFF free 3072 bytes SRAM, BIOS buffer0, 
-; 
-; $1000  page forth :)
-; 
-; $8000  start of ROM (FLASH) BIOS, IOS, Forth
-; 
-; 3. the MITC inner interpreter
-;     R> >R R@ must use the second cell at return stack to load/save values
-; 
-; 
-; 
- 
- 
+;---------------------------------------------------------------------
+;
+;   04/01/2023   please read the Notes.md
+;
+;---------------------------------------------------------------------
+;   enable some ca65  
+;
+; enable listing
+.list on
+
+; lines per page
+.pagelength 66
+
+; enable 6502 mode
+.p02
+
+
 ;---------------------------------------------------------------------
 ; macros
 
