@@ -43,7 +43,7 @@
  ### the indirect access question
 
    the 6502 ISA offers only **LDA (BY),Y** as indirect access, "a byte at address pointed by a address at a address with offset",
-   [ use zero page as array of cells, BY is a index, Y an offset, as cell [BY low byte][BY+1 hugh byte] + Y ] 
+   [ use zero page as array of cells, BY is a index, Y an offset, as address (BY,BY+1) and offset Y ] 
 
  ### the MITC inner interpreter
 
