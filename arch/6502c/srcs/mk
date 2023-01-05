@@ -7,9 +7,10 @@
 #    --pagelength 36 \
 #    main.s
 
-cl65 -O0 -v -v -v -v -vm -c -T -l main.asm -m main.map -o main.obj \
+cl65 -O0 -c -T -l main.asm -m main.map -o main.obj \
+    -vm -vm -v -v -v \ 
     --cpu 6502 \
-    --create-full-dep main.dep \
-    --list-bytes 80 \
+    --create-dep main.dep \
     main.s
 
+ld65 -o main.obj -Ln main.lbs main.bin
