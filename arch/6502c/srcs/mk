@@ -8,7 +8,7 @@
 #    main.s
 
 cl65 -O0 -c -T -l main.asm -m main.map -o main.obj \
-    -vm -vm -v -v -v \ 
+    -vm -vm -v -v -v \
     --cpu 6502 \
     --create-dep main.dep \
     main.s
