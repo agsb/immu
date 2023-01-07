@@ -1,16 +1,38 @@
+#! /usr/bin/bash
 
+case $1 in
 
-#ca65 -W 1 -l main.lst -o main.o -mm near -v -v  \
-#    --cpu 6502 \
-#    --create-full-dep main.dep \
-#    --list-bytes 80 \
-#    --pagelength 36 \
-#    main.s
-
-cl65 -O0 -c -T -l main.asm -m main.map -o main.obj \
-    -vm -vm -v -v -v \
+a) 
+ca65 -W 1 -l main.lst -o main.o -mm near -v -v  \
     --cpu 6502 \
-    --create-dep main.dep \
+    --create-full-dep main.dep \
+    --list-bytes 80 \
+    --pagelength 36 \
     main.s
+    ;;
 
-ld65 -o main.obj -Ln main.lbs main.bin
+c) 
+    # cl65 -t atari -Ln main.lbl --listing main.lst --add-source -o main.xex main.s
+    
+cl65 -O0 -W1 -c -T \
+    -l main.asm -m main.map -o main.obj -L main.lbl \
+    --add-source \
+    --create-dep main.dep \
+    -vm -v \
+    --cpu 6502 \
+    main.s 1> out 2> err 
+    ;;
+
+l)
+ld65 -o main.bin -m main.map -Ln main.lbs -C main.cfg main.obj
+    ;;
+
+x)
+    rm a main.obj main.dep main.asm main.map main.lbl out err
+    ;;
+
+esac
+
+grep HEADER main.s > words
+
+

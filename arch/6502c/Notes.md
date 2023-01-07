@@ -15,6 +15,14 @@
  - 8 bits safe registers for A, Y, X, S, P, H, at page zero
  - stacks goes downwards, uses X and Y for index
  
+ ### fig_forth 6502
+
+    listings from 
+
+        http://www.forth.org/fig-forth/fig-forth_6502.pdf
+
+        http://www.forth.org/fig-forth/fig-forth_APPLEII.pdf
+
  ### I know that will be not the most fastest code possible.  
  
  ( I'm learning the 6502 ISA, there are Tons of technologies to know. )

@@ -1,3 +1,4 @@
+;---------------------------------------------------------------------
 ; /*
 ;  *  DISCLAIMER"
 ;  *
@@ -76,15 +77,15 @@ BASE_DEFAULT = 16
 ;---------------------------------------------------------------------
 ; forth words flags
 ;
-F_RESERVED = $80
+F_RESERVED  = $80
 F_IMMEDIATE = $40
-F_COMPILE = $20
-F_HIDDEN = $10
+F_COMPILE   = $20
+F_HIDDEN    = $10
 
 F_TOMASK = $F0
 F_UNMASK = $0F
 
-; not flags but usefull to look at listings
+; not really flags but nice look at listings
 F_LEAP = $00   ; for primitives
 F_CORE = $00   ; for core words
 
@@ -94,11 +95,11 @@ F_CORE = $00   ; for core words
 ; 2's complement
 ;
 NO_ERROR = 0
-INVALID_MEMORY = $FFF7  ; -9
-OUT_OF_RANGE = $FFF5    ; -11
-INVALID_WORD = $FFF3    ; -13
-TO_READ_ONLY = $FFEC    ; -20
-NOT_A_NUMBER = $FFE8    ; -24
+INVALID_MEMORY  = $FFF7     ; -9
+OUT_OF_RANGE    = $FFF5     ; -11
+INVALID_WORD    = $FFF3     ; -13
+TO_READ_ONLY    = $FFEC     ; -20
+NOT_A_NUMBER    = $FFE8     ; -24
 
 ;---------------------------------------------------------------------
 ; ASCII constants
@@ -133,6 +134,9 @@ _last_ .set NULL
 ;---------------------------------------------------------------------
 .macro HEADER name, label, flags, leaf
 
+.ifblank leaf
+    .out " No leaf "
+.endif
 .ifblank flags
     .out " No flags "
 .endif
@@ -151,13 +155,14 @@ makelabel "is_", label
 
     _last_ .set *
     .word _link_
-    .byte .strlen(name) + ( flags | F_RESERVED ) + 0
+    .byte .strlen(name) + ( F_RESERVED | flags ) + 0
     .byte name
 ;
 ; 6502 cpu is byte unit
 ;    .align 2, $20
     _link_ .set _last_
 
+; All primitives (leafs) must start with NULL
 .ifnblank leaf 
     .word $0000
 .endif 
@@ -181,49 +186,59 @@ makelabel "", label
 .endenum
 
 ;---------------------------------------------------------------------
-; need 8 bytes at page zero for indirect address
+; need page zero for indirect address
 ;
 .segment "ZP"
 
+;---------------------------------------------------------------------
 ; not used by Forth
 reserved: .res 240
 
+; ;---------------------------------------------------------------------
+; ; pseudo registers
+tos = $F0
+nos = tos + 2
+wrk = tos + 4
+
 ; copycat
-a_save: .res 1
-s_save: .res 1
-x_save: .res 1
-y_save: .res 1
-p_save: .res 1
-h_save: .res 1
-
-; pseudo registers, dual names as context
-cnt:
-tos: .res 2     ; classic TOS
-
-ptr:
-nos: .res 2     ; classic IP
-
-nxt:
-wrk: .res 2     ; classic W
+a_save = wrk + 2
+s_save = a_save + 1
+x_save = s_save + 1
+y_save = x_save + 1
+p_save = y_save + 1
+h_save = p_save + 1
 
 ; irq mask stuff
-irqnot: .res 1  ; pending
-irqcnt: .res 1  ; nested
-irqvec: .res 2  ; resolve
+irqnot = h_save + 1    ; pending
+irqcnt = irqnot + 1    ; nested
+irqvec = irqcnt + 1    ; resolver
+
+;   void
+void = irqvec + 2
 
 ;---------------------------------------------------------------------
 .segment "DATA"
+
+; forth stacks
 .org $0200
 
+;---------------------------------------------------------------------
 ; parameter stack, $0200
 p0: .res $0100
 
+;---------------------------------------------------------------------
 ; return stack, $0300
 r0: .res $0100
 
+;---------------------------------------------------------------------
+; forth buffers, variables
+.org $0400
+
+;---------------------------------------------------------------------
 ; terminal input buffer, $0400
 t0: .res TIB_SIZE
 
+;---------------------------------------------------------------------
 ; math reserved
 m0: .word NULL
 m1: .word NULL
@@ -234,11 +249,12 @@ m5: .word NULL
 m6: .word NULL
 m7: .word NULL
 
+;---------------------------------------------------------------------
 ; forth 
-radx:   .word NULL   ; base radix for numbers
-stat:   .word NULL   ; interpreter state
-last:   .word NULL   ; link to dictionary latest word
-dp:     .word NULL   ; pointer to dicionary next free cell
+radx: .word NULL   ; base radix for numbers
+stat: .word NULL   ; interpreter state
+last: .word NULL   ; link to dictionary latest word
+dp:   .word NULL   ; pointer to dicionary next free cell
 
 dsk:    .word NULL   ; disk number
 blk:    .word NULL   ; block number
@@ -254,9 +270,9 @@ tmp:    .word NULL  ; temprary
 ;
 .segment "VECTORS"
 
-.addr      _nmi_int    ; NMI vector
-.addr      _init       ; Reset vector
-.addr      _irq_int    ; IRQ/BRK vector
+.addr    _nmi_int  ; NMI vector
+.addr    _init     ; Reset vector
+.addr    _irq_int  ; IRQ/BRK vector
 
 ;---------------------------------------------------------------------
 ;
@@ -272,7 +288,8 @@ _init:
     ; clear memory
     lda #0
     ldx #0
-    :
+
+@clean:
     sta $0000, x
     sta $0100, x
     sta $0200, x
@@ -282,7 +299,7 @@ _init:
     ;sta $0600, x
     ;sta $0700, x
     inx
-    bne :-
+    bne @clean
 
     ; offset stacks
     ldy #$FF
@@ -310,10 +327,10 @@ _init:
 ;
 ;   reserved one 4k page $2000-$2FFF for I/O 6522VIA 6551CIA
 ;   external 74hc glue logic for phi2 LOW and address
-;       0010 [15-12] IOS == select IO
-;       XXXX [11-8]  IOS and XXXX == select chip 0-3
-;       YYYY [7-4]   IOS and YYYY == select chip 0-3
-;       ZZZZ [3-0]  port in chip
+;     0010 [15-12] IOS == select IO
+;     XXXX [11-8]  IOS and XXXX == select chip 0-3
+;     YYYY [7-4]   IOS and YYYY == select chip 0-3
+;     ZZZZ [3-0]  port in chip
 
 ;---------------------------------------------------------------------
 ;
@@ -323,71 +340,73 @@ _init:
 ;
 ;   CIA 6551, just one
 ;
-ACIA            := $2000
-ACIA_CTRL       := ACIA + 3
-ACIA_CMD        := ACIA + 2
-ACIA_SR         := ACIA + 1
-ACIA_RX         := ACIA
-ACIA_TX         := ACIA
+ACIA        = $2000
+ACIA_CTRL   = ACIA + 3
+ACIA_CMD    = ACIA + 2
+ACIA_SR     = ACIA + 1
+ACIA_RX     = ACIA
+ACIA_TX     = ACIA
 
 ;-------------------------------------------------------------------------------
-;       Name:           ACIA_INIT
-;       Desc:           Configures base setup
-;                       19200,N,8,1
-;       Destroys:       Nothing
+;   Name:         ACIA_INIT
+;   Desc:         Configures base setup
+;                   19200,N,8,1
+;   Destroys:     Nothing
 ;-------------------------------------------------------------------------------
 acia_init:
-   pha			; Push A to stack
-   lda #$1F     ; %0001 1111 = 19200 Baud
-                ;              External receiver
-                ;              8 bit words
-                ;              1 stop bit
-   sta ACIA_CTRL
-   lda #$0B     ; %0000 1011 = Receiver odd parity check
-                ;              Parity mode disabled
-                ;              Receiver normal mode
-                ;              RTSB Low, trans int disabled
-                ;              IRQB disabled
-                ;              Data terminal ready (DTRB low)
-   sta ACIA_CMD
-   pla                 ; Restore A
-   rts
+    pha			; Push A to stack
+    lda #$1F     ; %0001 1111 = 19200 Baud
+            ;              External receiver
+            ;              8 bit words
+            ;              1 stop bit
+    sta ACIA_CTRL
+    lda #$0B     ; %0000 1011 = Receiver odd parity check
+            ;              Parity mode disabled
+            ;              Receiver normal mode
+            ;              RTSB Low, trans int disabled
+            ;              IRQB disabled
+            ;              Data terminal ready (DTRB low)
+    sta ACIA_CMD
+    pla             ; Restore A
+    rts
 
 ;-------------------------------------------------------------------------------
-;       Name:           ACIA_ECHO
-;       Desc:           Sends data to serial port
-;       Destroys:       A
-;       Note:           TODO - Add fix for 65C51 transmit bug
-;                       It was recommended to use ~521 microseconds
-;                       (or a little more) delay.
+;   Name:         ACIA_ECHO
+;   Desc:         Sends data to serial port
+;   Destroys:     A
+;   Note:         TODO - Add fix for 65C51 transmit bug
+;                   It was recommended to use ~521 microseconds
+;                   (or a little more) delay.
 ;-------------------------------------------------------------------------------
 
 acia_echo:
-        pha             ; Push A to stack
+    pha             ; Push A to stack
 @loop:
-        lda ACIA_SR     ; Wait for TDRE bit = 1
-        and #$10        ; 16, %00010000
-        beq @loop
-        pla             ; Pull A from stack
-        sta ACIA_TX     ; Send A
-        Jsr DELAY_6551
-        rts
+    lda ACIA_SR     ; Wait for TDRE bit = 1
+    and #$10        ; 16, %00010000
+    beq @loop
+    pla             ; Pull A from stack
+    ; send
+    sta ACIA_TX     ; Send A
+    ; delay
+    jsr delay_6551
+    rts
 
 ;-------------------------------------------------------------------------------
-;       Name:           ACIA_READ
-;       Desc:           Reads data from serial port and return in A
-;       Destroys:       A
-;       Note:           Probably not compatible with EhBASIC because it is
-;                       blocking
+;   Name:         ACIA_READ
+;   Desc:         Reads data from serial port and return in A
+;   Destroys:     A
+;   Note:         Probably not compatible with EhBASIC because it is
+;                 blocking
 ;-------------------------------------------------------------------------------
 acia_read:
-        lda #$08
-acia_rx_full:
-        bit ACIA_SR             ; Check to see if the buffer is full
-        beq ACIA_RX_FULL
-        lda ACIA_RX
-        rts
-
+    lda #$08
+@loop:
+    bit ACIA_SR             ; Check to see if the buffer is full
+    beq @loop
+    ; receive
+    lda ACIA_RX
+    rts
 
 ; Latest WDC 65C51 has a bug - Xmit bit in status register is stuck on
 ; IRQ driven transmit is not possible as a result - interrupts are endlessly triggered
@@ -397,30 +416,39 @@ acia_rx_full:
 ; MINIDLY routine takes 524 clock cycles to complete - X Reg is used for the count loop
 ; Y Reg is loaded with the CPU clock rate in MHz (whole increments only) and used as a multiplier
 ;
+; zzzz must recalcule this 
+;
 delay_6551:
 ; save
-      phy      ;Save Y Reg
-      phx      ;Save X Reg
-delay_loop:
-;      ldy   #2    ;Get delay value (clock rate in MHz 2 clock cycles)
-      ldy   #1    ;Get delay value (clock rate in MHz 1 clock cycles)
+    pha
+    tya
+    pha
+    txa
+    pha
+@delay_loop:
+;    ldy   #2    ;Get delay value (clock rate in MHz 2 clock cycles)
+    ldy   #1    ;Get delay value (clock rate in MHz 1 clock cycles)
 
-minidly:
-      ldx   #$68      ;Seed X reg
-delay_1:
-      dex   	      ;Decrement low index
-      bne   delay_1   ;Loop back until done
-      dey       	  ;Decrease by one
-      bne   minidly   ;Loop until done
+@delay_y:
+    ldx   #$68    ;Seed X reg
+@delay_x:
+    dex   	    ;Decrement low index
+    bne @delay_x   ;Loop back until done
+    dey     	  ;Decrease by one
+    bne @delay_y   ;Loop until done
 ; load
-      plx         ;Restore X Reg
-      ply         ;Restore Y Reg
-      rts         ;Delay done, return
+    pla
+    tax
+    pla
+    tay
+    pla
+; done
+    rts       ; return
 
 ;=====================================================================
 ;---------------------------------------------------------------------
 ;
-segment "CODE"
+.segment "CODE"
 
 _nmi_int:
     ; return
@@ -462,6 +490,74 @@ _break:
     
 ;---------------------------------------------------------------------
 
+;======================================================================
+;
+; adapted from 
+; http://wilsonminesco.com/0-overhead_Forth_interrupts/
+;
+; zzzz not finished
+;
+; next: 
+;   ldy irqnot
+;   beq runISR
+;   ...
+;   bcs inc_hi
+;   jmp wrk - 1
+;
+;inc_hi:
+;   inc nos + 1
+;   jmp wrk - 1
+;
+HEADER "IRQOK", "IRQOK", F_LEAP, LEAF
+    cli
+    ; continue
+    jmp unnest
+
+HEADER "NOIRQ", "NOIRQ", F_LEAP, LEAF
+    sei
+    ; continue
+    jmp unnest
+
+HEADER "SYSRTI", "SYSRTI", F_LEAP, LEAF
+    sei
+    lda irqnot
+    beq noi
+    cli
+noi:
+    ; continue
+    jmp unnest
+
+HEADER "IRQOK?", "IRQOKQ", F_LEAP, LEAF
+    php
+    pla
+    and #4
+    beq irqf
+    jmp FFALSE
+irqf: 
+    jmp FTRUE
+
+runISR:
+    inc irqnot
+    jmp (irqvec)
+
+irqroute:
+    jmp (irqvec)
+
+setirq:
+    sta a_save
+    ; clear byte irq flag
+    lda #0
+    sta irqnot
+    ; set bit 4 flag
+    pla
+    ora #4
+    pha
+    lda a_save
+    rti
+
+;======================================================================
+
+
 ;---------------------------------------------------------------------
 ;
 COLD:
@@ -477,18 +573,19 @@ _main:
 
 _halt:
 
+;======================================================================
+;
 ;---------------------------------------------------------------------
 ; inner address interpreter, using MITC
-; classic  ptr == IP, nxt == WR
-; also ptr = nos, nxt = wrk
+; classic ITC, nos == IP, wrk == WR
 ;
 HEADER "ENDS", "ends", F_LEAP, LEAF 
 unnest:
     ; pull from return stack
     lda r0 + 0, y
-    sta ptr + 0
+    sta nos + 0
     lda r0 + 1, y
-    sta ptr + 1
+    sta nos + 1
     iny
     iny
     ; jmp next
@@ -497,56 +594,57 @@ next:
     ; as is, classic ITC from fig-forth 6502
     sty y_save
     ldy #0
-    lda (ptr), y
-    sta nxt + 0
+    lda (nos), y
+    sta wrk + 0
     iny
-    lda (ptr), y
-    sta nxt + 1
+    lda (nos), y
+    sta wrk + 1
     ldy y_save
+
     ; pointer to next reference
     clc
-    lda ptr + 0
+    lda nos + 0
     adc #2
-    sta ptr + 0
-    bne :+
-    inc ptr + 1
-    :
+    sta nos + 0
+    bne @end
+    inc nos + 1
+@end:
 
 jump:
     ; in MICT, all leafs start with NULL
     lda #0
-    cmp nxt + 1
+    cmp wrk + 1
     bne nest
     ; none forth word at page zero
-    jmp (ptr)
+    jmp (nos)
 
 nest:
     ; push into return stack
     dey
     dey
-    lda ptr + 1
+    lda nos + 1
     sta r0 + 1, y
-    lda ptr + 0
+    lda nos + 0
     sta r0 + 0, y
 
     ; next reference
-    lda nxt + 0
-    sta ptr + 0
-    lda nxt + 1
-    sta ptr + 1
+    lda wrk + 0
+    sta nos + 0
+    lda wrk + 1
+    sta nos + 1
     jmp next
 ; 
 ; ok ( -- false )
 ;
 HEADER "FALSE", "FFALSE", F_LEAP + F_CORE, LEAF
-    lda #0
+    lda #$00
     jmp fflag
 
 ; 
 ; ok ( -- true )
 ;
 HEADER "TRUE", "FTRUE", F_LEAP + F_CORE, LEAF
-    lda #255
+    lda #$FF
     jmp fflag
 
 ; 
@@ -555,6 +653,7 @@ HEADER "TRUE", "FTRUE", F_LEAP + F_CORE, LEAF
 HEADER "(flag)", "fflag", F_LEAP + F_CORE, LEAF
     sta p0 + 0, x
     sta p0 + 1, x
+    ; continue
     jmp unnest
 
 ; 
@@ -611,6 +710,7 @@ HEADER "2*", "SHL", F_LEAP + F_CORE, LEAF
     clc
     rol p0 + 0, x
     rol p0 + 1, x
+    ; continue
     jmp unnest
 
 ; 
@@ -620,6 +720,7 @@ HEADER "2/", "SHR", F_LEAP + F_CORE, LEAF
     clc
     ror p0 + 1, x
     ror p0 + 0, x
+    ; continue
     jmp unnest
 
 ; 
@@ -690,6 +791,7 @@ HEADER "XOR", "IXOR", F_LEAP + F_CORE, LEAF
 HEADER "DROP", "DROP", F_LEAP + F_CORE, LEAF
     inx
     inx
+    ; continue
     jmp unnest
 
 ; 
@@ -702,6 +804,7 @@ HEADER "DUP", "DUP", F_LEAP + F_CORE, LEAF
     sta p0 + 0, x
     lda p0 + 3, x
     sta p0 + 1, x
+    ; continue
     jmp unnest
 
 ; 
@@ -714,6 +817,7 @@ HEADER "OVER", "OVER", F_LEAP + F_CORE, LEAF
     sta p0 + 0, x
     lda p0 + 5, x
     sta p0 + 1, x
+    ; continue
     jmp unnest
 
 ;
@@ -735,6 +839,7 @@ HEADER ">R", "TOR", F_LEAP + F_CORE, LEAF
     sta r0 + 3, y
     inx
     inx
+    ; continue
     jmp unnest
 
 ;
@@ -756,6 +861,7 @@ HEADER "R>", "RTO", F_LEAP + F_CORE, LEAF
     sta r0 + 3, y
     iny
     iny
+    ; continue
     jmp unnest
 
 ;
@@ -770,6 +876,7 @@ HEADER "R@", "RAT", F_LEAP + F_CORE, LEAF
     sta p0 + 0, x
     lda r0 + 3, y
     sta p0 + 1, x
+    ; continue
     jmp unnest
 
 ;
@@ -788,6 +895,23 @@ HEADER "UM+", "UMPLUS", F_LEAP + F_CORE, LEAF
     sta p0 + 1, x
     adc #0
     sta p0 + 0, x
+    ; continue
+    jmp unnest
+
+;
+;   ok  ( w1 w2 -- w3 carry )
+;   zzzz
+HEADER "UM*", "UMSTAR", F_LEAP + F_CORE, LEAF
+    clc
+    ; continue
+    jmp unnest
+
+;
+;   ok  ( w1 w2 -- w3 carry )
+;   zzzz
+HEADER "UM/MOD", "UMSLASHMOD", F_LEAP + F_CORE, LEAF
+    clc
+    ; continue
     jmp unnest
 
 ;
@@ -799,6 +923,7 @@ HEADER "(stor)", "stor", F_LEAP + F_CORE, LEAF
     sta p0 + 0, x
     lda #0
     sta p0 + 1, x
+    ; continue
     jmp unnest
 
 ;
@@ -870,7 +995,7 @@ HEADER "BL", "BL", F_LEAP + F_CORE, LEAF
 HEADER "SP!", "PSTO", F_LEAP + F_CORE, LEAF
     lda p0 + 0, x
     tax
-    jmp unnest
+    jmp DROP 
 
 ;
 ;   ok  ( -- wrk )
@@ -878,7 +1003,7 @@ HEADER "SP!", "PSTO", F_LEAP + F_CORE, LEAF
 HEADER "RP!", "RSTO", F_LEAP + F_CORE, LEAF
     lda p0 + 0, x
     tay
-    jmp unnest
+    jmp DROP
 
 ;
 ;   ok  ( -- ; a -- a )
@@ -886,24 +1011,22 @@ HEADER "RP!", "RSTO", F_LEAP + F_CORE, LEAF
 HEADER "BRANCH", "BRANCH", F_LEAP + F_CORE, LEAF
     ; get reference
     lda r0 + 0, y
-    sta wrk
-    lda r0 + 1, y
-    sta wrk + 1
-    ; load from
-    sty y_save
-    ldy #0
-    lda (wrk), y
     sta nos
-    iny
-    lda (wrk), y
+    lda r0 + 1, y
     sta nos + 1
-    ldy y_save
-    ; put reference
-    lda nos
+    ; save index
+    sty y_save
+    ; copy lsb
+    ldy #0
+    lda (nos), y
     sta r0 + 0, y
-    lda nos + 1
+    ; copy msb
+    iny
+    lda (nos), y
     sta r0 + 1, y
-    ; done
+    ; load index
+    ldy y_save
+    ; continue
     jmp unnest
 
 ;
@@ -929,72 +1052,116 @@ HEADER "NOBRANCH", "NOBRANCH", F_LEAP + F_CORE, LEAF
     sta r0 + 0, y
     bcc @non
     lda r0 + 1, y
-    adc #0
+    adc #1
     sta r0 + 1, y
 @non:
     jmp DROP
 
-;======================================================================
 ;
-; adapted from 
-; http://wilsonminesco.com/0-overhead_Forth_interrupts/
+;   ok  ( w -- ; a -- a )
 ;
-; zzzz not finished
+HEADER "LIT", "LIT", F_LEAP + F_CORE, LEAF
+    ; get reference
+    dex
+    dex
+    lda r0 + 0, y
+    sta p0 + 0, x
+    lda r0 + 1, y
+    sta p0 + 1, x
+    ; tricky extra for drop :)
+    dex
+    dex
+    jmp NOBRANCH
+
 ;
-; next: 
-;   ldy irqnot
-;   beq runISR
-;   ...
-;   bcs inc_hi
-;   jmp wrk - 1
+;   ok  ( w -- ; a -- a )
 ;
-;inc_hi:
-;   inc ptr + 1
-;   jmp wrk - 1
-;
-HEADER "IRQOK", "IRQOK", F_LEAP, LEAF
-    cli
+HEADER "@", "AT", F_LEAP + F_CORE, LEAF
+    ; load address
+    lda p0 + 0, x
+    sta nos + 0
+    lda p0 + 1, x
+    sta nos + 1
+    ; save index
+    sty y_save
+    ; copy lsb
+    ldy #0
+    lda (nos), y
+    sta p0 + 0, x
+    ; copy msb
+    iny
+    lda (nos), y
+    sta p0 + 1, x
+    ; load index
+    ldy y_save
+    ; continue
     jmp unnest
 
-HEADER "NOIRQ", "NOIRQ", F_LEAP, LEAF
-    sei
+;
+;   ok  ( w -- ; a -- a )
+;
+HEADER "!", "TO", F_LEAP + F_CORE, LEAF
+    ; load address
+    lda p0 + 0, x
+    sta nos + 0
+    lda p0 + 1, x
+    sta nos + 1
+    ; save index
+    sty y_save
+    ; copy lsb
+    ldy #0
+    lda p0 + 2, x
+    sta (nos), y
+    ; copy msb
+    iny
+    lda p0 + 3, x
+    sta (nos), y
+    ; load index
+    ldy y_save
+    ; continue
     jmp unnest
-
-HEADER "SYSRTI", "SYSRTI", F_LEAP, LEAF
-    sei
-    lda irqnot
-    beq noi
-    cli
-noi:
-    jmp unnest
-
-HEADER "IRQOK?", "IRQOKQ", F_LEAP, LEAF
-    php
-    pla
-    and #4
-    beq irqf
-    jmp FFALSE
-irqf: 
-    jmp FTRUE
-
-runISR:
-    inc irqnot
-    jmp (irqvec)
-
-irqroute:
-    jmp (irqvec)
-
-setirq:
-    sta a_save
-    ; set byte flag
+    
+;
+;   ok  ( w -- ; a -- a )
+;
+HEADER "C@", "CAT", F_LEAP + F_CORE, LEAF
+    ; load address
+    lda p0 + 0, x
+    sta nos + 0
+    lda p0 + 1, x
+    sta nos + 1
+    ; save index
+    sty y_save
+    ; copy lsb
+    ldy #0
+    lda (nos), y
+    sta p0 + 0, x
+    ; clear msb
     lda #0
-    sta irqnot
-    ; set bit flag
-    pla
-    ora #4
-    pha
-    lda a_save
-    rti
+    sta p0 + 1, x
+    ; load index
+    ldy y_save
+    ; continue
+    jmp unnest
 
-;======================================================================
-
+;
+;   ok  ( w -- ; a -- a )
+;
+HEADER "C!", "CTO", F_LEAP + F_CORE, LEAF
+    ; load address
+    lda p0 + 0, x
+    sta nos + 0
+    lda p0 + 1, x
+    sta nos + 1
+    ; save index
+    sty y_save
+    ; copy only lsb
+    ldy #0
+    lda p0 + 2, x
+    sta (nos), y
+    ; load index
+    ldy y_save
+    ; continue
+    jmp unnest
+    
+;==============================================================================   

@@ -10,7 +10,7 @@ More IMMU information in [Details](https://github.com/agsb/immu/blob/main/Detail
 
 In 2023, the immu Forth was splitted for ISAs: 6502, Atmega328, RiscV
 
-This is the review of Fig-Forth-6502, updated for some 1979, 1983, 2012 standart
+This is the adapted review of Fig-Forth-6502, updated for some 1979, 1983, 2012 standart
 
 changes:
 
@@ -18,7 +18,7 @@ changes:
 
         All math as signed 2-complement's, and 0x8000 is Not A Number (NAN). 
 
-        FOR NEXT masks offsets with 0x8000 and counts down to zero, as eforth and forth-83
+        FOR NEXT masks offsets with 0x8000, as Forth-83, and counts down to zero, as eforth
 
         Still no DO LOOP +LOOP LEAVE CASE OF ENDOF ENDCASE
 
