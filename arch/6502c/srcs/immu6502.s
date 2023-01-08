@@ -42,17 +42,13 @@
 
 .define VERSION "0.01.02"
 
-.define EQU =
-
-.define TIMES .time
-
 ;---------------------------------------------------------------------
 ;
-.macro commentsto
+.macro comments_to
 .if 0 
 .endmacro
 
-.macro endcommentsto
+.macro endcomments_to
 .endif
 .endmacro
 
@@ -102,6 +98,7 @@ F_IMMEDIATE = $40
 F_COMPILE   = $20
 F_HIDDEN    = $10
 
+;
 F_TOMASK = $F0
 F_UNMASK = $0F
 
@@ -143,8 +140,8 @@ QT_     =   34    ; ascii double quotes \"
 ;=====================================================================
 ;   macros generic
 
-_link_ .set NULL
-_last_ .set NULL
+_link_ .set $0000
+_last_ .set $0000
 
 ;---------------------------------------------------------------------
 .macro typestring display, string
@@ -284,6 +281,8 @@ dp = tz +  24  ; pointer to dicionary next free cell
 ;
 .segment "VECTORS"
 
+.org $FFFA
+
 .addr    _nmi_int  ; NMI vector
 .addr    _init     ; Reset vector
 .addr    _irq_int  ; IRQ/BRK vector
@@ -331,27 +330,42 @@ _init:
 ;       XXXX [11-08]    IOS and XXXX == select chip 0-3
 ;       YYYY [07-04]    IOS and YYYY == select chip 0-3
 ;       ZZZZ [03-00]    port in chip
+;
+; must adjust the address
+; from http://wilsonminesco.com/6502primer/PgmWrite.html
+
+;---------------------------------------------------------------------
+ACIA       =  $9000    ; The base address of the 6551 ACIA.
+ACIA_DATA  =  ACIA+0   ; Its data I/O register is at $9000.
+ACIA_STAT  =  ACIA+1   ; Its  status  register is at $9001.
+ACIA_COMM  =  ACIA+2   ; Its command  register is at $9002. 
+ACIA_CTRL  =  ACIA+3   ; Its control  register is at $9003.
+
+;---------------------------------------------------------------------
+VIA        =  $A000    ; The base address of the 6522 VIA.
+PB         =  VIA      ; Its port B is at that address.
+PA         =  VIA+1    ; Its port A is at address $A001.
+DDRB       =  VIA+2    ; Its data-direction register for port B is at $A002.
+DDRA       =  VIA+3    ; Its data-direction register for port A is at $A003.
+T2CL       =  VIA+8    ; Its timer-2 counter's low  byte is at $A008.
+T2CH       =  VIA+9    ; Its timer-2 counter's high byte is at $A009.
+SR         =  VIA+10   ; The shift register is at $A00A.
+ACR        =  VIA+11   ; The auxiliary  control register is at $A00B.
+PCR        =  VIA+12   ; The peripheral control register is at $A00C.
+IFR        =  VIA+13   ; The interrupt  flag  register is at $A00D.
+IER        =  VIA+14   ; The interrupt enable register is at $A00E.
 
 ;---------------------------------------------------------------------
 ;
-;   adapted from: http://forum.6502.org/viewtopic.php?f=4&t=5495
+;   adapted from http://forum.6502.org/viewtopic.php?f=4&t=5495
 ;
 ;---------------------------------------------------------------------
-;
-;   CIA 6551, just one
-;
-ACIA        = $2000
-ACIA_CTRL   = ACIA + 3
-ACIA_CMD    = ACIA + 2
-ACIA_SR     = ACIA + 1
-ACIA_RX     = ACIA
-ACIA_TX     = ACIA
 
 ;-------------------------------------------------------------------------------
-;   Name:         ACIA_INIT
-;   Desc:         Configures base setup
+;   Name         ACIA_INIT
+;   Desc         Configures base setup
 ;                   19200,N,8,1
-;   Destroys:     Nothing
+;   Destroys     Nothing
 ;-------------------------------------------------------------------------------
 acia_init:
     pha			; Push A to stack
@@ -1410,7 +1424,8 @@ HEADER "U*", "USTAR", F_LEAP + F_CORE, LEAF
           STA N + 1
           STY p0 + 3, x
           LDY #16        ; for 16 bits
-L396      ASL p0 + 2, x
+L396:
+          ASL p0 + 2, x
           ROL p0 + 3, x
           ROL p0 + 0, x
           ROL p0 + 1, x
@@ -1425,12 +1440,14 @@ L396      ASL p0 + 2, x
           LDA #0
           ADC p0 + 0, x
           STA p0 + 0, x
-00624
-L411      DEY
+L411:
+          DEY
           BNE L396
           JMP NEXT
 
-HEADER "U/", "USLASH, F_LEAP + F_CORE, LEAF
+;------------------------------------------------------------------------------
+;
+HEADER "U/", "USLASH", F_LEAP + F_CORE, LEAF
           LDA p0 + 4, x
           LDY p0 + 2, x
           STY p0 + 4, x
@@ -1443,7 +1460,8 @@ HEADER "U/", "USLASH, F_LEAP + F_CORE, LEAF
           STA p0 + 3, x
           LDA #16
           STA N
-L433      ROL p0 + 4, x
+L433:      
+          ROL p0 + 4, x
           ROL p0 + 5, x
           SEC
           LDA p0 + 4, x
@@ -1454,8 +1472,11 @@ L433      ROL p0 + 4, x
           BCC L444
           STY p0 + 4, x
           STA p0 + 5, x
-L444      ROL p0 + 2, x
+L444:      
+          ROL p0 + 2, x
           ROL p0 + 3, x
           DEC N
           BNE L433
           JMP POP
+
+;------------------------------------------------------------------------------
