@@ -1,5 +1,14 @@
 # Notes for 6502 IMMU
 
+## 08/01/2023
+
+ - working in primitive words: FALSE TRUE 0= 0< = < UM+ + - AND OR XOR NOT 2/ 2\* 
+   DROP DUP OVER >R R> R@ SP@ SP! RP@ RP! BRANCH ZBRANCH LIT 0 1 2 4 CR LF BL 
+   @ ! C@ C! CELL CELL- CELL+ 
+ - extending primitives 1+ 2+ 4+ 1- 2- 4- 
+ - working on UM\* UM/MOD 
+ - using cc65, with it, syntax is extreme sensible
+ - include parts of sources from fig-Forth-6502 and from Wilson Mines Co.
 
 ## 28/12/2022
  
@@ -8,10 +17,11 @@
  - changed to use MITC
  - changed to use X and Y as index for stacks (parameter and return)
  - minimal use of pages, zero and one, for easy use external libraries
- - all stuff use absolute address and jump 
+ - all stuff use absolute address and jump
+
  - bare minimal use real stack pointer SP 
  - bare minimal use jsr/rts for relative BIOS routines
- - 16 bits pseudo registers (as in SWEET16): DS, RS, T, N, W, C, at page zero
+ - 16 bits pseudo registers (as in SWEET16): TOS, NOS, WRK, at page zero
  - 8 bits safe registers for A, Y, X, S, P, H, at page zero
  - stacks goes downwards, uses X and Y for index
  
@@ -27,8 +37,13 @@
  
  ( I'm learning the 6502 ISA, there are Tons of technologies to know. )
  
- Most of page zero indexed access uses 3 cycles and absolute indexed access uses 4 cycles.
- Not using Accumulator as Top of Stack, just as accumulator (as is). ** may be changed **
+ Most of page zero indexed access uses 3 cycles, 
+ push/pull stack 4 cycles,
+ absolute indexed access 4 cycles.
+
+ Not using Accumulator as Top of Stack, just as accumulator (as is). 
+ 
+ ** may be changed **
  
  ### the 6502 pages:
  
@@ -46,7 +61,7 @@
              $8000  start of ROM (FLASH) BIOS, IOS, Forth
              
              for reference, a disk sector was 512 bytes, a filesystem block was 4096 bytes, 
-             and a forth screen is 16 lines of 64 characters, 1024 bytes;
+             and a forth screen is 16 lines of 64 characters, one block of 1024 bytes;
              
  ### the indirect access question
 

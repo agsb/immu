@@ -33,50 +33,60 @@
 ; enable listing
 .list on
 
-; lines per page
-.pagelength 66
-
 ; enable 6502 mode
 .p02
 
 ;---------------------------------------------------------------------
-; macros
+; 
+;   defines
 
 .define VERSION "0.01.02"
 
 .define EQU =
 
-;.dword .time
+.define TIMES .time
 
 ;---------------------------------------------------------------------
 ; 
-; ancient borrow
+;   ancient borrow
 NULL    = $0000
 
-; 6502 hardware
+;   6502 hardware
 ZPAGE   = $000
 STACK   = $100
 
-; logical flags, forth 83
+;   logical flags, forth 83
 FALSE   = $0000
 TRUE    = $FFFF
 
-; buffer sizes
-TIB_SIZE    = 80
-PAD_SIZE    = 72
+;   buffer sizes
+TIB_SIZE  = 80
+PAD_SIZE  = 72
 
-; cell is 16 bits, 2 bytes, common
+;   cell is 16 bits, 2 bytes, common
 CELL_SIZE = 2
 
-; maximum word size, not standart
+;   maximum word size, not standart
 WORD_SIZE = 15
 
-; default base
+;   default base
 BASE_DEFAULT = 16
 
 ;---------------------------------------------------------------------
-; forth words flags
+;   forth dictionary:
 ;
+;   | link | size + flags | name + pad | code ~~~ ends |
+;
+;   link, .word, link to previous forth 
+;   size+flags, .byte, size of name (1 - 15)
+;   name+pad, .bytes, characters of name (+pad)  
+;   code, .words, array of code or references
+;   ends, .word, jump or reference to unnest
+;
+;---------------------------------------------------------------------
+;
+;   forth words flags
+; 
 F_RESERVED  = $80
 F_IMMEDIATE = $40
 F_COMPILE   = $20
@@ -85,14 +95,14 @@ F_HIDDEN    = $10
 F_TOMASK = $F0
 F_UNMASK = $0F
 
-; not really flags but nice look at listings
+;   not really flags but nice look at listings
 F_LEAP = $00   ; for primitives
 F_CORE = $00   ; for core words
 
 ;---------------------------------------------------------------------
 ;
-; minimal error codes from forth 2012
-; 2's complement
+;   minimal error codes from forth 2012
+;   2's complement
 ;
 NO_ERROR = 0
 INVALID_MEMORY  = $FFF7     ; -9
@@ -102,12 +112,12 @@ TO_READ_ONLY    = $FFEC     ; -20
 NOT_A_NUMBER    = $FFE8     ; -24
 
 ;---------------------------------------------------------------------
-; ASCII constants
+;   ASCII constants
 ;
-; Flow Control
-; assumes that all line edit is done at remote!
-; just a static line, receives a line until a CR or CR LF
-; uses BS, for edit last char
+;   Flow Control
+;   assumes that all line edit is done at remote!
+;   just a static line, receives a line until a CR or CR LF
+;   uses BS, for edit last char
 ;
 ESC_    =   27    ; ascii escape ^[
 XON_    =   17    ; ascii DC1 ^Q
@@ -121,7 +131,7 @@ BL_     =   32    ; ascii space
 QT_     =   34    ; ascii double quotes \"
 
 ;=====================================================================
-; macros generic
+;   macros generic
 
 _link_ .set NULL
 _last_ .set NULL
@@ -150,7 +160,7 @@ _last_ .set NULL
 makelabel "is_", label
 
 ;
-; 6502 cpu is byte unit
+;   6502 cpu is byte unit
 ;    .align 2, $00  
 
     _last_ .set *
@@ -158,13 +168,14 @@ makelabel "is_", label
     .byte .strlen(name) + ( F_RESERVED | flags ) + 0
     .byte name
 ;
-; 6502 cpu is byte unit
+;   6502 cpu is byte unit
 ;    .align 2, $20
+
     _link_ .set _last_
 
-; All primitives (leafs) must start with NULL
+;   All primitives (leafs) must start with NULL
 .ifnblank leaf 
-    .word $0000
+    .word NULL
 .endif 
 
 makelabel "", label
@@ -172,12 +183,7 @@ makelabel "", label
 .endmacro
 
 ;---------------------------------------------------------------------
-.macro NOOP
-    .word NULL
-.endmacro
-
-;---------------------------------------------------------------------
-; task or process states
+;   task or process states
 .enum
     HALT    = 0
     IDLE    = 1
@@ -186,85 +192,74 @@ makelabel "", label
 .endenum
 
 ;---------------------------------------------------------------------
-; need page zero for indirect address
+;   need page zero for indirect address
 ;
 .segment "ZP"
 
-;---------------------------------------------------------------------
-; not used by Forth
-reserved: .res 240
+reserved:   .res 240
 
-; ;---------------------------------------------------------------------
-; ; pseudo registers
-tos = $F0
+;---------------------------------------------------------------------
+; pseudo registers
+tos = $00F0
 nos = tos + 2
 wrk = tos + 4
 
 ; copycat
-a_save = wrk + 2
-s_save = a_save + 1
-x_save = s_save + 1
-y_save = x_save + 1
-p_save = y_save + 1
-h_save = p_save + 1
-
-; irq mask stuff
-irqnot = h_save + 1    ; pending
-irqcnt = irqnot + 1    ; nested
-irqvec = irqcnt + 1    ; resolver
-
-;   void
-void = irqvec + 2
+a_save = tos + 6
+s_save = tos + 7
+x_save = tos + 8
+y_save = tos + 9
+p_save = tos + 10
+h_save = tos + 11
 
 ;---------------------------------------------------------------------
-.segment "DATA"
-
-; forth stacks
-.org $0200
+;   system
+;   irq mask stuff
+irqnot = tos + 12  ; pending
+irqcnt = tos + 13  ; nested
+irqvec = tos + 14  ; resolver
 
 ;---------------------------------------------------------------------
 ; parameter stack, $0200
-p0: .res $0100
-
+p0 = $0200
+pz = $02FF
 ;---------------------------------------------------------------------
 ; return stack, $0300
-r0: .res $0100
-
-;---------------------------------------------------------------------
-; forth buffers, variables
-.org $0400
+r0 = $0300
+rz = $03FF
 
 ;---------------------------------------------------------------------
 ; terminal input buffer, $0400
-t0: .res TIB_SIZE
+t0 = $0400
+tz = t0 + TIB_SIZE
 
 ;---------------------------------------------------------------------
 ; math reserved
-m0: .word NULL
-m1: .word NULL
-m2: .word NULL
-m3: .word NULL
-m4: .word NULL
-m5: .word NULL
-m6: .word NULL
-m7: .word NULL
+m0 = tz + 2 
+m1 = tz + 4
+m2 = tz + 6 
+m3 = tz + 8
+m4 = tz + 10
+m5 = tz + 12
+m6 = tz + 14
+m7 = tz + 16
 
 ;---------------------------------------------------------------------
 ; forth 
-radx: .word NULL   ; base radix for numbers
-stat: .word NULL   ; interpreter state
-last: .word NULL   ; link to dictionary latest word
-dp:   .word NULL   ; pointer to dicionary next free cell
+radx = tz + 18   ; base radix for numbers
+stat = tz + 20   ; interpreter state
+last = tz + 22   ; link to dictionary latest word
+dp = tz +  24  ; pointer to dicionary next free cell
 
-dsk:    .word NULL   ; disk number
-blk:    .word NULL   ; block number
-sct:    .word NULL   ; sector number
-scr:    .word NULL   ; screen number
+;dsk = tz + 26   ; disk number
+;blk = tz + 28   ; block number (track)
+;sct = tz + 30   ; sector number
+;scr = tz + 32   ; screen number
 
-csp:    .word NULL  ; hold stack
-hnd:    .word NULL  ; hold handler
-hld:    .word NULL  ; holder
-tmp:    .word NULL  ; temprary
+;csp = tz + 34  ; hold stack
+;hnd = tz + 36  ; hold handler
+;hld = tz + 38  ; holder
+;tmp = tz + 40  ; scratch
 
 ;---------------------------------------------------------------------
 ;
@@ -276,7 +271,7 @@ tmp:    .word NULL  ; temprary
 
 ;---------------------------------------------------------------------
 ;
-.segment "STARTUP"
+.segment "ONCE"
 
 _init:
     ; disable interrupts
@@ -295,9 +290,6 @@ _init:
     sta $0200, x
     sta $0300, x
     sta $0400, x
-    ;sta $0500, x
-    ;sta $0600, x
-    ;sta $0700, x
     inx
     bne @clean
 
@@ -305,17 +297,6 @@ _init:
     ldy #$FF
     ldx #$FF
     txs
-
-    ; stack reference absolute
-    ; high bytes
-    lda $02
-    sta p0 + 1
-    lda $03
-    sta r0 + 1
-    ; low bytes
-    lda $00
-    sta p0
-    sta r0
 
     ; enable interrupts
     cli
@@ -327,14 +308,14 @@ _init:
 ;
 ;   reserved one 4k page $2000-$2FFF for I/O 6522VIA 6551CIA
 ;   external 74hc glue logic for phi2 LOW and address
-;     0010 [15-12] IOS == select IO
-;     XXXX [11-8]  IOS and XXXX == select chip 0-3
-;     YYYY [7-4]   IOS and YYYY == select chip 0-3
-;     ZZZZ [3-0]  port in chip
+;       0010 [15-12]    IOS == select IO
+;       XXXX [11-08]    IOS and XXXX == select chip 0-3
+;       YYYY [07-04]    IOS and YYYY == select chip 0-3
+;       ZZZZ [03-00]    port in chip
 
 ;---------------------------------------------------------------------
 ;
-; adapted from: http://forum.6502.org/viewtopic.php?f=4&t=5495
+;   adapted from: http://forum.6502.org/viewtopic.php?f=4&t=5495
 ;
 ;---------------------------------------------------------------------
 ;
@@ -446,10 +427,12 @@ delay_6551:
     rts       ; return
 
 ;=====================================================================
-;---------------------------------------------------------------------
 ;
 .segment "CODE"
 
+;---------------------------------------------------------------------
+; interrups stubs
+;
 _nmi_int:
     ; return
     rti
@@ -612,10 +595,11 @@ next:
 
 jump:
     ; in MICT, all leafs start with NULL
+    ; in 6502 non code at page zero
     lda #0
     cmp wrk + 1
     bne nest
-    ; none forth word at page zero
+    ; non forth word at page zero
     jmp (nos)
 
 nest:
@@ -627,12 +611,15 @@ nest:
     lda nos + 0
     sta r0 + 0, y
 
+link:
     ; next reference
     lda wrk + 0
     sta nos + 0
     lda wrk + 1
     sta nos + 1
     jmp next
+
+;---------------------------------------------------------------------
 ; 
 ; ok ( -- false )
 ;
@@ -647,14 +634,31 @@ HEADER "TRUE", "FTRUE", F_LEAP + F_CORE, LEAF
     lda #$FF
     jmp fflag
 
-; 
-; ok ( -- flag )
-;   push with both byte equal
-HEADER "(flag)", "fflag", F_LEAP + F_CORE, LEAF
+fflag:
+    inx
+    inx
     sta p0 + 0, x
     sta p0 + 1, x
     ; continue
     jmp unnest
+
+false2:
+    dex
+    dex
+
+false1:
+    dex
+    dex
+    jmp ffalse
+
+true2:
+    dex
+    dex
+
+true1:
+    dex
+    dex
+    jmp ftrue
 
 ; 
 ; ok ( w -- false | true ) \ test w = 0
@@ -662,10 +666,10 @@ HEADER "(flag)", "fflag", F_LEAP + F_CORE, LEAF
 HEADER "0=", "ZEQU", F_LEAP + F_CORE, LEAF
     lda #0
     cmp p0 + 0, x
-    bne FFALSE
+    bne false1
     cmp p0 + 1, x
-    bne FFALSE
-    beq FTRUE
+    bne false1
+    beq true1
 
 ; 
 ; ok ( w -- false | true ) \ test w < 0
@@ -673,10 +677,23 @@ HEADER "0=", "ZEQU", F_LEAP + F_CORE, LEAF
 HEADER "0<", "ZLESS", F_LEAP + F_CORE, LEAF
     lda #0
     cmp p0 + 0, x
-    bcc FFALSE
+    bcc false1
     cmp p0 + 1, x
-    bcc FFALSE
-    beq FTRUE
+    bcc false1
+    beq true1
+
+; 
+; 
+; ok ( w1 w2  -- false | true ) \ test w1 > w2
+;
+HEADER "=", "EQU", F_LEAP + F_CORE, LEAF
+    lda p0 + 2, x
+    cmp p0 + 0, x
+    bne flase2
+    lda p0 + 3, x
+    cmp p0 + 1, x
+    bne flase2
+    beq true2 
 
 ; 
 ; ok ( w1 w2  -- false | true ) \ test w1 > w2
@@ -684,23 +701,11 @@ HEADER "0<", "ZLESS", F_LEAP + F_CORE, LEAF
 HEADER "<", "LESS", F_LEAP + F_CORE, LEAF
     lda p0 + 2, x
     cmp p0 + 0, x
-    bcs FFALSE
+    bcs false2
     lda p0 + 3, x
     cmp p0 + 1, x
-    bcs FFALSE
-    beq FTRUE
-
-; 
-; ok ( w1 w2  -- false | true ) \ test w1 > w2
-;
-HEADER "=", "EQU", F_LEAP + F_CORE, LEAF
-    lda p0 + 2, x
-    cmp p0 + 0, x
-    bne FFALSE
-    lda p0 + 3, x
-    cmp p0 + 1, x
-    bne FFALSE
-    beq FTRUE
+    bcs false2
+    bcc true2
 
 ; 
 ; ok ( w1 -- w2 ) \  rotate left
@@ -721,6 +726,17 @@ HEADER "2/", "SHR", F_LEAP + F_CORE, LEAF
     ror p0 + 1, x
     ror p0 + 0, x
     ; continue
+    jmp unnest
+
+; 
+; ok ( w1 w2  -- w3 ) \  w1 XOR w2
+;
+HEADER "NEGATE", "INOT", F_LEAP + F_CORE, LEAF
+    lda #FF
+    eor p0 + 0, x
+    sta p0 + 0, x
+    eor p0 + 1, x
+    sta p0 + 3, x
     jmp unnest
 
 ; 
@@ -1068,7 +1084,7 @@ HEADER "LIT", "LIT", F_LEAP + F_CORE, LEAF
     sta p0 + 0, x
     lda r0 + 1, y
     sta p0 + 1, x
-    ; tricky extra for drop :)
+    ; tricky extra :)
     dex
     dex
     jmp NOBRANCH
@@ -1118,8 +1134,10 @@ HEADER "!", "TO", F_LEAP + F_CORE, LEAF
     sta (nos), y
     ; load index
     ldy y_save
-    ; continue
-    jmp unnest
+    ; 2drop
+    inx 
+    inx
+    jmp DROP 
     
 ;
 ;   ok  ( w -- ; a -- a )
@@ -1164,4 +1182,90 @@ HEADER "C!", "CTO", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
     
+; 
+; ok ( w1  -- w2 ) \  w1 + 1
+;
+HEADER "1+", "PLUS1", F_LEAP + F_CORE, LEAF
+    clc
+    lda #1
+    adc p0 + 0, x
+    sta p0 + 0, x
+adcs:
+    lda #0
+    adc p0 + 1, x
+    sta p0 + 1, x
+    jmp unnest
+
+; 
+; ok ( w1  -- w2 ) \  w1 + 1
+;
+HEADER "2+", "PLUS2", F_LEAP + F_CORE, LEAF
+    clc
+    lda #2
+    adc p0 + 0, x
+    sta p0 + 0, x
+    jmp adcs
+
+; 
+; ok ( w1  -- w2 ) \  w1 + 1
+;
+HEADER "4+", "PLUS4", F_LEAP + F_CORE, LEAF
+    clc
+    lda #4
+    adc p0 + 0, x
+    sta p0 + 0, x
+    jmp adcs
+
+; 
+; ok ( w1  -- w2 ) \  w1 + 1
+;
+HEADER "1-", "MINUS1", F_LEAP + F_CORE, LEAF
+    sec
+    lda #1
+    sbc p0 + 0, x
+    sta p0 + 0, x
+sbcs:
+    lda #0
+    sbc p0 + 1, x
+    sta p0 + 1, x
+    jmp unnest
+
+; 
+; ok ( w1  -- w2 ) \  w1 + 1
+;
+HEADER "2-", "MINUS2", F_LEAP + F_CORE, LEAF
+    sec
+    lda #2
+    sbc p0 + 0, x
+    sta p0 + 0, x
+    jmp sbcs
+
+; 
+; ok ( w1  -- w2 ) \  w1 + 1
+;
+HEADER "4-", "MINUS4", F_LEAP + F_CORE, LEAF
+    sec
+    lda #4
+    sbc p0 + 0, x
+    sta p0 + 0, x
+    jmp sbcs
+
+; 
+; ok (  -- cell )
+;
+HEADER "CELL", "CELL", F_LEAP + F_CORE, LEAF
+    jmp two
+
+; 
+; ok (  -- cell )
+;
+HEADER "CELL+", "CELLPLUS", F_LEAP + F_CORE, LEAF
+    jmp plus2
+
+; 
+; ok (  -- cell )
+;
+HEADER "CELL-", "CELLMINUS", F_LEAP + F_CORE, LEAF
+    jmp minus2
+
 ;==============================================================================   
