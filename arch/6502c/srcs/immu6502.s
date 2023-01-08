@@ -47,6 +47,16 @@
 .define TIMES .time
 
 ;---------------------------------------------------------------------
+;
+.macro commentsto
+.if 0 
+.endmacro
+
+.macro endcommentsto
+.endif
+.endmacro
+
+;---------------------------------------------------------------------
 ; 
 ;   ancient borrow
 NULL    = $0000
@@ -135,6 +145,15 @@ QT_     =   34    ; ascii double quotes \"
 
 _link_ .set NULL
 _last_ .set NULL
+
+;---------------------------------------------------------------------
+.macro typestring display, string
+    jsr display
+    .byte str1 - str0
+str0:
+    .byte string
+str1:
+.endmacro
 
 ;---------------------------------------------------------------------
 .macro makelabel arg1, arg2
@@ -1194,6 +1213,7 @@ adcs:
     lda #0
     adc p0 + 1, x
     sta p0 + 1, x
+    ; continue
     jmp unnest
 
 ; 
@@ -1228,6 +1248,7 @@ sbcs:
     lda #0
     sbc p0 + 1, x
     sta p0 + 1, x
+    ; continue
     jmp unnest
 
 ; 
@@ -1268,4 +1289,173 @@ HEADER "CELL+", "CELLPLUS", F_LEAP + F_CORE, LEAF
 HEADER "CELL-", "CELLMINUS", F_LEAP + F_CORE, LEAF
     jmp minus2
 
+; 
+; ok ( w1 w2 -- w2 w1 )
+;
+HEADER "SWAP", "SWAP", F_LEAP + F_CORE, LEAF
+    ; 2d to nos
+    lda p0 + 0, x
+    sta nos + 0
+    lda p0 + 1, x
+    sta nos + 1
+    ; 1d to 2d
+    lda p0 + 2, x
+    sta p0 + 0, x
+    lda p0 + 3, x
+    sta p0 + 1, x
+    ; nos to 1d
+    lda nos + 0, x
+    sta p0 + 2, x
+    lda nos + 1, x
+    sta p0 + 3, x
+    ; continue
+    jmp unnest
+
+; 
+; ok ( w1 w2 w3 -- w2 w3 w1 )
+;
+HEADER "ROT", "ROT", F_LEAP + F_CORE, LEAF
+    ; 3d to nos
+    lda p0 + 5, x
+    sta nos + 0
+    lda p0 + 6, x
+    sta nos + 1
+    ; 2d to 3d
+    lda p0 + 3, x
+    sta p0 + 5, x
+    lda p0 + 4, x
+    sta p0 + 6, x
+    ; 1d to 2d
+    lda p0 + 2, x
+    sta p0 + 4, x
+    lda p0 + 3, x
+    sta p0 + 5, x
+    ; nos to 1d
+    lda nos + 0, x
+    sta p0 + 0, x
+    lda nos + 1, x
+    sta p0 + 1, x
+    ; continue
+    jmp unnest
+
 ;==============================================================================   
+; 
+; adapted from
+; from: https://dwheeler.com/6502/ummod.txt
+; 
+; The following is Garth Wilson's corrected UM/MOD code for Forth,
+; compared to the buggy fig-Forth, per
+; http://6502.org/source/integers/ummodfix/ummodfix.htm
+; 
+;   ok    ( ud u -- rem quot )
+;
+HEADER "UM/MOD", "UMMOD", F_LEAP + F_CORE, LEAF
+         sec
+         lda  p0 + 2, x    ; Subtract hi cell of dividend by
+         sbc  p0 + 0, x    ; divisor to see if there's an overflow condition.
+         lda  p0 + 3, x
+         sbc  p0 + 1, x
+         bcs  oflow        ; Branch if /0 or overflow.
+ 
+         lda  #11H         ; Loop 17x.
+         sta  nos          ; Use N for loop counter.
+
+  loop:  rol  p0 + 4, x    ; Rotate dividend lo cell left one bit.
+         rol  p0 + 5, x
+         dec  nos          ; Decrement loop counter.
+         beq  endw         ; If we're done, then branch to end.
+         rol  p0 + 2, x    ; Otherwise rotate dividend hi cell left one bit.
+         rol  p0 + 3, x
+         lda  #0
+         sta  nos + 1
+         rol  nos + 1      ; Rotate the bit carried out of above into N+1.
+ 
+         sec
+         lda  p0 + 2, x    ; Subtract dividend hi cell minus divisor.
+         sbc  p0 + 0, x
+         sta  nos + 2      ; Put result temporarily in N+2 (lo byte)
+         lda  p0 + 3, x
+         sbc  p0 + 1, x
+         sta  nos + 3      ; and Y (hi byte).
+         lda  nos + 1      ; Remember now to bring in the bit carried out above.
+         sbc  #0
+         bcc  loop
+ 
+         lda  nos + 2      ; If that didn't cause a borrow,
+         sta  p0 + 2, x    ; make the result from above to
+         lda  nos + 3
+         sta  p0 + 3, x    ; be the new dividend hi cell
+         bcs  loop         ; and then brach up. (NMOS 6502 can use BCS here.)
+ 
+  oflow: lda  #FFH         ; If overflow or /0 condition found,
+         sta  p0 + 2, x    ; just put FFFF in both the remainder
+         sta  p0 + 3, x
+         sta  p0 + 4, x    ; and the quotient.
+         sta  p0 + 5, x
+ 
+  endw:  inx           ; When you're done, show one less cell on data stack,
+         inx           ; (INX INX is exactly what the Forth word DROP does) 
+         jmp  SWAP     ; and swap the two top cells to put quotient on top.
+                       ; (Actually you'll jump to the beginning of SWAP's
+                       ; executable code.  Assembler label "SWAP" is at SWAP's
+                       ; PFA, not the CFA that ' SWAP would give you in Forth.
+
+;------------------------------------------------------------------------------
+;
+HEADER "U*", "USTAR", F_LEAP + F_CORE, LEAF
+          LDA p0 + 2, x
+          STA N
+          STY p0 + 2, x
+          LDA p0 + 3, x
+          STA N + 1
+          STY p0 + 3, x
+          LDY #16        ; for 16 bits
+L396      ASL p0 + 2, x
+          ROL p0 + 3, x
+          ROL p0 + 0, x
+          ROL p0 + 1, x
+          BCC L411
+          CLC
+          LDA N
+          ADC p0 + 2, x
+          STA p0 + 2, x
+          LDA N + 1
+          ADC p0 + 3, x
+          STA p0 + 3, x
+          LDA #0
+          ADC p0 + 0, x
+          STA p0 + 0, x
+00624
+L411      DEY
+          BNE L396
+          JMP NEXT
+
+HEADER "U/", "USLASH, F_LEAP + F_CORE, LEAF
+          LDA p0 + 4, x
+          LDY p0 + 2, x
+          STY p0 + 4, x
+          ASL A
+          STA p0 + 2, x
+          LDA p0 + 5, x
+          LDY p0 + 3, x
+          STY p0 + 5, x
+          ROL A
+          STA p0 + 3, x
+          LDA #16
+          STA N
+L433      ROL p0 + 4, x
+          ROL p0 + 5, x
+          SEC
+          LDA p0 + 4, x
+          SBC p0 + 0, x
+          TAY
+          LDA p0 + 5, x
+          SBC p0 + 1, x
+          BCC L444
+          STY p0 + 4, x
+          STA p0 + 5, x
+L444      ROL p0 + 2, x
+          ROL p0 + 3, x
+          DEC N
+          BNE L433
+          JMP POP
