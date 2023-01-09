@@ -12,13 +12,28 @@ In 2023, the immu Forth was splitted for ISAs: 6502, Atmega328, RiscV
 
 ## Go Slow
 
-For now, immu just does the MITC and primitives: FALSE TRUE 0= 0< = < 
-AND OR XOR SHR SHL NEGATE INVERT + - UM+ U\* U/ UM/MOD UM<
->R R> R@ SP@ SP! RP@ RP! DROP DUP OVER SWAP ROT BRANCH ZBRANCH LIT 
-0 1 2 4 1+ 2+ 4+ 1- 2- 4- CELL CELL+ CELL-
+Ideally Forth was two types of words, **primitives**, aka leafs, that does not reference any forth word, and **compounds**, aka twigs, that are a list of references to forth words. 
 
-Some minimal BIOS support for KEY?, KEY, EMIT, IO!, IO@, IRQ? 
+Usually leafs are CPU/MCU ISA dependents.
 
+For now, immu just does the MITC and primitives: 
+
+        FALSE TRUE AND OR XOR SHR SHL NEGATE INVERT
+        0= 0< = < + - UM+ U< U* U/ UM/MOD
+        >R R> R@ SP@ SP! RP@ RP! DROP DUP OVER SWAP ROT 
+        BRANCH ZBRANCH LIT EXEC
+        0 1 2 4 1+ 2+ 4+ 1- 2- 4- CELL CELL+ CELL-
+
+Some minimal BIOS support for 
+      
+        KEY?, KEY, EMIT, 
+        IO!, IO@, IRQ? ( for read/write devices and interrupts )  
+        flash flush ( for read/write flash memory )
+
+For mixed code, not really a good practice : 
+
+        :code ;code ( for inline assembler )
+        
 ## Working
 
 I'm requesting for comments about immu, an extended indirect thread code for forth. 
