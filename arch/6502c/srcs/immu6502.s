@@ -34,8 +34,14 @@
 ; enable listing
 .list on
 
+; identifiers
+.case +
+
 ; enable 6502 mode
 .p02
+
+; enable C comments
+.feature c_comments
 
 ;---------------------------------------------------------------------
 ; 
@@ -210,21 +216,22 @@ reserved:   .res 240
 tos = $F0
 nos = tos + 2
 wrk = tos + 4
+cnt = tos + 6
 
 ; copycat
-a_save = tos + 6
-s_save = tos + 7
-x_save = tos + 8
-y_save = tos + 9
-p_save = tos + 10
-h_save = tos + 11
+a_save = tos + 8
+s_save = tos + 9
+x_save = tos + 10
+y_save = tos + 11
+p_save = tos + 12
+h_save = tos + 13
 
 ;---------------------------------------------------------------------
 ;   system
 ;   irq mask stuff
-irqnot = tos + 12  ; pending
-irqcnt = tos + 13  ; nested
-irqvec = tos + 14  ; resolver
+irqnot = tos + 14  ; pending
+irqcnt = tos + 15  ; nested
+irqvec = tos + 16  ; resolver
 
 ;---------------------------------------------------------------------
 ; parameter stack, $0200
@@ -256,17 +263,21 @@ m7 = tz + 16
 radx = tz + 18   ; base radix for numbers
 stat = tz + 20   ; interpreter state
 last = tz + 22   ; link to dictionary latest word
-dp = tz +  24  ; pointer to dicionary next free cell
+list = tz + 24   ; pointer to dicionary next free cell
 
-;dsk = tz + 26   ; disk number
-;blk = tz + 28   ; block number (track)
-;sct = tz + 30   ; sector number
-;scr = tz + 32   ; screen number
+turn = tz + 26
+rest = tz + 28
+void = tz + 30
 
-;csp = tz + 34  ; hold stack
-;hnd = tz + 36  ; hold handler
-;hld = tz + 38  ; holder
-;tmp = tz + 40  ; scratch
+dsk = tz + 26   ; disk number
+blk = tz + 28   ; block number (track)
+sct = tz + 30   ; sector number
+scr = tz + 32   ; screen number
+
+csp = tz + 34  ; hold stack
+hnd = tz + 36  ; hold handler
+hld = tz + 38  ; holder
+tmp = tz + 40  ; scratch
 
 ;---------------------------------------------------------------------
 ;
@@ -360,17 +371,12 @@ IER        =  VIA+14   ; The interrupt enable register is at $A00E.
 ;-------------------------------------------------------------------------------
 acia_init:
     pha			; Push A to stack
-    lda #$1F     ; %0001 1111 = 19200 Baud
-            ;              External receiver
-            ;              8 bit words
-            ;              1 stop bit
+    ; %0001 1111 = 19200 baud, external receiver, 8 bit words, 1 stop bit
+    lda #$1F     
     sta ACIA_CTRL
-    lda #$0B     ; %0000 1011 = Receiver odd parity check
-            ;              Parity mode disabled
-            ;              Receiver normal mode
-            ;              RTSB Low, trans int disabled
-            ;              IRQB disabled
-            ;              Data terminal ready (DTRB low)
+    ; %0000 1011 = odd parity, parity mode disabled, normal mode, 
+    ; RTSB Low, trans int disabled, IRQB disabled, DTRB low
+    lda #$0B     
     sta ACIA_CMD
     pla             ; Restore A
     rts
@@ -453,115 +459,6 @@ delay_6551:
 ;=====================================================================
 ;
 .segment "CODE"
-
-;---------------------------------------------------------------------
-; interrups stubs
-;
-_nmi_int:
-    ; return
-    rti
-
-_irq_int:
-    ; save registers
-    pha
-    txa
-    pha
-    tya
-    pha
-    
-    ; verify status
-    tsx
-    inx
-    inx
-    lda STACK, x
-    and #$10
-    bne _break
-    
-    ;
-    ; do something somewhere sometime
-    ;
-
-_irq:
-    ; load registers
-    pla
-    tay
-    pla
-    tax
-    pla
-
-    ; return 
-    rti
-
-_break:
-    jmp _halt
-    
-;---------------------------------------------------------------------
-
-;======================================================================
-;
-; adapted from 
-; http://wilsonminesco.com/0-overhead_Forth_interrupts/
-;
-; zzzz not finished
-;
-; next: 
-;   ldy irqnot
-;   beq runISR
-;   ...
-;   bcs inc_hi
-;   jmp wrk - 1
-;
-;inc_hi:
-;   inc nos + 1
-;   jmp wrk - 1
-;
-HEADER "IRQOK", "IRQOK", F_LEAP, LEAF
-    cli
-    ; continue
-    jmp unnest
-
-HEADER "NOIRQ", "NOIRQ", F_LEAP, LEAF
-    sei
-    ; continue
-    jmp unnest
-
-HEADER "SYSRTI", "SYSRTI", F_LEAP, LEAF
-    sei
-    lda irqnot
-    beq noi
-    cli
-noi:
-    ; continue
-    jmp unnest
-
-HEADER "IRQOK?", "IRQOKQ", F_LEAP, LEAF
-    php
-    pla
-    and #4
-    beq irqf
-    jmp FFALSE
-irqf: 
-    jmp FTRUE
-
-runISR:
-    inc irqnot
-    jmp (irqvec)
-
-irqroute:
-    jmp (irqvec)
-
-setirq:
-    sta a_save
-    ; clear byte irq flag
-    lda #0
-    sta irqnot
-    ; set bit 4 flag
-    pla
-    ora #4
-    pha
-    lda a_save
-    rti
-
 ;======================================================================
 
 
@@ -950,22 +847,6 @@ HEADER "UM+", "UMPLUS", F_LEAP + F_CORE, LEAF
     jmp unnest
 
 ;
-;   ok  ( w1 w2 -- w3 carry )
-;   zzzz
-HEADER "UM*", "UMSTAR", F_LEAP + F_CORE, LEAF
-    clc
-    ; continue
-    jmp unnest
-
-;
-;   ok  ( w1 w2 -- w3 carry )
-;   zzzz
-HEADER "UM/MOD", "UMSLASHMOD", F_LEAP + F_CORE, LEAF
-    clc
-    ; continue
-    jmp unnest
-
-;
 ;   ok  ( -- w ) \ high byte always $00
 ;   push with high byte cleared
 HEADER "(stor)", "stor", F_LEAP + F_CORE, LEAF
@@ -1107,6 +988,12 @@ HEADER "NOBRANCH", "NOBRANCH", F_LEAP + F_CORE, LEAF
     sta r0 + 1, y
 @non:
     jmp DROP
+
+;
+;   ok  ( w -- ; a -- a )
+;
+HEADER "EXE", "EXE", F_LEAP + F_CORE, LEAF
+    jmp TOR
 
 ;
 ;   ok  ( w -- ; a -- a )
@@ -1354,136 +1241,270 @@ HEADER "ROT", "ROT", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
-;==============================================================================   
-; 
-; adapted from
-; from: https://dwheeler.com/6502/ummod.txt
-; 
-; The following is Garth Wilson's corrected UM/MOD code for Forth,
-; compared to the buggy fig-Forth, per
-; http://6502.org/source/integers/ummodfix/ummodfix.htm
-; 
-;   ok    ( ud u -- rem quot )
-;
-HEADER "UM/MOD", "UMMOD", F_LEAP + F_CORE, LEAF
-         sec
-         lda  p0 + 2, x    ; Subtract hi cell of dividend by
-         sbc  p0 + 0, x    ; divisor to see if there's an overflow condition.
-         lda  p0 + 3, x
-         sbc  p0 + 1, x
-         bcs  oflow        ; Branch if /0 or overflow.
- 
-         lda  #11H         ; Loop 17x.
-         sta  nos          ; Use N for loop counter.
-
-  loop:  rol  p0 + 4, x    ; Rotate dividend lo cell left one bit.
-         rol  p0 + 5, x
-         dec  nos          ; Decrement loop counter.
-         beq  endw         ; If we're done, then branch to end.
-         rol  p0 + 2, x    ; Otherwise rotate dividend hi cell left one bit.
-         rol  p0 + 3, x
-         lda  #0
-         sta  nos + 1
-         rol  nos + 1      ; Rotate the bit carried out of above into N+1.
- 
-         sec
-         lda  p0 + 2, x    ; Subtract dividend hi cell minus divisor.
-         sbc  p0 + 0, x
-         sta  nos + 2      ; Put result temporarily in N+2 (lo byte)
-         lda  p0 + 3, x
-         sbc  p0 + 1, x
-         sta  nos + 3      ; and Y (hi byte).
-         lda  nos + 1      ; Remember now to bring in the bit carried out above.
-         sbc  #0
-         bcc  loop
- 
-         lda  nos + 2      ; If that didn't cause a borrow,
-         sta  p0 + 2, x    ; make the result from above to
-         lda  nos + 3
-         sta  p0 + 3, x    ; be the new dividend hi cell
-         bcs  loop         ; and then brach up. (NMOS 6502 can use BCS here.)
- 
-  oflow: lda  #FFH         ; If overflow or /0 condition found,
-         sta  p0 + 2, x    ; just put FFFF in both the remainder
-         sta  p0 + 3, x
-         sta  p0 + 4, x    ; and the quotient.
-         sta  p0 + 5, x
- 
-  endw:  inx           ; When you're done, show one less cell on data stack,
-         inx           ; (INX INX is exactly what the Forth word DROP does) 
-         jmp  SWAP     ; and swap the two top cells to put quotient on top.
-                       ; (Actually you'll jump to the beginning of SWAP's
-                       ; executable code.  Assembler label "SWAP" is at SWAP's
-                       ; PFA, not the CFA that ' SWAP would give you in Forth.
-
 ;------------------------------------------------------------------------------
+;
+;   adapted from  http://forum.6502.org/viewtopic.php?f=9&t=689
+;   ok ( multiplier multiplicant -- result_lsb result_msb )
 ;
 HEADER "U*", "USTAR", F_LEAP + F_CORE, LEAF
-          LDA p0 + 2, x
-          STA N
-          LDA p0 + 3, x
-          STA N + 1
-          STY y_save
-          LDY #$10        ; for 16 bits
-L396:
-          ASL p0 + 0, x
-          ROL p0 + 1, x
-          ROL p0 + 2, x
-          ROL p0 + 3, x
-          BCC L411
-          CLC
-          LDA N
-          ADC p0 + 2, x
-          STA p0 + 2, x
-          LDA N + 1
-          ADC p0 + 3, x
-          STA p0 + 3, x
-          LDA #0
-          ADC p0 + 0, x
-          STA p0 + 0, x
-L411:
-          DEY
-          BNE L396
-          LDY y_save
-          JMP NEXT
+    ; save index
+    sty y_save
+
+    ; copy multiplier
+    lda p0 + 2, x
+    sta nos
+    lda p0 + 3, x
+    sta nos + 1
+
+    ; clear multiplier
+    lda #0
+    sta p0 + 2, x
+    sta p0 + 3, x
+
+    ; counter for 16 bits
+    ldy #$10        
+
+@loop:
+    ; multiply by 2
+    asl p0 + 2, x
+    rol p0 + 3, x
+    rol p0 + 0, x
+    rol p0 + 1, x
+    bcc @end
+
+    ; add multiplier
+    clc
+    lda nos
+    adc p0 + 2, x
+    sta p0 + 2, x
+    lda nos + 1
+    adc p0 + 3, x
+    sta p0 + 3, x
+    bcc @end
+
+    ; increase product
+    ; lda #0, adc, sta
+    inc p0 + 0
+    bne @end
+    inc p0 + 1
+
+@end:
+    dey
+    bne loop
+
+    ; load index
+    ldy y_save
+    
+    ; continue
+    jmp unnest
 
 ;------------------------------------------------------------------------------
+; also
+HEADER "UM*", "UMSTAR", F_LEAP + F_CORE, LEAF
+    jmp USTAR
+
+;------------------------------------------------------------------------------
+; 
+; adapted from http://6502.org/source/integers/ummodfix/ummodfix.htm
+; 
+;   ok ( dividend divisor -- remainder quotient )
 ;
 HEADER "U/", "USLASH", F_LEAP + F_CORE, LEAF
-          LDA p0 + 4, x
-          LDY p0 + 2, x
-          STY p0 + 4, x
-          ASL A
-          STA p0 + 2, x
-          LDA p0 + 5, x
-          LDY p0 + 3, x
-          STY p0 + 5, x
-          ROL A
-          STA p0 + 3, x
-          LDA #16
-          STA N
-L433:      
-          ROL p0 + 4, x
-          ROL p0 + 5, x
-          SEC
-          LDA p0 + 4, x
-          SBC p0 + 0, x
-          TAY
-          LDA p0 + 5, x
-          SBC p0 + 1, x
-          BCC L444
-          STY p0 + 4, x
-          STA p0 + 5, x
-L444:      
-          ROL p0 + 2, x
-          ROL p0 + 3, x
-          DEC N
-          BNE L433
-          JMP POP
+    ; save index
+    sty y_save
+
+    ; verify
+    sec
+    lda  p0 + 2, x    ; Subtract hi cell of dividend by
+    sbc  p0 + 0, x    ; divisor to see if there's an overflow condition.
+    lda  p0 + 3, x
+    sbc  p0 + 1, x
+    bcs  @oflow        ; Branch if /0 or overflow.
+
+    ; counter
+    ldy #11H         ; Loop 17x.
+
+@loop:  
+    rol  p0 + 4, x    ; Rotate dividend lo cell left one bit.
+    rol  p0 + 5, x
+    
+    dey               ; Decrement loop counter.
+    beq  @end         ; If we're done, then branch to end.
+
+    rol  p0 + 2, x    ; Otherwise rotate dividend hi cell left one bit.
+    rol  p0 + 3, x
+    
+    lda  #0           ; save carry
+    sta  nos + 0
+    rol  nos + 0      ; Rotate the bit carried out of above into N+1.
+
+    ; Subtract dividend cell minus divisor.
+    sec
+    lda  p0 + 2, x    
+    sbc  p0 + 0, x
+    sta  wrk + 0      ; Put result temporarily in N+2 (lo byte)
+    
+    lda  p0 + 3, x     
+    sbc  p0 + 1, x
+    sta  wrk + 1      ; Put result temporarily in N+3 (hi byte)
+
+    ; verify carry
+    lda  nos + 0
+    sbc  #0
+    bcc  @loop
+
+    ; update dividend
+    lda  wrk + 0      ; If that didn't cause a borrow,
+    sta  p0 + 2, x    ; make the result from above to
+    lda  wrk + 1
+    sta  p0 + 3, x    ; be the new dividend hi cell
+    bcs  @loop        ; and then brach up. (NMOS 6502 can use BCS here.)
+
+@oflow:
+    lda  #FFH         ; If overflow or /0 condition found,
+    sta  p0 + 2, x    ; just put FFFF in both the remainder
+    sta  p0 + 3, x
+    sta  p0 + 4, x    ; and the quotient.
+    sta  p0 + 5, x
+
+@end:  
+    ; load index
+    ldy y_save
+
+    ; drop and continue
+    inx           ; When you're done, show one less cell on data stack,
+    inx           ; (INX INX is exactly what the Forth word DROP does) 
+    jmp  SWAP     ; and swap the two top cells to put quotient on top.
 
 ;------------------------------------------------------------------------------
+; also
+HEADER "UM/MOD", "UMMOD", F_LEAP + F_CORE, LEAF
+    jmp USLASH
 
+;------------------------------------------------------------------------------
+.END
+;
+;==============================================================================   
+; some code to study
+;------------------------------------------------------------------------------
+;
+;======================================================================
+;
+; adapted from 
+; http://wilsonminesco.com/0-overhead_Forth_interrupts/
+;
+;---------------------------------------------------------------------
+; interrups stubs
+;
+_nmi_int:
+    ; return
+    rti
 
+_irq_int:
+    ; save registers
+    pha
+    txa
+    pha
+    tya
+    pha
+    
+    ; verify status
+    tsx
+    inx
+    inx
+    lda STACK, x
+    and #$10
+    bne _break
+    
+    ;
+    ; do something somewhere sometime
+    ;
+
+_irq:
+    ; load registers
+    pla
+    tay
+    pla
+    tax
+    pla
+
+    ; return 
+    rti
+
+_break:
+    jmp _halt
+    
+;---------------------------------------------------------------------
+; zzzz not finished
+;
+; next: 
+;   ldy irqnot
+;   beq runISR
+;   ...
+;   bcs inc_hi
+;   jmp wrk - 1
+;
+;inc_hi:
+;   inc nos + 1
+;   jmp wrk - 1
+;
+HEADER "IRQOK", "IRQOK", F_LEAP, LEAF
+    cli
+    ; continue
+    jmp unnest
+
+HEADER "NOIRQ", "NOIRQ", F_LEAP, LEAF
+    sei
+    ; continue
+    jmp unnest
+
+HEADER "SYSRTI", "SYSRTI", F_LEAP, LEAF
+    sei
+    lda irqnot
+    beq noi
+    cli
+noi:
+    ; continue
+    jmp unnest
+
+HEADER "IRQOK?", "IRQOKQ", F_LEAP, LEAF
+    php
+    pla
+    and #4
+    beq irqf
+    jmp FFALSE
+irqf: 
+    jmp FTRUE
+
+runISR:
+    inc irqnot
+    jmp (irqvec)
+
+irqroute:
+    jmp (irqvec)
+
+setirq:
+    sta a_save
+    ; clear byte irq flag
+    lda #0
+    sta irqnot
+    ; set bit 4 flag
+    pla
+    ora #4
+    pha
+    lda a_save
+    rti
+
+;------------------------------------------------------------------------------
+;   check address lines a14 to a0
+;   http://6502.org/source/general/address_test.html
+;
+;   to check ram, use $55 $AA in every address
+;
+;------------------------------------------------------------------------------
+
+;==============================================================================
+;------------------------------------------------------------------------------
 ;https://codebase64.org/doku.php?id=base:16bit_multiplication_32-bit_product
 
 ;16-bit multiply with 32-bit result 
@@ -1493,11 +1514,13 @@ multiplier	= $f7
 multiplicand	= $f9 
 product		= $fb 
  
-mult16 		lda	#$00
+mult16: 		
+        lda	#$00
 		sta	product+2	; clear upper bits of product
 		sta	product+3 
 		ldx	#$10		; set binary count to 16 
-shift_r		lsr	multiplier+1	; divide multiplier by 2 
+shift_r:
+        lsr	multiplier+1	; divide multiplier by 2 
 		ror	multiplier
 		bcc	rotate_r 
 		lda	product+2	; get upper half of product and add multiplicand
@@ -1506,7 +1529,8 @@ shift_r		lsr	multiplier+1	; divide multiplier by 2
 		sta	product+2
 		lda	product+3 
 		adc	multiplicand+1
-rotate_r	ror			; rotate partial product 
+rotate_r:
+        ror			; rotate partial product 
 		sta	product+3 
 		ror	product+2
 		ror	product+1 
@@ -1516,6 +1540,7 @@ rotate_r	ror			; rotate partial product
 		rts
 
 
+;---------------------------------------------------------------------
 ;16-bit division with 32-bit result 
 ;took from 6502.org
 
@@ -1551,3 +1576,5 @@ skip:
 	dex
 	bne divloop	
 	rts
+
+;==============================================================================
