@@ -24,13 +24,13 @@ For now, immu just does the MITC and primitives:
         BRANCH ZBRANCH LIT EXEC
         0 1 2 4 1+ 2+ 4+ 1- 2- 4- CELL CELL+ CELL-
 
-Some minimal BIOS support for 
+Some minimal BIOS support for ( in schedule )
       
         KEY?, KEY, EMIT, 
         IO!, IO@, IRQ? ( for read/write devices and interrupts )  
         flash flush ( for read/write flash memory )
 
-For mixed code, not really a good practice : 
+For mixed code, not really a good practice ( in schedule ) 
 
         :code ;code ( for inline assembler )
         
