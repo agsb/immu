@@ -10,6 +10,17 @@ More information in [Details](https://github.com/agsb/immu/blob/main/Details.md)
 
 In 2023, the immu Forth was splitted for ISAs: 6502, Atmega328, RiscV
 
+## Go Slow
+
+For now, immu just does the MITC and primitives: FALSE TRUE 0= 0< = < 
+AND OR XOR SHR SHL NEGATE INVERT + - UM+ U\* U/ UM/MOD UM<
+>R R> R@ SP@ SP! RP@ RP! DROP DUP OVER SWAP ROT BRANCH ZBRANCH LIT 
+0 1 2 4 1+ 2+ 4+ 1- 2- 4- CELL CELL+ CELL-
+
+Some minimal BIOS support for KEY?, KEY, EMIT, IO!, IO@, IRQ? 
+
+## Working
+
 I'm requesting for comments about immu, an extended indirect thread code for forth. 
 
 I welcome your patience.
@@ -18,7 +29,6 @@ There are some insights and documentation at
       https://github.com/agsb/immu/tree/main/docs 
       
 For known about [Forth Style](http://www.forth.org/forth_style.html)
-
 
 ![image](https://github.com/agsb/immu/blob/main/beach-g681c55cdd_640.jpg)
 

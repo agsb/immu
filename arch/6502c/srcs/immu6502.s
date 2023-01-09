@@ -28,6 +28,7 @@
 ;   04/01/2023   please read the Notes.md
 ;
 ;---------------------------------------------------------------------
+;
 ;   enable some ca65  
 ;
 ; enable listing
@@ -41,16 +42,6 @@
 ;   defines
 
 .define VERSION "0.01.02"
-
-;---------------------------------------------------------------------
-;
-.macro comments_to
-.if 0 
-.endmacro
-
-.macro endcomments_to
-.endif
-.endmacro
 
 ;---------------------------------------------------------------------
 ; 
@@ -140,8 +131,8 @@ QT_     =   34    ; ascii double quotes \"
 ;=====================================================================
 ;   macros generic
 
-_link_ .set $0000
-_last_ .set $0000
+_link_ .set 0
+_last_ .set 0
 
 ;---------------------------------------------------------------------
 .macro typestring display, string
@@ -215,8 +206,8 @@ makelabel "", label
 reserved:   .res 240
 
 ;---------------------------------------------------------------------
-; pseudo registers
-tos = $00F0
+; pseudo registers, page zero
+tos = $F0
 nos = tos + 2
 wrk = tos + 4
 
@@ -281,11 +272,11 @@ dp = tz +  24  ; pointer to dicionary next free cell
 ;
 .segment "VECTORS"
 
-.org $FFFA
+;.org $FFFA
 
-.addr    _nmi_int  ; NMI vector
-.addr    _init     ; Reset vector
-.addr    _irq_int  ; IRQ/BRK vector
+.word    _nmi_int  ; NMI vector
+.word    _init     ; Reset vector
+.word    _irq_int  ; IRQ/BRK vector
 
 ;---------------------------------------------------------------------
 ;
@@ -722,21 +713,22 @@ HEADER "0<", "ZLESS", F_LEAP + F_CORE, LEAF
 HEADER "=", "EQU", F_LEAP + F_CORE, LEAF
     lda p0 + 2, x
     cmp p0 + 0, x
-    bne flase2
+    bne false2
     lda p0 + 3, x
     cmp p0 + 1, x
-    bne flase2
+    bne false2
     beq true2 
 
 ; 
 ; ok ( w1 w2  -- false | true ) \ test w1 > w2
 ;
 HEADER "<", "LESS", F_LEAP + F_CORE, LEAF
-    lda p0 + 2, x
-    cmp p0 + 0, x
-    bcs false2
     lda p0 + 3, x
     cmp p0 + 1, x
+    bcc false2
+    bne true2
+    lda p0 + 2, x
+    cmp p0 + 0, x
     bcs false2
     bcc true2
 
@@ -745,8 +737,7 @@ HEADER "<", "LESS", F_LEAP + F_CORE, LEAF
 ;
 HEADER "2*", "SHL", F_LEAP + F_CORE, LEAF
     ; preserve high bit zzzz
-    clc
-    rol p0 + 0, x
+    asl p0 + 0, x
     rol p0 + 1, x
     ; continue
     jmp unnest
@@ -755,8 +746,7 @@ HEADER "2*", "SHL", F_LEAP + F_CORE, LEAF
 ; ok ( w1 -- w2 ) \  rotate right
 ;
 HEADER "2/", "SHR", F_LEAP + F_CORE, LEAF
-    clc
-    ror p0 + 1, x
+    lsr p0 + 1, x
     ror p0 + 0, x
     ; continue
     jmp unnest
@@ -764,14 +754,26 @@ HEADER "2/", "SHR", F_LEAP + F_CORE, LEAF
 ; 
 ; ok ( w1 w2  -- w3 ) \  w1 XOR w2
 ;
-HEADER "NEGATE", "INOT", F_LEAP + F_CORE, LEAF
-    lda #FF
+HEADER "INVERT", "IINV", F_LEAP + F_CORE, LEAF
+    lda #$FF
     eor p0 + 0, x
     sta p0 + 0, x
     eor p0 + 1, x
-    sta p0 + 3, x
+    sta p0 + 1, x
     jmp unnest
 
+; 
+; ok ( w1 w2  -- w3 ) \  w1 XOR w2
+;
+HEADER "NEGATE", "INEG", F_LEAP + F_CORE, LEAF
+    sec
+    lda #$00
+    sbc p0 + 0, x
+    sta p0 + 0, x
+    lda #$00
+    sbc p0 + 1, x
+    sta p0 + 1, x
+    jmp unnest
 ; 
 ; ok ( w1 w2  -- w3 ) \  w1 + w2
 ;
@@ -1419,16 +1421,15 @@ HEADER "UM/MOD", "UMMOD", F_LEAP + F_CORE, LEAF
 HEADER "U*", "USTAR", F_LEAP + F_CORE, LEAF
           LDA p0 + 2, x
           STA N
-          STY p0 + 2, x
           LDA p0 + 3, x
           STA N + 1
-          STY p0 + 3, x
-          LDY #16        ; for 16 bits
+          STY y_save
+          LDY #$10        ; for 16 bits
 L396:
-          ASL p0 + 2, x
-          ROL p0 + 3, x
-          ROL p0 + 0, x
+          ASL p0 + 0, x
           ROL p0 + 1, x
+          ROL p0 + 2, x
+          ROL p0 + 3, x
           BCC L411
           CLC
           LDA N
@@ -1443,6 +1444,7 @@ L396:
 L411:
           DEY
           BNE L396
+          LDY y_save
           JMP NEXT
 
 ;------------------------------------------------------------------------------
@@ -1480,3 +1482,72 @@ L444:
           JMP POP
 
 ;------------------------------------------------------------------------------
+
+
+;https://codebase64.org/doku.php?id=base:16bit_multiplication_32-bit_product
+
+;16-bit multiply with 32-bit result 
+;took from 6502.org
+ 
+multiplier	= $f7 
+multiplicand	= $f9 
+product		= $fb 
+ 
+mult16 		lda	#$00
+		sta	product+2	; clear upper bits of product
+		sta	product+3 
+		ldx	#$10		; set binary count to 16 
+shift_r		lsr	multiplier+1	; divide multiplier by 2 
+		ror	multiplier
+		bcc	rotate_r 
+		lda	product+2	; get upper half of product and add multiplicand
+		clc
+		adc	multiplicand
+		sta	product+2
+		lda	product+3 
+		adc	multiplicand+1
+rotate_r	ror			; rotate partial product 
+		sta	product+3 
+		ror	product+2
+		ror	product+1 
+		ror	product 
+		dex
+		bne	shift_r 
+		rts
+
+
+;16-bit division with 32-bit result 
+;took from 6502.org
+
+divisor = $58     ;$59 used for hi-byte
+dividend = $fb	  ;$fc used for hi-byte
+remainder = $fd	  ;$fe used for hi-byte
+result = dividend ;save memory by reusing divident to store the result
+
+divide:	
+	lda #0	        ;preset remainder to 0
+	sta remainder
+	sta remainder+1
+	ldx #16	        ;repeat for each bit: ...
+
+divloop:
+	asl dividend	;dividend lb & hb*2, msb -> Carry
+	rol dividend+1	
+	rol remainder	;remainder lb & hb * 2 + msb from carry
+	rol remainder+1
+	lda remainder
+	sec
+	sbc divisor	;substract divisor to see if it fits in
+	tay	        ;lb result -> Y, for we may need it later
+	lda remainder+1
+	sbc divisor+1
+	bcc skip	;if carry=0 then divisor didn't fit in yet
+
+	sta remainder+1	;else save substraction result as new remainder,
+	sty remainder	
+	inc result	;and INCrement result cause divisor fit in 1 times
+
+skip:
+	dex
+	bne divloop	
+	rts

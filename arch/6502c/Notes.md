@@ -4,11 +4,12 @@
 
  - working in primitive words: FALSE TRUE 0= 0< = < UM+ + - AND OR XOR NOT 2/ 2\* 
    DROP DUP OVER >R R> R@ SP@ SP! RP@ RP! BRANCH ZBRANCH LIT 0 1 2 4 CR LF BL 
-   @ ! C@ C! CELL CELL- CELL+ 
+   @ ! C@ C! CELL CELL- CELL+  
  - extending primitives 1+ 2+ 4+ 1- 2- 4- 
- - working on UM\* UM/MOD 
+ - working on UM/MOD U\* U/
  - using cc65, with it, syntax is extreme sensible
- - include parts of sources from fig-Forth-6502 and from Wilson Mines Co.
+ - include parts of sources from fig-Forth-6502 and 
+    from guides from Garth Wilson, http://wilsonminesco.com/
 
 ## 28/12/2022
  

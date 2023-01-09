@@ -1,0 +1,136 @@
+main.s:518: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:523: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:528: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:537: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:589: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:650: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:657: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:690: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:701: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:713: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:725: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:738: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:748: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:757: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:768: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:780: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:793: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:806: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:818: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:830: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:842: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:851: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:864: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:878: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:900: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:922: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:936: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:955: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:963: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:971: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:983: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:990: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:997: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1004: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1011: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1018: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1025: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1032: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1039: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1046: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1054: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1062: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1086: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1099: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1114: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1130: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1154: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1180: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1203: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1223: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1238: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1248: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1258: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1273: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1283: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1293: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1299: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1305: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1311: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1333: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1368: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1421: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1452: Error: Constant expression expected
+main.s:173: Note: Macro was defined here
+main.s:1455: Error: Illegal addressing mode
+main.s:1460: Error: Illegal addressing mode
+main.s:1475: Error: Illegal addressing mode
+main.s:1491: Error: Invalid input character: 0xC2
+main.s:1491: Error: Invalid input character: 0xA0
+main.s:1495: Error: Invalid input character: 0xC2
+main.s:1495: Error: Invalid input character: 0xA0
+main.s:1496: Error: ':' expected
+main.s:1500: Error: ':' expected
+main.s:1509: Error: ':' expected
