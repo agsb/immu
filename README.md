@@ -21,7 +21,7 @@ For now, immu just does the MITC and primitives:
         FALSE TRUE AND OR XOR SHR SHL NEGATE INVERT
         0= 0< = < + - UM+ U< U* U/ UM/MOD
         >R R> R@ SP@ SP! RP@ RP! DROP DUP OVER SWAP ROT 
-        BRANCH ZBRANCH LIT EXEC
+        BRANCH ZBRANCH LIT EXEC JUMP
         0 1 2 4 1+ 2+ 4+ 1- 2- 4- CELL CELL+ CELL-
 
 Some minimal BIOS support for ( in schedule )
