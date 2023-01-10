@@ -40,6 +40,9 @@
 ; enable 6502 mode
 .p02
 
+; debug 
+.debuginfo +
+
 ; enable C comments
 .feature c_comments
 
@@ -176,7 +179,7 @@ makelabel "is_", label
 ;   6502 cpu is byte unit
 ;    .align 2, $00  
 
-    ; _last_ .set *
+    _last_ .set *
     .word _link_
     .byte .strlen(name) + ( F_RESERVED | flags ) + 0
     .byte name
@@ -285,9 +288,9 @@ tmp = tz + 40  ; scratch
 
 ;.org $FFFA
 
-.word    _nmi_int  ; NMI vector
-.word    _init     ; Reset vector
-.word    _irq_int  ; IRQ/BRK vector
+.addr    _nmi_int  ; NMI vector
+.addr    _init     ; Reset vector
+.addr    _irq_int  ; IRQ/BRK vector
 
 ;---------------------------------------------------------------------
 ;
@@ -337,7 +340,8 @@ _init:
 ; from http://wilsonminesco.com/6502primer/PgmWrite.html
 
 ;---------------------------------------------------------------------
-ACIA       =  $9000    ; The base address of the 6551 ACIA.
+ACIA       =  $8000    ; The base address of the 6551 ACIA.
+;ACIA       =  $80N0    ; The base address of the 6551 ACIAs [0-F].
 ACIA_DATA  =  ACIA+0   ; Its data I/O register is at $9000.
 ACIA_RX    =  ACIA+0   ; Its data I/O register is at $9000.
 ACIA_TX    =  ACIA+0   ; Its data I/O register is at $9000.
@@ -346,7 +350,8 @@ ACIA_COMM  =  ACIA+2   ; Its command  register is at $9002.
 ACIA_CTRL  =  ACIA+3   ; Its control  register is at $9003.
 
 ;---------------------------------------------------------------------
-VIA        =  $A000    ; The base address of the 6522 VIA.
+VIA        =  $8100    ; The base address of the 6522 VIA.
+;VIA        =  $8XX0    ; The base address of the 6522 VIAs [00-FF].
 PB         =  VIA      ; Its port B is at that address.
 PA         =  VIA+1    ; Its port A is at address $A001.
 DDRB       =  VIA+2    ; Its data-direction register for port B is at $A002.
