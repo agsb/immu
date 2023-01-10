@@ -176,7 +176,7 @@ makelabel "is_", label
 ;   6502 cpu is byte unit
 ;    .align 2, $00  
 
-    _last_ .set *
+    ; _last_ .set *
     .word _link_
     .byte .strlen(name) + ( F_RESERVED | flags ) + 0
     .byte name
@@ -302,7 +302,7 @@ _init:
 
     ; clear memory
     lda #0
-    ldx #0
+    tax
 
 @clean:
     sta $0000, x
@@ -339,6 +339,8 @@ _init:
 ;---------------------------------------------------------------------
 ACIA       =  $9000    ; The base address of the 6551 ACIA.
 ACIA_DATA  =  ACIA+0   ; Its data I/O register is at $9000.
+ACIA_RX    =  ACIA+0   ; Its data I/O register is at $9000.
+ACIA_TX    =  ACIA+0   ; Its data I/O register is at $9000.
 ACIA_STAT  =  ACIA+1   ; Its  status  register is at $9001.
 ACIA_COMM  =  ACIA+2   ; Its command  register is at $9002. 
 ACIA_CTRL  =  ACIA+3   ; Its control  register is at $9003.
@@ -377,7 +379,7 @@ acia_init:
     ; %0000 1011 = odd parity, parity mode disabled, normal mode, 
     ; RTSB Low, trans int disabled, IRQB disabled, DTRB low
     lda #$0B     
-    sta ACIA_CMD
+    sta ACIA_COMM
     pla             ; Restore A
     rts
 
@@ -393,7 +395,7 @@ acia_init:
 acia_echo:
     pha             ; Push A to stack
 @loop:
-    lda ACIA_SR     ; Wait for TDRE bit = 1
+    lda ACIA_STAT     ; Wait for TDRE bit = 1
     and #$10        ; 16, %00010000
     beq @loop
     pla             ; Pull A from stack
@@ -413,7 +415,7 @@ acia_echo:
 acia_read:
     lda #$08
 @loop:
-    bit ACIA_SR             ; Check to see if the buffer is full
+    bit ACIA_STAT             ; Check to see if the buffer is full
     beq @loop
     ; receive
     lda ACIA_RX
@@ -570,7 +572,7 @@ false2:
 false1:
     dex
     dex
-    jmp ffalse
+    jmp FFALSE
 
 true2:
     dex
@@ -579,7 +581,7 @@ true2:
 true1:
     dex
     dex
-    jmp ftrue
+    jmp FTRUE
 
 ; 
 ; ok ( w -- false | true ) \ test w = 0
@@ -1178,19 +1180,19 @@ HEADER "4-", "MINUS4", F_LEAP + F_CORE, LEAF
 ; ok (  -- cell )
 ;
 HEADER "CELL", "CELL", F_LEAP + F_CORE, LEAF
-    jmp two
+    jmp TWO
 
 ; 
 ; ok (  -- cell )
 ;
 HEADER "CELL+", "CELLPLUS", F_LEAP + F_CORE, LEAF
-    jmp plus2
+    jmp PLUS2
 
 ; 
 ; ok (  -- cell )
 ;
 HEADER "CELL-", "CELLMINUS", F_LEAP + F_CORE, LEAF
-    jmp minus2
+    jmp PLUS2
 
 ; 
 ; ok ( w1 w2 -- w2 w1 )
@@ -1290,7 +1292,7 @@ HEADER "U*", "USTAR", F_LEAP + F_CORE, LEAF
 
 @end:
     dey
-    bne loop
+    bne @loop
 
     ; load index
     ldy y_save
@@ -1361,7 +1363,7 @@ HEADER "U/", "USLASH", F_LEAP + F_CORE, LEAF
     bcs  @loop        ; and then brach up. (NMOS 6502 can use BCS here.)
 
 @oflow:
-    lda  #FFH         ; If overflow or /0 condition found,
+    lda  #$FF         ; If overflow or /0 condition found,
     sta  p0 + 2, x    ; just put FFFF in both the remainder
     sta  p0 + 3, x
     sta  p0 + 4, x    ; and the quotient.
@@ -1382,12 +1384,16 @@ HEADER "UM/MOD", "UMMOD", F_LEAP + F_CORE, LEAF
     jmp USLASH
 
 ;------------------------------------------------------------------------------
-.END
-;
-;==============================================================================   
-; some code to study
-;------------------------------------------------------------------------------
-;
+; 
+HEADER "JUMP", "JUMP", F_LEAP + F_CORE, LEAF 
+    lda p0 + 0, y
+    sta nos + 0
+    lda p0 + 1, y
+    sta nos + 1
+    iny
+    iny
+    jmp (nos)
+
 ;======================================================================
 ;
 ; adapted from 
@@ -1434,6 +1440,13 @@ _irq:
 _break:
     jmp _halt
     
+;------------------------------------------------------------------------------
+.END
+;
+;==============================================================================   
+; some code to study
+;------------------------------------------------------------------------------
+;
 ;---------------------------------------------------------------------
 ; zzzz not finished
 ;
