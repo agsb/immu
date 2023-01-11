@@ -313,6 +313,9 @@ _halt:
 
 ;======================================================================
 ;
+; some routines adapted from:
+; http://wilsonminesco.com/stacks/StackOps.ASM
+;
 ;---------------------------------------------------------------------
 ;   inner address interpreter, using MITC
 ;   classic ITC, nos == IP, wrk == WR
@@ -338,8 +341,10 @@ _halt:
 ;   tos, nos, wrk, cnt pseudo registers at page zero
 ;   a_save, x_save, y_save, keep values
 ;
-;   |low address                  high address|
-;   [0,1] 1st, [2,3] 2nd, [4,5] 3rd, [6,7] 4th, cells at stack
+    |top ...                | stack
+;   | 1st   2nd   3nd   4th | cells
+;   |[0,1] [2,3] [4,5] [6,7]| offsets at stack, [LSB,MSB]
+;   |low                high| address
 ;
 ;   att: never use negative offsets as -1, -2, etc 
 ;
@@ -504,9 +509,18 @@ HEADER "<", "LESS", F_LEAP + F_CORE, LEAF
     bcs true2
 
 ; 
+; ok ( w1 -- w2 ) \  rotate right
+;
+HEADER "SHR", "SHR", F_LEAP + F_CORE, LEAF
+    lsr p0 + 1, x
+    ror p0 + 0, x
+    ; continue
+    jmp unnest
+
+; 
 ; ok ( w1 -- w2 ) \  rotate left
 ;
-HEADER "2*", "SHL", F_LEAP + F_CORE, LEAF
+HEADER "SHL", "SHL", F_LEAP + F_CORE, LEAF
     asl p0 + 0, x
     rol p0 + 1, x
     ; continue
@@ -514,10 +528,35 @@ HEADER "2*", "SHL", F_LEAP + F_CORE, LEAF
 
 ; 
 ; ok ( w1 -- w2 ) \  rotate right
-;
-HEADER "2/", "SHR", F_LEAP + F_CORE, LEAF
+; by book
+HEADER "2/", "ASR", F_LEAP + F_CORE, LEAF
+    ; copy sign bit
+    lda p0 + 1, x
+    and #$80
+    sta a_save
+    ; shift
     lsr p0 + 1, x
     ror p0 + 0, x
+    ; mask sign bit
+    lda a_save
+    ora p0 + 1, x
+    ; continue
+    jmp unnest
+
+; 
+; ok ( w1 -- w2 ) \  rotate right
+; by book
+HEADER "2*", "ASL", F_LEAP + F_CORE, LEAF
+    ; copy sign bit to carry
+    lda p0 + 1, x
+    and #$80
+    sta a_save
+    ; shift
+    asl p0 + 0, x
+    rsl p0 + 1, x
+    ; mask sign bit
+    lda a_save
+    ora p0 + 1, x
     ; continue
     jmp unnest
 
