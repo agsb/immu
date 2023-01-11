@@ -149,3 +149,29 @@ skip:
 	rts
 
 ;==============================================================================
+
+; @Lee Davison
+;
+;   1.  clear carry, and set N Z
+;
+;   rol a
+;   eor #$1
+;   ror a
+;
+;   2.  check 0 < n < m < $FF
+; 
+;   sec
+;   sbc #n            ; 
+;   sbc #m - n + 1    ;
+;   bcc   n < A < m 
+;
+;   3. nibble to ASCII
+;
+;   and #$0F
+;   cmp #$0A
+;   bcc @no
+;   adc #6
+;@no:
+;   adc #'0'
+;
+

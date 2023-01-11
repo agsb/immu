@@ -341,7 +341,7 @@ _halt:
 ;   tos, nos, wrk, cnt pseudo registers at page zero
 ;   a_save, x_save, y_save, keep values
 ;
-    |top ...                | stack
+;   |top ...                | stack
 ;   | 1st   2nd   3nd   4th | cells
 ;   |[0,1] [2,3] [4,5] [6,7]| offsets at stack, [LSB,MSB]
 ;   |low                high| address
@@ -353,8 +353,11 @@ _halt:
 ;   minimal use of page zero;
 ;   acumulator used as is.
 ;
-HEADER "ENDS", "ends", F_LEAP, LEAF 
-
+;   p0, x   parameter stack
+;   r0, y   return stack
+;
+;   ATT: KEEP THE WORDS AT BRANCH OFFSETS (-127 to +128) or COLAPSE
+;
 unnest:     ; aka semis
     ; pull from return stack
     lda r0 + 0, y
@@ -442,6 +445,25 @@ fflag:
     ; continue
     jmp unnest
 
+; 
+; ok ( w -- false | true ) \ test w = 0
+;
+HEADER "0=", "ZEQU", F_LEAP + F_CORE, LEAF
+    lda p0 + 0, x
+    ora p0 + 1, x
+    bne false1
+    beq true1
+
+; 
+; ok ( w -- false | true ) \ test w < 0
+;
+HEADER "0<", "ZLESS", F_LEAP + F_CORE, LEAF
+    lda p0 + 1, x
+    bmi true1
+    bpl false1
+
+; 
+; 
 false2:
     dex
     dex
@@ -460,58 +482,51 @@ true1:
     dex
     jmp FTRUE
 
-; 
-; ok ( w -- false | true ) \ test w = 0
-;
-HEADER "0=", "ZEQU", F_LEAP + F_CORE, LEAF
-    lda #0
-    cmp p0 + 0, x
-    bne false1
-    cmp p0 + 1, x
-    bne false1
-    beq true1
-
-; 
-; ok ( w -- false | true ) \ test w < 0
-;
-HEADER "0<", "ZLESS", F_LEAP + F_CORE, LEAF
-    lda #0
-    cmp p0 + 0, x
-    bcc false1
-    cmp p0 + 1, x
-    bcc false1
-    bcs true1
-
-; 
-; 
 ; ok ( w1 w2  -- false | true ) \ test w1 > w2
 ;
 HEADER "=", "EQU", F_LEAP + F_CORE, LEAF
-    lda p0 + 2, x
-    cmp p0 + 0, x
+    lda p0 + 1, x
+    cmp p0 + 3, x
     bne false2
-    lda p0 + 3, x
-    cmp p0 + 1, x
+    lda p0 + 0, x
+    cmp p0 + 2, x
     bne false2
     beq true2 
 
 ; 
 ; ok ( w1 w2  -- false | true ) \ test w1 < w2
-; yes dspans-94 ditto. w1 < w2
+; look no overflow, SO pin free 
 HEADER "<", "LESS", F_LEAP + F_CORE, LEAF
+    lda p0 + 1, x
+    eor #$80
+    sta a_save
     lda p0 + 3, x
-    cmp p0 + 0, x
+    eor #$80
+    cmp a_save
+    bcc true2
+    bne false2
+    lda p0 + 0, x
+    cmp p0 + 2, x
+    bcc true2
+    bcs false2
+
+;
+;   ok  ( w1 w2 -- flag ) \ w1 < w2 
+;
+HEADER "U<", "UMLESS", F_LEAP + F_CORE, LEAF
+    lda p0 + 3, x
+    cmp p0 + 1, x
     bcc true2
     bne false2
     lda p0 + 2, x
     cmp p0 + 0, x
-    bcc false2
-    bcs true2
+    bcc true2
+    bcs false2
 
 ; 
 ; ok ( w1 -- w2 ) \  rotate right
 ;
-HEADER "SHR", "SHR", F_LEAP + F_CORE, LEAF
+HEADER "SHR", "LSHR", F_LEAP + F_CORE, LEAF
     lsr p0 + 1, x
     ror p0 + 0, x
     ; continue
@@ -520,7 +535,7 @@ HEADER "SHR", "SHR", F_LEAP + F_CORE, LEAF
 ; 
 ; ok ( w1 -- w2 ) \  rotate left
 ;
-HEADER "SHL", "SHL", F_LEAP + F_CORE, LEAF
+HEADER "SHL", "LSHL", F_LEAP + F_CORE, LEAF
     asl p0 + 0, x
     rol p0 + 1, x
     ; continue
@@ -529,7 +544,7 @@ HEADER "SHL", "SHL", F_LEAP + F_CORE, LEAF
 ; 
 ; ok ( w1 -- w2 ) \  rotate right
 ; by book
-HEADER "2/", "ASR", F_LEAP + F_CORE, LEAF
+HEADER "2/", "ASHR", F_LEAP + F_CORE, LEAF
     ; copy sign bit
     lda p0 + 1, x
     and #$80
@@ -546,14 +561,14 @@ HEADER "2/", "ASR", F_LEAP + F_CORE, LEAF
 ; 
 ; ok ( w1 -- w2 ) \  rotate right
 ; by book
-HEADER "2*", "ASL", F_LEAP + F_CORE, LEAF
-    ; copy sign bit to carry
+HEADER "2*", "ASHL", F_LEAP + F_CORE, LEAF
+    ; copy sign bit
     lda p0 + 1, x
     and #$80
     sta a_save
     ; shift
     asl p0 + 0, x
-    rsl p0 + 1, x
+    rol p0 + 1, x
     ; mask sign bit
     lda a_save
     ora p0 + 1, x
@@ -742,7 +757,7 @@ HEADER "R@", "RAT", F_LEAP + F_CORE, LEAF
 ;
 ;   ok  ( w1 w2 -- w3 carry )
 ;
-HEADER "UM+", "UMPLUS", F_LEAP + F_CORE, LEAF
+HEADER "U+", "UMPLUS", F_LEAP + F_CORE, LEAF
     clc
     lda p0 + 2, x
     adc p0 + 0, x
@@ -758,7 +773,9 @@ HEADER "UM+", "UMPLUS", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;
 ;   push with high byte cleared
+;
 stor:
     dex
     dex
@@ -1326,3 +1343,4 @@ HEADER "><", "NIBBLE", F_LEAP + F_CORE, LEAF
 
 ;======================================================================
 
+.END

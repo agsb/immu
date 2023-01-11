@@ -110,6 +110,8 @@ _init:
 ; from http://wilsonminesco.com/6502primer/PgmWrite.html
 
 ;---------------------------------------------------------------------
+;   $800X ~ $80FX, 16 ACIAs
+;
 ACIA       =  $8000    ; The base address of the 6551 ACIA.
 ACIA_DATA  =  ACIA+0   ; Its data I/O register is at $8000.
 ACIA_RX    =  ACIA+0   ; Its data I/O register is at $8000.
@@ -119,6 +121,8 @@ ACIA_COMM  =  ACIA+2   ; Its command  register is at $8002.
 ACIA_CTRL  =  ACIA+3   ; Its control  register is at $8003.
 
 ;---------------------------------------------------------------------
+;   $810X ~ $8FFX, 240 VIAs
+;
 VIA        =  $8100    ; The base address of the 6522 VIA.
 PB         =  VIA      ; Its port B is at that address.
 PA         =  VIA+1    ; Its port A is at address $A001.

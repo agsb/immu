@@ -7,10 +7,13 @@
  - give 4k at $8000 to $8FFF for I/O devices, 
    using 8 address lines for select and 4 address lines for communication 
  - done U* U/ or UM* UM/MOD
+ - more primitives words: UM+ UM< ALIGN, ><, JUMP, EXEC, LSHL, LSHR, ASHL (2*), ASHR (2/)
+ - quirks about SO, overflow pin, and words < UM< ASHL ASHR then 
+    using common algorithms
 
 ## 08/01/2023
 
- - working in primitive words: FALSE TRUE 0= 0< = < UM+ + - AND OR XOR NOT 2/ 2\* 
+ - working in primitive words: FALSE TRUE 0= 0< = < UM+ + - AND OR XOR NOT  
    DROP DUP OVER >R R> R@ SP@ SP! RP@ RP! BRANCH ZBRANCH LIT 0 1 2 4 CR LF BL 
    @ ! C@ C! CHAR CHAR- CHAR+ CELL CELL- CELL+  
  - extending primitives 1+ 2+ 4+ 1- 2- 4- 
