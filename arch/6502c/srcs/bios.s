@@ -111,26 +111,26 @@ _init:
 
 ;---------------------------------------------------------------------
 ACIA       =  $8000    ; The base address of the 6551 ACIA.
-ACIA_DATA  =  ACIA+0   ; Its data I/O register is at $9000.
-ACIA_RX    =  ACIA+0   ; Its data I/O register is at $9000.
-ACIA_TX    =  ACIA+0   ; Its data I/O register is at $9000.
-ACIA_STAT  =  ACIA+1   ; Its  status  register is at $9001.
-ACIA_COMM  =  ACIA+2   ; Its command  register is at $9002. 
-ACIA_CTRL  =  ACIA+3   ; Its control  register is at $9003.
+ACIA_DATA  =  ACIA+0   ; Its data I/O register is at $8000.
+ACIA_RX    =  ACIA+0   ; Its data I/O register is at $8000.
+ACIA_TX    =  ACIA+0   ; Its data I/O register is at $8000.
+ACIA_STAT  =  ACIA+1   ; Its  status  register is at $8001.
+ACIA_COMM  =  ACIA+2   ; Its command  register is at $8002. 
+ACIA_CTRL  =  ACIA+3   ; Its control  register is at $8003.
 
 ;---------------------------------------------------------------------
 VIA        =  $8100    ; The base address of the 6522 VIA.
 PB         =  VIA      ; Its port B is at that address.
 PA         =  VIA+1    ; Its port A is at address $A001.
-DDRB       =  VIA+2    ; Its data-direction register for port B is at $A002.
-DDRA       =  VIA+3    ; Its data-direction register for port A is at $A003.
-T2CL       =  VIA+8    ; Its timer-2 counter's low  byte is at $A008.
-T2CH       =  VIA+9    ; Its timer-2 counter's high byte is at $A009.
-SR         =  VIA+10   ; The shift register is at $A00A.
-ACR        =  VIA+11   ; The auxiliary  control register is at $A00B.
-PCR        =  VIA+12   ; The peripheral control register is at $A00C.
-IFR        =  VIA+13   ; The interrupt  flag  register is at $A00D.
-IER        =  VIA+14   ; The interrupt enable register is at $A00E.
+DDRB       =  VIA+2    ; Its data-direction register for port B is at $8102.
+DDRA       =  VIA+3    ; Its data-direction register for port A is at $8103.
+T2CL       =  VIA+8    ; Its timer-2 counter's low  byte is at $8108.
+T2CH       =  VIA+9    ; Its timer-2 counter's high byte is at $8109.
+SR         =  VIA+10   ; The shift register is at $810A.
+ACR        =  VIA+11   ; The auxiliary  control register is at $810B.
+PCR        =  VIA+12   ; The peripheral control register is at $810C.
+IFR        =  VIA+13   ; The interrupt  flag  register is at $810D.
+IER        =  VIA+14   ; The interrupt enable register is at $810E.
 
 ;---------------------------------------------------------------------
 ;

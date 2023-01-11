@@ -97,12 +97,12 @@ else many stack operations are need
 // works as a screen or block, just receives a line till a CR or CR LF
 // uses ESC, CAN, XON, XOFF, for control
 //
-
+:
 // #define EOF_      0x05    //#; ascii eof ^D
 // #define TB_       0x09    //#; ascii horizontal ^I
 
-// #define XON_      0x11    //#; ascii DC1 ^Q
-// #define XOFF_     0x13    //#; ascii DC3 ^S
+#define XON_      0x11    //#; ascii DC1 ^Q
+#define XOFF_     0x13    //#; ascii DC3 ^S
 
 // #define CAN_      0x18    //#; ascii cancel ^C
 // #define ESC_      0x1B    //#; ascii escape ^[
@@ -185,7 +185,7 @@ else many stack operations are need
 //; set start reverse linked list
 //;
  
-.macro header name, label, flags=0x0
+.macro header name, label, flags=0x0, leaf
 is_\label:
     .p2align 1, 0x00
     .word 99b
@@ -196,9 +196,14 @@ is_\label:
     .ascii "\name"
 3:
     .p2align 2, 0x20	
+
+; only for primitives
+.if leaf
+    .word 0x0
+.endif
+
 \label:
 .endm
-
 
 /***********************************************************************
 
@@ -212,7 +217,6 @@ is_\label:
 // .skip <bytes> reserves but dont initialize
 
 VOID:
-.word 0x0
 
 // return stack
 XRSP:
@@ -228,39 +232,30 @@ XTIB:
 
 // cursor in TIB
 TOIN:
-.word 0x0
 
 // numeric radix
 BASE:
-.word 0x0
 
 // state of interpreter, 0 = interpret, 1 = compile
 STATE:
-.word 0x0
 
 // link to latest word in dictionary
 LATEST:
-.word 0x0
 
 // dictionary pointer
 XDP:
-.word 0x0
 
 // turn on routine after boot
 TURN:
-.word 0x0
 
 // turn of routine before boot
 REST:
-.word 0x0
 
 // context, where to search a word, reference of vocabulary
 CONTXT:
-.word 0x0
 
 // current, where to create a word, reference of vocabulary
 CURTXT:
-.word 0x0
 
 /***********************************************************************
 
@@ -290,9 +285,8 @@ _forth_:
 //
 // Nos and Wrk are free for use, only Top hold values
 //
-header "ENDS", "ends"
+header "ENDS", "ends", F_RESERVED, LEAF
 _inner: 
-    .word 0x0
 
 _unnest:
     spull Rsp, Nos
@@ -322,20 +316,17 @@ _link:
 */
 //----------------------------------------------------------------------
 //   ( -- F | T )
-header "KEY?", "keyq", 
-    .word 0x0
+header "KEY?", "keyq", , F_RESERVED, LEAF
     jal zero, _link
 
 //----------------------------------------------------------------------
 //   ( -- c )
-header "KEY", "key", 
-    .word 0x0
+header "KEY", "key", , F_RESERVED, LEAF
     jal zero, _link
 
 //----------------------------------------------------------------------
 //   ( c -- )
-header "EMIT", "emit", 
-    .word 0x0
+header "EMIT", "emit", , F_RESERVED, LEAF
     jal zero, _link
 
 /***********************************************************************
@@ -347,15 +338,12 @@ header "EMIT", "emit",
 ***********************************************************************/
 //----------------------------------------------------------------------
 //   ( -- )
-header "NOOP", "noop", 
-    .word 0x0
-_noop: 
+header "NOP", "nop", , F_RESERVED, LEAF
     jal zero, _link
 
 //----------------------------------------------------------------------
 //   ( -- FALSE)
-header "FALSE", "false", 
-    .word 0x0
+header "FALSE", "false", , F_RESERVED, LEAF
     spush Psp, Top 
 _isfalse:
     addi Top, zero, FALSE  
@@ -363,8 +351,7 @@ _isfalse:
 
 //----------------------------------------------------------------------
 //   ( -- TRUE)
-header "TRUE", "true", 
-    .word 0x0
+header "TRUE", "true", , F_RESERVED, LEAF
     spush Psp, Top 
 _istrue:
     addi Top, zero, TRUE   
@@ -372,52 +359,45 @@ _istrue:
 
 //----------------------------------------------------------------------
 // ( w -- FALSE | TRUE)
-header "0=", "zequ"    
-    .word 0x0
+header "0=", "zequ"    , F_RESERVED, LEAF
     beq Top, zero, _istrue
     bne Top, zero, _isfalse
 
 //----------------------------------------------------------------------
 // ( w -- FALSE | TRUE) xxxx
-header "0>", "zgth"    
-    .word 0x0
+header "0>", "zgth"    , F_RESERVED, LEAF
     blt zero, Top, _istrue
     bge zero, Top, _isfalse 
 
 //----------------------------------------------------------------------
 // ( w -- FALSE | TRUE)
-header "0<", "zlth"    
-    .word 0x0
+header "0<", "zlth"    , F_RESERVED, LEAF
     blt Top, zero, _istrue
     bge Top, zero, _isfalse 
 
 //----------------------------------------------------------------------
-header "=", "equ", 
-    .word 0x0
+header "=", "equ", , F_RESERVED, LEAF
     spull Psp, Nos
     beq Top, Nos, _istrue
     bne Top, Nos, _isfalse
 
 //----------------------------------------------------------------------
 // (n1 n2 -- n1 > n2)
-header ">", "greath", 
-    .word 0x0
+header ">", "greath", , F_RESERVED, LEAF
     spull Psp, Nos
     blt Top, Nos, _istrue
     bge Top, Nos, _isfalse
     
 //----------------------------------------------------------------------
 // (n1 n2 -- n1 < n2)
-header "<", "lessth", 
-    .word 0x0
+header "<", "lessth", , F_RESERVED, LEAF
     spull Psp, Nos
     blt Nos, Top, _istrue
     bge Nos, Top, _isfalse
     
 //----------------------------------------------------------------------
 // ( w a -- ) store
-header "!", "to", 
-    .word 0x0
+header "!", "to", , F_RESERVED, LEAF
     spull Psp, Nos
     sw Top, 0 (Nos)
     spull Psp, Top
@@ -425,101 +405,88 @@ header "!", "to",
 
 //----------------------------------------------------------------------
 // ( a -- w ) fetch
-header "@", "at", 
-    .word 0x0
+header "@", "at", , F_RESERVED, LEAF
     lw Top, 0 (Top)
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u v -- u+v )
-header "+", "plus",
-    .word 0x0
+header "+", "plus",, F_RESERVED, LEAF
     spull Psp, Nos
     add Top, Nos, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u v -- u-v )
-header "-", "minus",
-    .word 0x0
+header "-", "minus",, F_RESERVED, LEAF
     spull Psp, Nos
     sub Top, Nos, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u -- w )
-header "INVERT", "invert"
-    .word 0x0
+header "INVERT", "invert", F_RESERVED, LEAF
     xori Top, Top, -1
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u -- w )
-header "NEGATE", "negate"
-    .word 0x0
+header "NEGATE", "negate", F_RESERVED, LEAF
     sub Top, zero, Top 
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u v -- u>>v )
-header "2*", "twostar"
-    .word 0x0
+header "2*", "twostar", F_RESERVED, LEAF
     spull Psp, Nos
     srli Top, Top, 1
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u v -- u>>v )
-header "2/", "twoslash"
-    .word 0x0
+header "2/", "twoslash", F_RESERVED, LEAF
     spull Psp, Nos
     slli Top, Top, 1
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u v -- u<<v  )
-header "LSHIFT", "lshift"
-    .word 0x0
+header "LSHIFT", "lshift", F_RESERVED, LEAF
     spull Psp, Nos
     sll Top, Nos, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u v -- u>>v )
-header "RSHIFT", "rshift"
-    .word 0x0
+header "RSHIFT", "rshift", F_RESERVED, LEAF
     spull Psp, Nos
     srl Top, Nos, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u v -- w )
-header "AND", "andf"
-    .word 0x0
+header "AND", "andf", F_RESERVED, LEAF
     spull Psp, Nos
     and Top, Top, Nos
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u v -- w )
-header "OR", "orf"
-    .word 0x0
+header "OR", "orf", F_RESERVED, LEAF
     spull Psp, Nos
     or Top, Top, Nos
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u v -- w )
-header "XOR", "xorf"
-    .word 0x0
+header "XOR", "xorf", F_RESERVED, LEAF
     spull Psp, Nos
     xor Top, Top, Nos
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u v -- w )
-header "NAND", "nandf",
-    .word 0x0
+header "NAND", "nandf",, F_RESERVED, LEAF
     spull Psp, Nos
     and Nos, Top, Nos
     neg Top, Nos
@@ -527,56 +494,56 @@ header "NAND", "nandf",
 
 //----------------------------------------------------------------------
 // ( -- 0x20 )
-header "BL", "bl", 
-    .word 0x0
+header "BL", "bl", , F_RESERVED, LEAF
     spush Psp, Top 
     addi Top, zero, BL_
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( -- 0x0 )
-header "0", "nil", 
-    .word 0x0
+// ( -- 0x20 )
+header "CR", "CR", , F_RESERVED, LEAF
+    spush Psp, Top 
+    addi Top, zero, CR_
+    jal zero, _link
+
+//----------------------------------------------------------------------
+// ( -- 0x20 )
+header "LF", "LF", , F_RESERVED, LEAF
+    spush Psp, Top 
+    addi Top, zero, LF_
+    jal zero, _link
+
+//----------------------------------------------------------------------
+// ( -- 0 )
+header "0", "nil", , F_RESERVED, LEAF
     spush Psp, Top 
     add Top, zero, zero
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( -- -1 )
-header "-1", "oneneg", 
-    .word 0x0
-    spush Psp, Top 
-    add Top, zero, -1
-    jal zero, _link
-
-//----------------------------------------------------------------------
-// ( -- -2 )
-header "-2", "twoneg", 
-    .word 0x0
-    spush Psp, Top 
-    add Top, zero, -2
-    jal zero, _link
-
-//----------------------------------------------------------------------
-// ( -- +1 )
-header "1", "one", 
-    .word 0x0
+// ( -- 1 )
+header "1", "one", , F_RESERVED, LEAF
     spush Psp, Top 
     addi Top, zero, 1
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( -- +2 )
-header "2", "two", 
-    .word 0x0
+// ( -- 2 )
+header "2", "two", , F_RESERVED, LEAF
     spush Psp, Top 
     addi Top, zero, 2
     jal zero, _link
 
 //----------------------------------------------------------------------
+// ( -- 4 )
+header "4", "four", , F_RESERVED, LEAF
+    spush Psp, Top 
+    addi Top, zero, 4
+    jal zero, _link
+
+//----------------------------------------------------------------------
 // ( -- CELL )
-header "CELL", "cell", 
-    .word 0x0
+header "CELL", "cell", , F_RESERVED, LEAF
     spush Psp, Top 
     addi Top, zero, CELL
     jal zero, _link
@@ -584,16 +551,14 @@ header "CELL", "cell",
 //----------------------------------------------------------------------
 // ( u -- u*CELL )
 // CELL is 4, multiply by shift left
-header "CELLS", "cells", 
-    .word 0x0
+header "CELLS", "cells", , F_RESERVED, LEAF
     slli Top, Top, 2
     jal zero, _link
 
 //----------------------------------------------------------------------
 // ( u -- u+CELL )
 // CELL is 4, add a CELL size
-header "CELL+", "cellplus", 
-    .word 0x0
+header "CELL+", "cellplus", , F_RESERVED, LEAF
     addi Top, Top, CELL
     jal zero, _link
 
@@ -601,23 +566,20 @@ header "CELL+", "cellplus",
 // CHAR is one byte, just add zero 
 // ( u -- u*BYTE )
 // hook 
-header "CHARS", "chars", 
-    .word 0x0
+header "CHARS", "chars", , F_RESERVED, LEAF
     add Top, Top, zero
     jal zero, _link
 
 //----------------------------------------------------------------------
 // CHAR is one byte, add a char size
 // ( u -- u+BYTE )
-header "CHAR+", "charplus", 
-    .word 0x0
+header "CHAR+", "charplus", , F_RESERVED, LEAF
     addi Top, Top, BYTE
     jal zero, _link
 
 //----------------------------------------------------------------------
 // put at 2nd to preserve the immediate next reference 
-header ">R", "tor", 
-    .word 0x0
+header ">R", "tor", , F_RESERVED, LEAF
     spull Rsp, Nos
     spush Rsp, Top
     spush Rsp, Nos
@@ -626,8 +588,7 @@ header ">R", "tor",
 
 //----------------------------------------------------------------------
 // get at 2nd to preserve the immediate next reference 
-header "R>", "rto", 
-    .word 0x0
+header "R>", "rto", , F_RESERVED, LEAF
     spush Psp, Top 
     spull Rsp, Nos
     spull Rsp, Top 
@@ -636,76 +597,66 @@ header "R>", "rto",
 
 //----------------------------------------------------------------------
 // copy from 2nd to preserve the immediate next reference 
-header "R@", "rat", 
-    .word 0x0
+header "R@", "rat", , F_RESERVED, LEAF
     spush Psp, Top 
     lw Top, 1 (Rsp)
     jal zero, _link
 
 //----------------------------------------------------------------------
 //   ( rs -- )
-header "RS!", "rsto", 
-    .word 0x0
+header "RS!", "rsto", , F_RESERVED, LEAF
     add Rsp, Top, zero 
     jal zero, _drop
     
 //----------------------------------------------------------------------
 //   ( ps -- )
-header "PS!", "psto", 
-    .word 0x0
+header "PS!", "psto", , F_RESERVED, LEAF
     add Psp, Top, zero
     jal zero, _drop
 
 //----------------------------------------------------------------------
 //   ( rs -- )
-header "RS@", "rsat", 
-    .word 0x0
-	spush Psp, Top
+header "RS@", "rsat", , F_RESERVED, LEAF
+    	spush Psp, Top
     add Top, Rsp, zero 
     jal zero, _drop
     
 //----------------------------------------------------------------------
 //   ( ps -- )
-header "PS@", "psat", 
-    .word 0x0
-	spush Psp, Top
+header "PS@", "psat", , F_RESERVED, LEAF
+    	spush Psp, Top
     add Top, Psp, zero
     jal zero, _drop
 
 //----------------------------------------------------------------------
 //   ( u w -- u )
-header "DROP", "drop", 
-    .word 0x0
-_drop:
+header "DROP", "drop", , F_RESERVED, LEAF
+    _drop:
     spull Psp, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
 //   ( u w -- w )
-header "NIP", "nip", 
-    .word 0x0
+header "NIP", "nip", , F_RESERVED, LEAF
     spull Psp, Nos
     jal zero, _link
 
 //----------------------------------------------------------------------
 //   ( 0 -- 0 ) (w -- w w)
-header "?DUP", "zdup", 
-    .word 0x0
+header "?DUP", "zdup", , F_RESERVED, LEAF
     bne Top, zero, _dup  
     jal zero, _link
 
 //----------------------------------------------------------------------
 //   ( u w -- u w w )
-header "DUP", "dup", 
-    .word 0x0
-_dup:
+header "DUP", "dup", , F_RESERVED, LEAF
+    _dup:
     spush Psp, Top 
     jal zero, _link
 
 //----------------------------------------------------------------------
 //   ( u w -- u u w )
-header "DIP", "dip", 
-    .word 0x0
+header "DIP", "dip", , F_RESERVED, LEAF
     lw Nos, 0 (Psp)
 _dip:
     spush Psp, Nos
@@ -713,16 +664,14 @@ _dip:
 
 //----------------------------------------------------------------------
 //   ( u w -- w u w )
-header "TUCK", "tuck", 
-    .word 0x0
+header "TUCK", "tuck", , F_RESERVED, LEAF
     spull Psp, Nos
     spush Psp, Top
     beq zero, zero, _dip
 
 //----------------------------------------------------------------------
 //   ( u w -- u w u )
-header "OVER", "over", 
-    .word 0x0
+header "OVER", "over", , F_RESERVED, LEAF
     lw Nos, 0 (Psp)
     spush Psp, Top
 _n2t:
@@ -731,16 +680,14 @@ _n2t:
     
 //----------------------------------------------------------------------
 //   ( v u w -- v w u )
-header "SWAP", "swap", 
-    .word 0x0
+header "SWAP", "swap", , F_RESERVED, LEAF
     lw Nos, 0 (Psp)
     sw Top, 0 (Psp)
     beq zero, zero, _n2t
 
 //----------------------------------------------------------------------
 //   (v u w -- u w v)
-header "ROT", "rot", 
-    .word 0x0
+header "ROT", "rot", , F_RESERVED, LEAF
     lw Wrk, 0 (Psp)
     lw Nos, CELL (Psp)
     sw Wrk, CELL (Psp)
@@ -749,8 +696,7 @@ header "ROT", "rot",
     
 //----------------------------------------------------------------------
 //   (v u w -- w v u)
-header "-ROT", "nrot", 
-    .word 0x0
+header "-ROT", "nrot", , F_RESERVED, LEAF
     lw Nos, 0 (Psp)
     lw Wrk, CELL (Psp)
     sw Top, CELL (Psp)
@@ -759,16 +705,14 @@ header "-ROT", "nrot",
     
 //----------------------------------------------------------------------
 //   (v u w -- w u v)
-header "FLIP", "flip", 
-    .word 0x0
+header "FLIP", "flip", , F_RESERVED, LEAF
     lw Nos, CELL (Psp)
     sw Top, CELL (Psp)
     beq zero, zero, _n2t
     
 //----------------------------------------------------------------------
 //   ( v u w -- u v w )
-header "SWIP", "swip", 
-    .word 0x0
+header "SWIP", "swip", , F_RESERVED, LEAF
     lw Nos, 0 (Psp)
     lw Wrk, CELL (Psp)
     sw Nos, CELL (Psp)
@@ -776,49 +720,43 @@ header "SWIP", "swip",
     jal zero, _link
 
 //----------------------------------------------------------------------
-header "MIN", "min", 
-    .word 0x0
+header "MIN", "min", , F_RESERVED, LEAF
     spull Psp, Nos
     blt Top, Nos, _noop 
     beq zero, zero, _n2t
   
 //----------------------------------------------------------------------
-header "MAX", "max", 
-    .word 0x0
+header "MAX", "max", , F_RESERVED, LEAF
     spull Psp, Nos
     blt Nos, Top, _noop 
     beq zero, zero, _n2t
   
 //----------------------------------------------------------------------
 // trick, 
-header "LIT", "lit", 
-    .word 0x0
-dolit:
+header "LIT", "lit", , F_RESERVED, LEAF
+    dolit:
     spush Psp, Top 
     spull Rsp, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
 // trick,
-header "EXE", "exe", 
-    .word 0x0
-dolit:
+header "EXE", "exe", , F_RESERVED, LEAF
+    dolit:
     spush Rsp, Top 
     spull Psp, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
 // trick, branch if Top is zero else skip next reference
-header "?BRANCH", "zbranch", 
-    .word 0x0
+header "?BRANCH", "zbranch", , F_RESERVED, LEAF
     beq Top, zero, _branch
     jal zero, _link
     
 //----------------------------------------------------------------------
 // all absolut reference, no more offsets
-header "BRANCH", "branch", 
-    .word 0x0
-_branch:    
+header "BRANCH", "branch", , F_RESERVED, LEAF
+    _branch:    
     spull Rsp, Wrk
     lbu Wrk, 0 (Wrk)
     spush Rsp, Wrk
@@ -827,8 +765,7 @@ _branch:
 //----------------------------------------------------------------------
 //   ( b a -- ) 
 // writes one byte at address, unsigned
-header "C!", "cto", 
-    .word 0x0
+header "C!", "cto", , F_RESERVED, LEAF
     spull Psp, Nos
     sb Nos, 0 (Top)
     beq zero, zero, _drop
@@ -836,16 +773,14 @@ header "C!", "cto",
 //----------------------------------------------------------------------
 //   ( a -- b )
 // reads one byte from address, unsigned
-header "C@", "cat", 
-    .word 0x0
+header "C@", "cat", , F_RESERVED, LEAF
     lbu Top, 0 (Top)
     jal zero, _link
 
 //----------------------------------------------------------------------
 //   ( w a --  )
 // add to contents of a address
-header "+!", "plusto", 
-    .word 0x0
+header "+!", "plusto", , F_RESERVED, LEAF
     spull Psp, Nos
     lw Wrk, 0 (Top)
     add Wrk, Wrk, Nos
@@ -856,8 +791,7 @@ header "+!", "plusto",
 // from amforth 6.9
 //   ( a -- b )
 // aligns a address to next CELL
-header "ALIGNED", "aligned", 
-    .word 0x0
+header "ALIGNED", "aligned", , F_RESERVED, LEAF
     andi Wrk, Top, 1
     add Top, Top, Wrk
     andi Wrk, Top, 2 
@@ -871,8 +805,7 @@ header "ALIGNED", "aligned",
 *******************************************************************************/
 // -----------------------------------------------------------------------------
 // ok multiply ( w1 w2 w3 -- ((w1 * w2) / w3) ) zzzz
-header "*/", "starslash", 
-    .word 0x0
+header "*/", "starslash", , F_RESERVED, LEAF
     spull Psp, Nos
     mul Top, Top, Nos
     spull Psp, Nos
@@ -881,16 +814,14 @@ header "*/", "starslash",
 
 // -----------------------------------------------------------------------------
 // ok multiply ( w1 w2 -- w1 * w2 )
-header "*", "star", 
-    .word 0x0
+header "*", "star", , F_RESERVED, LEAF
     spull Psp, Nos
     mul Top, Top, Nos
     jal zero, _link
 
 // -----------------------------------------------------------------------------
  // ok unsigned multiply ( w1 w2 -- w1 * w2 )
-header "m*", "mstar", 
-    .word 0x0
+header "m*", "mstar", , F_RESERVED, LEAF
     lw Nos, 0 (Psp)
     mul Wrk, Top, Nos
     sw Wrk, 0 (Psp)
@@ -899,8 +830,7 @@ header "m*", "mstar",
 
 // -----------------------------------------------------------------------------
 // ok unsigned multiply ( w1 w2 -- w1 * w2 )
-header "um*", "umstar", 
-    .word 0x0
+header "um*", "umstar", , F_RESERVED, LEAF
     lw Nos, 0 (Psp)
     mul Wrk, Top, Nos
     sw Wrk, 0 (Psp)
@@ -909,24 +839,21 @@ header "um*", "umstar",
 
 // -----------------------------------------------------------------------------
 // ok divide ( w1 w2 -- quotient )
-header "/", "slash", 
-    .word 0x0
+header "/", "slash", , F_RESERVED, LEAF
     spull Psp, Nos
     div Top, Nos, Top
     jal zero, _link
 
 // -----------------------------------------------------------------------------
 // ok module ( w1 w2 -- remainder ) 
-header "mod", "module", 
-    .word 0x0
+header "mod", "module", , F_RESERVED, LEAF
     spull Psp, Nos
     rem Top,  Nos, Top
     jal zero, _link
 
 // -----------------------------------------------------------------------------
 // ok dual divide ( w1 w2 -- remainder quotient )
-header "/mod", "slashmod", 
-    .word 0x0
+header "/mod", "slashmod", , F_RESERVED, LEAF
     lw Nos, 0 (Psp)
     rem Wrk, Top, Nos
     sw Wrk, 0 (Psp)
@@ -935,8 +862,7 @@ header "/mod", "slashmod",
 
 // -----------------------------------------------------------------------------
 // ok unsigned dual divide  ( w1 w2 -- remainder quotient )
-header "u/mod", "uslashmod", 
-    .word 0x0
+header "u/mod", "uslashmod", , F_RESERVED, LEAF
     lw Nos, 0 (Psp)
     remu Wrk, Top, Nos
     sw Wrk, 0 (Psp)
@@ -953,8 +879,7 @@ header "u/mod", "uslashmod",
 // copy a cell from return stack
 // number is  converted to CELLs
 // copy a cell index ( n -- R:n )
-header "CS-PICK", "cspick", F_COMPILE_ONLY
-    .word 0x0
+header "CS-PICK", "cspick", F_COMPILE_ONLY, F_RESERVED, LEAF
     // CELL is 4 bytes
     slli Top, Top, 2 
     add Wrk, Rsp, Top
@@ -966,8 +891,7 @@ header "CS-PICK", "cspick", F_COMPILE_ONLY
 // move cells (32bit) from a1 source++ to a2 destination++, decrease count--
 // returns 0 if equal (no differ)
 //
-header "MOVE", "move"
-    .word 0x0
+header "MOVE", "move", F_RESERVED, LEAF
     spull Psp, Nos
     spull Psp, Wrk
 1:
@@ -986,8 +910,7 @@ header "MOVE", "move"
 // move bytes from a1 source++ to a2 destination++, decrease count--
 // returns 0 if equal (no differ)
 //
-header "CMOVE", "cmove"
-    .word 0x0
+header "CMOVE", "cmove", F_RESERVED, LEAF
     spull Psp, Nos
     spull Psp, Wrk
 1:
@@ -1007,8 +930,7 @@ header "CMOVE", "cmove"
 // offsets calculated inside
 // returns 0 if equal (no differ)
 //
-header "CMOVE>", "cmoveb"
-    .word 0x0
+header "CMOVE>", "cmoveb", F_RESERVED, LEAF
     spull Psp, Nos
     spull Psp, Wrk
  
@@ -1031,8 +953,7 @@ header "CMOVE>", "cmoveb"
 // compare bytes, from a1 source++ to a2 destination++, decrease u count--
 // returns 0 if equal (no differ)
 // 
-header "CSAME", "csame"
-    .word 0x0
+header "CSAME", "csame", F_RESERVED, LEAF
     spull Psp, Nos
     spull Psp, Wrk
 1:
@@ -1053,8 +974,7 @@ header "CSAME", "csame"
 //   ( a u c --- )
 // copy  (c) byte to (a) destination++, decrease (u) count--
 //
-header "CFILL", "cfill"
-    .word 0x0
+header "CFILL", "cfill", F_RESERVED, LEAF
     spull Psp, Nos
     spull Psp, Wrk
 1:
@@ -1072,8 +992,7 @@ header "CFILL", "cfill"
 // point next non c
 // returns 0 at end of buffer
 //
-header "cskip", "cskip"
-    .word 0x0
+header "cskip", "cskip", F_RESERVED, LEAF
     // get the separator char
     spull Psp, Nos
 
@@ -1094,8 +1013,7 @@ header "cskip", "cskip"
 // point next c
 // returns 0 at end of buffer
 //
-header "cscan", "cscan"
-    .word 0x0
+header "cscan", "cscan", F_RESERVED, LEAF
     // get the separator char
     spull Psp, Nos
 
@@ -1116,8 +1034,7 @@ header "cscan", "cscan"
 // point next word between <ch><ch><ch>sssssss<ch>
 // returns 0 at end of buffer
 //
-header "sscan", "sscan"
-    .word 0x0
+header "sscan", "sscan", F_RESERVED, LEAF
     // get the separator char
     spull Psp, Nos
 
@@ -1156,16 +1073,15 @@ header "sscan", "sscan"
 // return a3 (lfa) or zero
 // bytes: link(4),flags(1),size(1),name(n),pads(?)
 //
-header "sfind", "sfind"
-    .word 0x0
-1:
+header "sfind", "sfind", F_RESERVED, LEAF
+    1:
     // copy cstr address
     scopy Psp, Nos, 0
 2:  
     lw Wrk, 0 (Top)     // point to lfa
     beq Wrk, zero, 8f   // end of vocabulary
 
-    lw Top, 0 (Wrk)           // update to link
+    lw Top, 0 (Wrk)       // update to link
     // check size and first char
     lh T0, (CELL+1) (Wrk)   
     lh T1, 0 (Nos)
@@ -1204,29 +1120,26 @@ header "sfind", "sfind"
 
 /***********************************************************************
     
-    depends on dictionary linked list header structure
+    depends on dictionary linked list header structure, F_RESERVED, LEAF
 
 ***********************************************************************/
 // lfa is the reference link word.
 
 //---------------------------------------------------------------------- 
 // ok  ( lfa -- flag )
-header  ">FLAGS", "toflags", 
-    .word 0x0
+header  ">FLAGS", "toflags", , F_RESERVED, LEAF
     lb Top, (CELL) (Top)
     jal zero, _link
     
 //---------------------------------------------------------------------- 
 // ok  ( lfa -- nfa )
-header  ">NAME", "toname", 
-    .word 0x0
+header  ">NAME", "toname", , F_RESERVED, LEAF
     lb Top, (CELL+1) (Top)
     jal zero, _link
     
 //---------------------------------------------------------------------- 
 // ok  ( lfa -- cfa )
-header  ">BODY", "tobody", 
-    .word 0x0
+header  ">BODY", "tobody", , F_RESERVED, LEAF
     // for sake all code must be CELL aligned, must use .p2align 2 
     // get length
     lb Wrk, (CELL+1) (Top)
@@ -1240,16 +1153,14 @@ header  ">BODY", "tobody",
     jal zero, _link
 
 //----------------------------------------------------------------------
-header "_EOW_", "_eoW_"
-    .word 0x0
-
+header "_EOW_", "_eoW_", F_RESERVED, LEAF
+    
 #include "biosv.S"
 
 #include "words.S"
 
-header "_EOF_", "_eoF_"
-    .word 0x0
-
+header "_EOF_", "_eoF_", F_RESERVED, LEAF
+    
 /*
 1       1st     fst,    first
 2       2nd     snd,    second
