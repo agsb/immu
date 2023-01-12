@@ -9,6 +9,7 @@ Those need be assembled and uses as registers:
       - TOS, top of parameter stack
       - NOS, next on parameter stack
       - WRK, scratch generic
+      - CNT, scratch generic
       
       - SP, system return stack reserved
       - ZR, zero hardware register
@@ -19,21 +20,27 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 
 | word | does | obs |
 | -- | -- | -- |
-| (inner) | address interpreter | next, nest, unnest, jump, link |
+| ENDS | address interpreter | next, nest, unnest, jump, link |
+| NOP | no operation | ( -- ) |
 | FALSE | false flag, puts 0x0000 at TOS | ( -- F ) |
 | TRUE | true flag, puts 0xFFFF at TOS  | ( -- T ) |
 | 0= | test if w == 0 | ( w -- F or T ) |
 | 0< | test if w < 0 | ( w -- F or T ) |
-| AND | logical AND | ( u v -- w ) |
-| OR | logical OR | ( u v -- w ) |
-| XOR | logical XOR | ( u v -- w ) |
-| NAND | logical NOT AND | ( u v -- w ) |
+| = | test if w1 == w2 | ( w1 w2 -- F or T ) |
+| < | test if w1 < w2 | ( w1 w2 -- F or T ) |
+| AND | logical AND | ( u u -- w ) |
+| OR | logical OR | ( u u -- w ) |
+| XOR | logical XOR | ( u u -- w ) |
+| NAND | logical NOT AND | ( u u -- w ) |
 | NEGATE | arithmetic inverse 0x02 ~ 0xFE | ( u -- v ) |
 | INVERT | logic inverse 0x00 ~ 0xFF | ( u -- v ) |
+| LSHR | logic shift right, zero padded | ( u -- u ) |
+| LSHL | logic shift left, zero padded | ( u -- u ) |
+| ASHR (2/)| math 2's shift right, sign preserved | ( w -- w ) |
+| ASHL (2*)| math 2's shift left, sign preserved | ( w -- w ) |
 | >< | exchanges lsb and msb, 0x0102 ~ 0x0201 | ( uv -- vu )
-| UM+ | unsigned word add with carry | ( w1 w2 -- w1+w2 carry ) |
-| 2/ | shift right one bit | ( w -- w >> 1 ) |
-| 2* | shift left one bit | ( w -- w << 1 ) |
+| UM+ | unsigned add with carry | ( w1 w2 -- w3 carry ) |
+| UM< | unsigned less than | ( w1 w2 -- flag ) |
 | BRANCH | branches to next absolute reference | ( -- ) |
 | ZBRANCH | if TOS == 0, branches to next absolute reference | ( -- ) |
 | ! | STORE word into a | ( w a -- ) |
@@ -42,8 +49,8 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 | C@ | C-FETCH char from a | ( a -- c ) |
 | DROP | drop TOS | ( w -- )|
 | DUP | duplicate TOS | ( w -- w w ) |
-| SWAP | exchange first and second | ( w1 w2 -- w2 w1 ) |
 | OVER | copy second to top | ( w1 w2 -- w1 w2 w1 ) |
+| SWAP | exchange first and second | ( w1 w2 -- w2 w1 ) |
 | ROT |  cycle order of stack | ( w1 w2 w3 -- w2 w3 w1 ) |
 | >R | place TOS at top of return stack | ( w -- ; -- w ) |
 | R> | place top of return stack at TOS | (  -- w ; w -- ) |
@@ -52,15 +59,26 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 | PS! | place TOS at PS | ( w -- ; -- ) |
 | RS@ | place RS at TOS | ( w -- ; -- ) |
 | PS@ | place PS at TOS | ( w -- ; -- ) |
+| CHAR | size of a char to TOS | (  -- cell ) |
 | CHAR+ | add the size of a char to TOS | (  -- cell ) |
+| CHAR- | add the size of a char to TOS | (  -- cell ) |
+| CELL | size of a cell to TOS | (  -- cell ) |
 | CELL+ | add the size of a cell to TOS | (  -- cell ) |
+| CELL- | add the size of a cell to TOS | (  -- cell ) |
 | ALIGNED | align a address into cell size | ( w -- w+ ) |
 | 0 | place 0x0000 into TOS | ( -- 0 ) |
 | 1 | place 0x0001 into TOS | ( -- 1 ) |
 | 2 | place 0x0002 into TOS | ( -- 2 ) |
 | 4 | place 0x0004 into TOS | ( -- 4 ) |
-| JUMP | execute assembler code at TOS address | ( a -- ) |
-| CALL | execute a external assembler code at TOS address using system stack pointer | ( a -- ) |
+| 1+ | add 0x0001 into TOS | ( w -- w+1 ) |
+| 2+ | add 0x0002 into TOS | ( w -- w+2 ) |
+| 4+ | add 0x0004 into TOS | ( w -- w+4 ) |
+| 1- | sub 0x0001 into TOS | ( w -- w-1 ) |
+| 2- | sub 0x0002 into TOS | ( w -- w-2 ) |
+| 4- | sub 0x0004 into TOS | ( w -- w-4 ) |
+| LIT | places the value of next cell at return stack into TOS, advance next cell |
+| EXE | places the value from TOS into next cell at return stack |
+| JMP | execute a jump (faith) to assembler code at TOS address | ( a -- ) |
 
 ### BIOS dependent
 
@@ -94,9 +112,15 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 | BASE | radix for number conversion | reference for number digits |
 | DP | dictionary pointer | next cell for dictionary entry |
 | LATEST | link for last word defined | linked list entry |
+| DSK | disk device | 1024 bytes |
 | BLK | block number | 1024 bytes |
 | SCR | screen number | 16 lines of 64 chars |
 | SOURCE | input/output source | -1 = buffer, 0 = usart, 1 = file, i2c, spi, bluetooth, wi-fi, etc... |
+| CSP | keep sp | transacional |
+| HND | handler | catch and throw | 
+| HLD | convert | <# # #> SIGN | 
+
+
 
 ### if CPU have math: 
 

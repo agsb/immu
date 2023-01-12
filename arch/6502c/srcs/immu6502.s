@@ -182,6 +182,7 @@ makelabel "is_", label
 ;    .align 2, $00  
 
     ; last_ .set * 
+
     .word link_
     .byte .strlen(name) + ( F_RESERVED | flags ) + 0
     .byte name
@@ -262,19 +263,23 @@ stat = tz + 20   ; state, interpreter state
 last = tz + 22   ; latest, link to dictionary latest word
 list = tz + 24   ; dp, pointer to dicionary next free cell
 
+; for boot/reset
 turn = tz + 26   ; routine pos-boot
 rest = tz + 28   ; routine pre-reset
-void = tz + 30   ; 
+warn = tz + 30   ; error/warning level
+void = tz + 32   ; 
 
-dsk = tz + 26   ; disk number
-blk = tz + 28   ; block number (track)
-sct = tz + 30   ; sector number
-scr = tz + 32   ; screen number
-
+; status
 csp = tz + 34  ; keep stack
 hnd = tz + 36  ; handler
 hld = tz + 38  ; holder
 tmp = tz + 40  ; scratch
+
+; devices
+dsk = tz + 42   ; disk number
+blk = tz + 44   ; block number (track)
+sct = tz + 46   ; sector number
+scr = tz + 48   ; screen number
 
 ;=====================================================================
 
@@ -429,8 +434,8 @@ HEADER "TRUE", "FTRUE", F_LEAP + F_CORE, LEAF
     jmp fflag
 
 fflag:
-    inx
-    inx
+    dex
+    dex
     sta p0 + 0, x
     sta p0 + 1, x
     ; continue
@@ -455,24 +460,24 @@ HEADER "0<", "ZLESS", F_LEAP + F_CORE, LEAF
 
 ; 
 false2:
-    dex
-    dex
+    inx
+    inx
 
 ; 
 false1:
-    dex
-    dex
+    inx
+    inx
     jmp FFALSE
 
 ; 
 true2:
-    dex
-    dex
+    inx
+    inx
 
 ; 
 true1:
-    dex
-    dex
+    inx
+    inx
     jmp FTRUE
 
 ;
@@ -516,6 +521,25 @@ HEADER "U<", "UMLESS", F_LEAP + F_CORE, LEAF
     cmp p0 + 0, x
     bcc true2
     bcs false2
+
+;
+;   ok  ( w1 w2 -- w3 carry )
+;
+HEADER "U+", "UMPLUS", F_LEAP + F_CORE, LEAF
+    clc
+    lda p0 + 2, x
+    adc p0 + 0, x
+    sta p0 + 2, x
+    lda p0 + 3, x
+    adc p0 + 1, x
+    sta p0 + 3, x
+    ; save carry flag
+    lda #0
+    sta p0 + 1, x
+    adc #0
+    sta p0 + 0, x
+    ; continue
+    jmp unnest
 
 ; 
 ; ok ( w1 -- w2 ) \  rotate right
@@ -670,10 +694,7 @@ HEADER "DROP", "DROP", F_LEAP + F_CORE, LEAF
 ;
 HEADER "?DUP", "QDUP", F_LEAP + F_CORE, LEAF
     lda p0 + 0, x
-    cmp #0
-    bne @nodup
-    lda p0 + 1, x
-    cmp #0
+    ora p0 + 1, x
     bne @nodup
     jmp DUP
 @nodup:
@@ -727,7 +748,7 @@ HEADER "RP!", "RSTO", F_LEAP + F_CORE, LEAF
 HEADER ">R", "TOR", F_LEAP + F_CORE, LEAF
     dey
     dey
-    ; preserve return 
+    ; preserve next return
     lda r0 + 2, y
     sta r0 + 0, y
     lda r0 + 3, y
@@ -754,7 +775,7 @@ HEADER "R>", "RTO", F_LEAP + F_CORE, LEAF
     sta p0 + 0, x
     lda r0 + 3, y
     sta p0 + 1, x
-    ; preserve return
+    ; preserve next return
     lda r0 + 0, x
     sta r0 + 2, y
     lda r0 + 1, x
@@ -776,25 +797,6 @@ HEADER "R@", "RAT", F_LEAP + F_CORE, LEAF
     sta p0 + 0, x
     lda r0 + 3, y
     sta p0 + 1, x
-    ; continue
-    jmp unnest
-
-;
-;   ok  ( w1 w2 -- w3 carry )
-;
-HEADER "U+", "UMPLUS", F_LEAP + F_CORE, LEAF
-    clc
-    lda p0 + 2, x
-    adc p0 + 0, x
-    sta p0 + 2, x
-    lda p0 + 3, x
-    adc p0 + 1, x
-    sta p0 + 3, x
-    ; save carry flag
-    lda #0
-    sta p0 + 1, x
-    adc #0
-    sta p0 + 0, x
     ; continue
     jmp unnest
 
@@ -841,7 +843,7 @@ HEADER "4", "FOUR", F_LEAP + F_CORE, LEAF
     jmp stor
 
 ;
-;   push with high byte cleared
+;   push with msb cleared
 ;
 stor:
     dex
@@ -927,11 +929,11 @@ HEADER "NOBRANCH", "NOBRANCH", F_LEAP + F_CORE, LEAF
     lda r0 + 0, y
     adc CELL_SIZE
     sta r0 + 0, y
-    bcc @non
+    bcc @nobranch
     lda r0 + 1, y
     adc #1
     sta r0 + 1, y
-@non:
+@nobranch:
     jmp DROP
 
 ;
@@ -947,11 +949,24 @@ HEADER "LIT", "LIT", F_LEAP + F_CORE, LEAF
     ; get reference
     dex
     dex
+    ; get reference
     lda r0 + 0, y
-    sta p0 + 0, x
+    sta nos
     lda r0 + 1, y
+    sta nos + 1
+    ; save index
+    sty y_save
+    ; copy lsb
+    ldy #0
+    lda (nos), y
+    sta p0 + 0, x 
+    ; copy msb
+    iny
+    lda (nos), y
     sta p0 + 1, x
-    ; tricky extra :)
+    ; load index
+    ldy y_save
+    ; continue
     dex
     dex
     jmp NOBRANCH
@@ -960,7 +975,7 @@ HEADER "LIT", "LIT", F_LEAP + F_CORE, LEAF
 ;   ok  ( a -- w )
 ;
 HEADER "@", "AT", F_LEAP + F_CORE, LEAF
-    ; load address
+    ; load address to page zero
     lda p0 + 0, x
     sta nos + 0
     lda p0 + 1, x
@@ -982,9 +997,9 @@ HEADER "@", "AT", F_LEAP + F_CORE, LEAF
 
 ;
 ;   ok  ( w1 w2 -- )
-;
+;   
 HEADER "!", "TO", F_LEAP + F_CORE, LEAF
-    ; load address
+    ; load address to page zero
     lda p0 + 0, x
     sta nos + 0
     lda p0 + 1, x
@@ -1010,7 +1025,7 @@ HEADER "!", "TO", F_LEAP + F_CORE, LEAF
 ;   ok  ( a -- c )
 ;
 HEADER "C@", "CAT", F_LEAP + F_CORE, LEAF
-    ; load address
+    ; load address to page zero
     lda p0 + 0, x
     sta nos + 0
     lda p0 + 1, x
@@ -1033,7 +1048,7 @@ HEADER "C@", "CAT", F_LEAP + F_CORE, LEAF
 ;   ok  ( c a -- )
 ;
 HEADER "C!", "CTO", F_LEAP + F_CORE, LEAF
-    ; load address
+    ; load address to page 0
     lda p0 + 0, x
     sta nos + 0
     lda p0 + 1, x
@@ -1047,7 +1062,9 @@ HEADER "C!", "CTO", F_LEAP + F_CORE, LEAF
     ; load index
     ldy y_save
     ; continue
-    jmp unnest
+    inx
+    inx
+    jmp DROP
     
 ; 
 ; ok ( w1  -- w2 ) \  w1 + 1
@@ -1137,50 +1154,51 @@ HEADER "CELL-", "CELLMINUS", F_LEAP + F_CORE, LEAF
 
 ; 
 ; ok ( w1 w2 -- w2 w1 )
+; using Y skips 8 cys
+; thx wilsonminesco
 ;
 HEADER "SWAP", "SWAP", F_LEAP + F_CORE, LEAF
-    ; 1st to nos
+    ; save index
+    sty y_save
+    ; swap lsb
     lda p0 + 0, x
-    sta nos + 0
-    lda p0 + 1, x
-    sta nos + 1
-    ; 2nd to 1st
-    lda p0 + 2, x
-    sta p0 + 0, x
-    lda p0 + 3, x
-    sta p0 + 1, x
-    ; nos to 2nd
-    lda nos + 0, x
+    ldy p0 + 2, x
     sta p0 + 2, x
-    lda nos + 1, x
+    sty p0 + 0, x
+    ; swap msb
+    lda p0 + 1, x
+    ldy p0 + 3, x
     sta p0 + 3, x
+    sty p0 + 1, x
+    ; load index
+    ldy y_save
     ; continue
     jmp unnest
 
 ; 
 ; ok ( w1 w2 w3 -- w2 w3 w1 )
+; using Y skips 8 cys
+; thx wilsonminesco
 ;
 HEADER "ROT", "ROT", F_LEAP + F_CORE, LEAF
-    ; 3rd to nos
-    lda p0 + 5, x
-    sta nos + 0
-    lda p0 + 6, x
-    sta nos + 1
-    ; 2nd to 3rd
-    lda p0 + 3, x
-    sta p0 + 5, x
+    ; save index
+    sty y_save
+    ; swap lsb
+    ldy p0 + 0, x
     lda p0 + 4, x
-    sta p0 + 6, x
-    ; 1st to 2nd
+    sta p0 + 0, x
     lda p0 + 2, x
     sta p0 + 4, x
+    sty p0 + 2, x
+    ; swap msb
+    ldy p0 + 1, x
+    lda p0 + 5, x
+    sta p0 + 1, x
     lda p0 + 3, x
     sta p0 + 5, x
-    ; nos to 1st
-    lda nos + 0, x
-    sta p0 + 0, x
-    lda nos + 1, x
-    sta p0 + 1, x
+    sty p0 + 1, x
+    ; load index
+    ldy y_save
     ; continue
     jmp unnest
 
@@ -1329,6 +1347,7 @@ HEADER "UM/MOD", "UMMOD", F_LEAP + F_CORE, LEAF
 ;------------------------------------------------------------------------------
 ; ok ( w -- )
 ; does a real jump !!!
+; wise end with 'jmp unnest'
 ;
 HEADER "JUMP", "JUMP", F_LEAP + F_CORE, LEAF 
     lda p0 + 0, y
@@ -1340,8 +1359,8 @@ HEADER "JUMP", "JUMP", F_LEAP + F_CORE, LEAF
     jmp (nos)
 
 ;------------------------------------------------------------------------------
-; 6502 is byte aligned, then just continue
 ; ok ( w -- w )
+; 6502 is byte aligned, then just continue
 ;
 HEADER "ALIGNED", "ALIGNED", F_LEAP + F_CORE, LEAF
     jmp unnest
@@ -1357,6 +1376,47 @@ HEADER "><", "NIBBLE", F_LEAP + F_CORE, LEAF
     lda nos + 0
     sta p0 + 1, x
     jmp unnest
+
+;------------------------------------------------------------------------------
+; ok ( w a -- w )
+;
+HEADER "+!", "PSTO", F_LEAP + F_CORE, LEAF
+    ; load address to page 0
+    lda p0 + 0, x
+    sta nos + 0, x
+    lda p0 + 1, x
+    sta nos + 1, x
+    ; save index
+    sty y_save
+    ; process
+    clc
+    ; sum lsb
+    ldy #0
+    lda (nos), y
+    adc p0 + 2, x
+    sta (nos), y
+    ; sum msb
+    inc y
+    lda (nos), y
+    adc p0 + 3, x
+    sta (nos), y
+    ; load index
+    ldy y_save
+    ; continue
+    inx
+    inx
+    jmp DROP
+
+;------------------------------------------------------------------------------
+; ok ( w a -- w )
+;
+HEADER "ABS", "ABS", F_LEAP + F_CORE, LEAF
+    lda p0 + 1, x
+    bpl @pos
+    jmp NEGATE
+@pos:
+    jmp unnest
+
 
 ;======================================================================
 

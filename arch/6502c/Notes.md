@@ -1,21 +1,21 @@
 # Notes for 6502 IMMU
 
-## 10/10/2023
+## 10-12/10/2023
 
  - using cc65 as assembler and linker, learning sintax and caveats
  - start to separate bios.s and immu.s, assigns and macros still in immu.s
  - give 4k at $8000 to $8FFF for I/O devices, 
    using 8 address lines for select and 4 address lines for communication 
  - done U* U/ or UM* UM/MOD
- - more primitives words: UM+ UM< ALIGN >< JUMP EXEC ?DUP 
-    LSHL, LSHR, ASHL (2*), ASHR (2/)
+ - more primitives words: UM+ UM< ALIGN >< JUMP LIT EXEC ?DUP 
+    LSHL, LSHR, ASHL (2*), ASHR (2/) +! ABS
  - quirks about SO, overflow pin, and words ( < UM< ASHL ASHR ) then 
     using common algorithms (no optimized )
 
 ## 08/01/2023
 
  - working in primitive words: FALSE TRUE 0= 0< = < UM+ + - AND OR XOR NOT  
-   DROP DUP OVER >R R> R@ SP@ SP! RP@ RP! BRANCH ZBRANCH LIT 0 1 2 4 CR LF BL 
+   DROP DUP OVER >R R> R@ SP@ SP! RP@ RP! BRANCH ZBRANCH 0 1 2 4 CR LF BL 
    @ ! C@ C! CHAR CHAR- CHAR+ CELL CELL- CELL+  
  - extending primitives 1+ 2+ 4+ 1- 2- 4- 
  - working on UM/MOD UM* 
