@@ -138,10 +138,8 @@ BL_     =   32    ; ascii space
 QT_     =   34    ; ascii double quotes \"
 
 ;=====================================================================
-;   macros generic
+;   macros 
 
-_link_ .set 0
-_last_ .set 0
 
 ;---------------------------------------------------------------------
 .macro typestring display, string
@@ -158,6 +156,10 @@ _last_ .set 0
 .endmacro
 
 ;---------------------------------------------------------------------
+
+link_ .set 0
+last_ .set 0
+
 .macro HEADER name, label, flags, leaf
 
 .ifblank leaf
@@ -179,16 +181,15 @@ makelabel "is_", label
 ;   6502 cpu is byte unit
 ;    .align 2, $00  
 
-    ; _last_ .set *
-
-    .word _link_
+    ; last_ .set * 
+    .word link_
     .byte .strlen(name) + ( F_RESERVED | flags ) + 0
     .byte name
+    link_ .set last_
 ;
 ;   6502 cpu is byte unit
 ;    .align 2, $20
 
-    _link_ .set _last_
 
 ;   All primitives (leafs) must start with NULL
 .ifnblank leaf 
@@ -255,17 +256,6 @@ t0 = $0400
 tz = t0 + TIB_SIZE
 
 ;---------------------------------------------------------------------
-; math reserved
-m0 = tz + 2 
-m1 = tz + 4
-m2 = tz + 6 
-m3 = tz + 8
-m4 = tz + 10
-m5 = tz + 12
-m6 = tz + 14
-m7 = tz + 16
-
-;---------------------------------------------------------------------
 ; forth 
 radx = tz + 18   ; base, radix for numbers
 stat = tz + 20   ; state, interpreter state
@@ -282,7 +272,7 @@ sct = tz + 30   ; sector number
 scr = tz + 32   ; screen number
 
 csp = tz + 34  ; keep stack
-hnd = tz + 36  ; hold handler
+hnd = tz + 36  ; handler
 hld = tz + 38  ; holder
 tmp = tz + 40  ; scratch
 
@@ -293,6 +283,7 @@ tmp = tz + 40  ; scratch
 ;=====================================================================
 ;
 .segment "CODE"
+
 ;======================================================================
 ;---------------------------------------------------------------------
 ;
@@ -356,7 +347,7 @@ _halt:
 ;   p0, x   parameter stack
 ;   r0, y   return stack
 ;
-;   ATT: KEEP THE WORDS AT BRANCH OFFSETS (-127 to +128) or COLAPSE
+;   ATT: KEEP THE WORDS AT BRANCH OFFSETS (-127 to +127) or COLAPSE
 ;
 unnest:     ; aka semis
     ; pull from return stack
@@ -463,25 +454,28 @@ HEADER "0<", "ZLESS", F_LEAP + F_CORE, LEAF
     bpl false1
 
 ; 
-; 
 false2:
     dex
     dex
 
+; 
 false1:
     dex
     dex
     jmp FFALSE
 
+; 
 true2:
     dex
     dex
 
+; 
 true1:
     dex
     dex
     jmp FTRUE
 
+;
 ; ok ( w1 w2  -- false | true ) \ test w1 > w2
 ;
 HEADER "=", "EQU", F_LEAP + F_CORE, LEAF
@@ -553,8 +547,9 @@ HEADER "2/", "ASHR", F_LEAP + F_CORE, LEAF
     lsr p0 + 1, x
     ror p0 + 0, x
     ; mask sign bit
-    lda a_save
-    ora p0 + 1, x
+    lda p0 + 1, x
+    ora a_save
+    sta p0 + 1, x
     ; continue
     jmp unnest
 
@@ -570,8 +565,9 @@ HEADER "2*", "ASHL", F_LEAP + F_CORE, LEAF
     asl p0 + 0, x
     rol p0 + 1, x
     ; mask sign bit
-    lda a_save
-    ora p0 + 1, x
+    lda p0 + 1, x
+    ora a_save
+    sta p0 + 1, x
     ; continue
     jmp unnest
 
@@ -592,11 +588,11 @@ HEADER "INVERT", "IINV", F_LEAP + F_CORE, LEAF
 HEADER "NEGATE", "INEG", F_LEAP + F_CORE, LEAF
     sec
     lda #$00
-    sbc p0 + 0, x
-    sta p0 + 0, x
-    lda #$00
     sbc p0 + 1, x
     sta p0 + 1, x
+    lda #$00
+    sbc p0 + 0, x
+    sta p0 + 0, x
     jmp unnest
 ; 
 ; ok ( w1 w2  -- w3 ) \  w1 + w2
@@ -672,6 +668,19 @@ HEADER "DROP", "DROP", F_LEAP + F_CORE, LEAF
 ; 
 ; ok ( w -- w w ) \  
 ;
+HEADER "?DUP", "QDUP", F_LEAP + F_CORE, LEAF
+    lda p0 + 0, x
+    cmp #0
+    bne @nodup
+    lda p0 + 1, x
+    cmp #0
+    bne @nodup
+    jmp DUP
+@nodup:
+    jmp unnest
+
+; ok ( w -- w w ) \  
+;
 HEADER "DUP", "DUP", F_LEAP + F_CORE, LEAF
     dex
     dex
@@ -694,6 +703,22 @@ HEADER "OVER", "OVER", F_LEAP + F_CORE, LEAF
     sta p0 + 1, x
     ; continue
     jmp unnest
+
+;
+;   ok  ( -- wrk )
+;
+HEADER "SP!", "PSTO", F_LEAP + F_CORE, LEAF
+    lda p0 + 0, x
+    tax
+    jmp DROP 
+
+;
+;   ok  ( -- wrk )
+;
+HEADER "RP!", "RSTO", F_LEAP + F_CORE, LEAF
+    lda p0 + 0, x
+    tay
+    jmp DROP
 
 ;
 ;   ok  ( w -- ; -- w )
@@ -774,18 +799,6 @@ HEADER "U+", "UMPLUS", F_LEAP + F_CORE, LEAF
     jmp unnest
 
 ;
-;   push with high byte cleared
-;
-stor:
-    dex
-    dex
-    sta p0 + 0, x
-    lda #0
-    sta p0 + 1, x
-    ; continue
-    jmp unnest
-
-;
 ;   ok  ( -- w )
 ;
 HEADER "SP@", "PSAT", F_LEAP + F_CORE, LEAF
@@ -828,6 +841,19 @@ HEADER "4", "FOUR", F_LEAP + F_CORE, LEAF
     jmp stor
 
 ;
+;   push with high byte cleared
+;
+stor:
+    dex
+    dex
+    sta p0 + 0, x
+    ; clear msb
+    lda #0
+    sta p0 + 1, x
+    ; continue
+    jmp unnest
+
+;
 ;   ok  ( -- CR )   \ ascii carriage return
 ;
 HEADER "CR", "CR", F_LEAP + F_CORE, LEAF
@@ -842,27 +868,18 @@ HEADER "LF", "LF", F_LEAP + F_CORE, LEAF
     jmp stor
 
 ;
+;   ok  ( -- VT)   \ ascii vertical tab
+;
+HEADER "VT", "VT", F_LEAP + F_CORE, LEAF
+    lda #11
+    jmp stor
+
+;
 ;   ok  ( -- BL )   \ ascii blank space
 ;
 HEADER "BL", "BL", F_LEAP + F_CORE, LEAF
     lda #32
     jmp stor
-
-;
-;   ok  ( -- wrk )
-;
-HEADER "SP!", "PSTO", F_LEAP + F_CORE, LEAF
-    lda p0 + 0, x
-    tax
-    jmp DROP 
-
-;
-;   ok  ( -- wrk )
-;
-HEADER "RP!", "RSTO", F_LEAP + F_CORE, LEAF
-    lda p0 + 0, x
-    tay
-    jmp DROP
 
 ;
 ;   ok  ( -- ; a -- a )
@@ -892,7 +909,7 @@ HEADER "BRANCH", "BRANCH", F_LEAP + F_CORE, LEAF
 ;
 ;   ok  ( w -- ; -- )
 ;
-HEADER "ZBRANCH", "ZBRANCH", F_LEAP + F_CORE, LEAF
+HEADER "0BRANCH", "ZBRANCH", F_LEAP + F_CORE, LEAF
     lda #0
     cmp p0 + 0, x
     bne NOBRANCH

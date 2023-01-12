@@ -7,9 +7,10 @@
  - give 4k at $8000 to $8FFF for I/O devices, 
    using 8 address lines for select and 4 address lines for communication 
  - done U* U/ or UM* UM/MOD
- - more primitives words: UM+ UM< ALIGN, ><, JUMP, EXEC, LSHL, LSHR, ASHL (2*), ASHR (2/)
- - quirks about SO, overflow pin, and words < UM< ASHL ASHR then 
-    using common algorithms
+ - more primitives words: UM+ UM< ALIGN >< JUMP EXEC ?DUP 
+    LSHL, LSHR, ASHL (2*), ASHR (2/)
+ - quirks about SO, overflow pin, and words ( < UM< ASHL ASHR ) then 
+    using common algorithms (no optimized )
 
 ## 08/01/2023
 
