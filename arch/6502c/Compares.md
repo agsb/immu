@@ -1,5 +1,7 @@
 # Compare Forth implementations
 
+**This File is a stub**
+
 Traditional Forths for 6502 ISA, uses return stack of 128 words in SP (page one), 
 data stack of 64 words in page zero indexed by X register, TOS in A and Y registers.
 
