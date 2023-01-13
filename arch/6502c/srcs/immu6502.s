@@ -157,11 +157,11 @@ QT_     =   34    ; ascii double quotes \"
 
 ;---------------------------------------------------------------------
 
-link_ .set 0
-last_ .set 0
+hcount .set 0          ; Initialize the counter
+
+H0000 = 0
 
 .macro HEADER name, label, flags, leaf
-
 .ifblank leaf
     .out " No leaf "
 .endif
@@ -175,30 +175,20 @@ last_ .set 0
     .error " No name "
 .endif
 
+;   6502 cpu is byte unit .align 1, $00  
 makelabel "is_", label
-
-;
-;   6502 cpu is byte unit
-;    .align 2, $00  
-
-    ; last_ .set * 
-
-    .word link_
+.ident(.sprintf("H%04X", hcount + 1)) = *
+    .word   .ident (.sprintf ("H%04X", hcount))
+    hcount .set hcount + 1
     .byte .strlen(name) + ( F_RESERVED | flags ) + 0
     .byte name
-    link_ .set last_
-;
-;   6502 cpu is byte unit
-;    .align 2, $20
-
-
-;   All primitives (leafs) must start with NULL
+    ; .align 1, $20, but no need PAD
+;   all primitives (leafs) must start with NULL
 .ifnblank leaf 
     .word NULL
 .endif 
-
+;   6502 cpu is byte unit .align 1, $00  
 makelabel "", label
-
 .endmacro
 
 ;---------------------------------------------------------------------
@@ -216,7 +206,8 @@ makelabel "", label
 ;---------------------------------------------------------------------
 ;   need page zero for indirect address
 ;
-.segment "ZP"
+.segment "ZEROPAGE"
+.org $0000
 
 reserved:   .res 240, $00
 
@@ -279,20 +270,20 @@ tmp = tz + 40  ; scratch
 dsk = tz + 42   ; disk number
 blk = tz + 44   ; block number (track)
 sct = tz + 46   ; sector number
-scr = tz + 48   ; screen number
-
-;=====================================================================
-
-.include "bios.s"
+sns = tz + 48   ; sense number
+scr = tz + 50   ; screen number
 
 ;=====================================================================
 ;
 .segment "CODE"
 
+;=====================================================================
+
+.include "bios.s"
+
 ;======================================================================
-;---------------------------------------------------------------------
 ;
-;   word to do...
+;   words to do...
 ;
 COLD:
 WARM:
@@ -331,6 +322,8 @@ _halt:
 ;
 ;   all return stack operations must be done 
 ;   exclusively with >R R> R@
+;
+;   all BRANCH are absolute references. No offsets.
 
 ;   r0 top of return stack, y index
 ;   p0 top of parameter stack, x index
@@ -354,6 +347,7 @@ _halt:
 ;
 ;   ATT: KEEP THE WORDS AT BRANCH OFFSETS (-127 to +127) or COLAPSE
 ;
+HEADER "ENDS", "ENDS", F_LEAP, LEAF
 unnest:     ; aka semis
     ; pull from return stack
     lda r0 + 0, y
@@ -384,7 +378,7 @@ next:
     inc nos + 1
 @end:
 
-jump:
+leaf:
     ; in MICT, all leafs start with NULL
     ; in 6502, none code at page zero
     ; just compare high byte
@@ -419,6 +413,7 @@ link:
 HEADER "NOP", "NOOP", F_LEAP, LEAF
     jmp unnest
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( -- false )
 ;
@@ -426,6 +421,7 @@ HEADER "FALSE", "FFALSE", F_LEAP + F_CORE, LEAF
     lda #$00
     jmp fflag
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( -- true )
 ;
@@ -433,6 +429,7 @@ HEADER "TRUE", "FTRUE", F_LEAP + F_CORE, LEAF
     lda #$FF
     jmp fflag
 
+;---------------------------------------------------------------------
 fflag:
     dex
     dex
@@ -441,6 +438,7 @@ fflag:
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w -- false | true ) \ test w = 0
 ;
@@ -450,6 +448,7 @@ HEADER "0=", "ZEQU", F_LEAP + F_CORE, LEAF
     bne false1
     beq true1
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w -- false | true ) \ test w < 0
 ;
@@ -458,28 +457,33 @@ HEADER "0<", "ZLESS", F_LEAP + F_CORE, LEAF
     bmi true1
     bpl false1
 
+;---------------------------------------------------------------------
 ; 
 false2:
     inx
     inx
 
+;---------------------------------------------------------------------
 ; 
 false1:
     inx
     inx
     jmp FFALSE
 
+;---------------------------------------------------------------------
 ; 
 true2:
     inx
     inx
 
+;---------------------------------------------------------------------
 ; 
 true1:
     inx
     inx
     jmp FTRUE
 
+;---------------------------------------------------------------------
 ;
 ; ok ( w1 w2  -- false | true ) \ test w1 > w2
 ;
@@ -492,6 +496,7 @@ HEADER "=", "EQU", F_LEAP + F_CORE, LEAF
     bne false2
     beq true2 
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 w2  -- false | true ) \ test w1 < w2
 ; look no overflow, SO pin free 
@@ -509,6 +514,7 @@ HEADER "<", "LESS", F_LEAP + F_CORE, LEAF
     bcc true2
     bcs false2
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( w1 w2 -- flag ) \ w1 < w2 
 ;
@@ -522,6 +528,7 @@ HEADER "U<", "UMLESS", F_LEAP + F_CORE, LEAF
     bcc true2
     bcs false2
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( w1 w2 -- w3 carry )
 ;
@@ -541,6 +548,7 @@ HEADER "U+", "UMPLUS", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 -- w2 ) \  rotate right
 ;
@@ -550,6 +558,7 @@ HEADER "SHR", "LSHR", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 -- w2 ) \  rotate left
 ;
@@ -559,6 +568,7 @@ HEADER "SHL", "LSHL", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 -- w2 ) \  rotate right
 ; by book
@@ -577,6 +587,7 @@ HEADER "2/", "ASHR", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 -- w2 ) \  rotate right
 ; by book
@@ -595,6 +606,7 @@ HEADER "2*", "ASHL", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 -- w2 ) \  NOT w1 
 ;
@@ -606,6 +618,7 @@ HEADER "INVERT", "IINV", F_LEAP + F_CORE, LEAF
     sta p0 + 1, x
     jmp unnest
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1  -- w3 ) \  0x00 - w1
 ;
@@ -618,6 +631,8 @@ HEADER "NEGATE", "INEG", F_LEAP + F_CORE, LEAF
     sbc p0 + 0, x
     sta p0 + 0, x
     jmp unnest
+
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 w2  -- w3 ) \  w1 + w2
 ;
@@ -631,6 +646,7 @@ HEADER "+", "PLUS", F_LEAP + F_CORE, LEAF
     sta p0 + 3, x
     jmp DROP
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 w2  -- w3 ) \  w1 - w2
 ;
@@ -644,6 +660,7 @@ HEADER "-", "MINUS", F_LEAP + F_CORE, LEAF
     sta p0 + 3, x
     jmp DROP
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 w2  -- w3 ) \  w1 AND w2
 ;
@@ -656,6 +673,7 @@ HEADER "AND", "IAND", F_LEAP + F_CORE, LEAF
     sta p0 + 3, x
     jmp DROP
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 w2  -- w3 ) \  w1 OR w2
 ;
@@ -668,6 +686,7 @@ HEADER "OR", "IOR", F_LEAP + F_CORE, LEAF
     sta p0 + 3, x
     jmp DROP
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 w2  -- w3 ) \  w1 XOR w2
 ;
@@ -680,6 +699,7 @@ HEADER "XOR", "IXOR", F_LEAP + F_CORE, LEAF
     sta p0 + 3, x
     jmp DROP
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w -- ) \  
 ;
@@ -689,6 +709,7 @@ HEADER "DROP", "DROP", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w -- w w ) \  
 ;
@@ -700,6 +721,7 @@ HEADER "?DUP", "QDUP", F_LEAP + F_CORE, LEAF
 @nodup:
     jmp unnest
 
+;---------------------------------------------------------------------
 ; ok ( w -- w w ) \  
 ;
 HEADER "DUP", "DUP", F_LEAP + F_CORE, LEAF
@@ -712,6 +734,7 @@ HEADER "DUP", "DUP", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 w2 -- w1 w2 w1 ) \  
 ;
@@ -725,6 +748,7 @@ HEADER "OVER", "OVER", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- wrk )
 ;
@@ -733,6 +757,7 @@ HEADER "SP!", "PSTO", F_LEAP + F_CORE, LEAF
     tax
     jmp DROP 
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- wrk )
 ;
@@ -741,6 +766,7 @@ HEADER "RP!", "RSTO", F_LEAP + F_CORE, LEAF
     tay
     jmp DROP
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( w -- ; -- w )
 ;   yes, must be placed into second on stack
@@ -763,6 +789,7 @@ HEADER ">R", "TOR", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ;
 ;   ok  (  -- w1 ; w1 -- )
 ;   yes, must be taken from second on stack
@@ -785,6 +812,7 @@ HEADER "R>", "RTO", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ;
 ;   ok  (  -- w1 ; w1 -- )
 ;   yes, must be taken from second on stack
@@ -800,6 +828,7 @@ HEADER "R@", "RAT", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- w )
 ;
@@ -807,6 +836,7 @@ HEADER "SP@", "PSAT", F_LEAP + F_CORE, LEAF
     txa
     jmp stor
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- wrk )
 ;
@@ -814,6 +844,7 @@ HEADER "RS@", "RSAT", F_LEAP + F_CORE, LEAF
     tya
     jmp stor
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- 0 )
 ;
@@ -821,6 +852,7 @@ HEADER "0", "ZERO", F_LEAP + F_CORE, LEAF
     lda #0
     jmp stor
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- 1 )
 ;
@@ -828,6 +860,7 @@ HEADER "1", "ONE", F_LEAP + F_CORE, LEAF
     lda #1
     jmp stor
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- 2 )
 ;
@@ -835,6 +868,7 @@ HEADER "2", "TWO", F_LEAP + F_CORE, LEAF
     lda #2
     jmp stor
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- 4 )
 ;
@@ -842,6 +876,7 @@ HEADER "4", "FOUR", F_LEAP + F_CORE, LEAF
     lda #4
     jmp stor
 
+;---------------------------------------------------------------------
 ;
 ;   push with msb cleared
 ;
@@ -855,6 +890,7 @@ stor:
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- CR )   \ ascii carriage return
 ;
@@ -862,6 +898,7 @@ HEADER "CR", "CR", F_LEAP + F_CORE, LEAF
     lda #13
     jmp stor
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- LF )   \ ascii line feed
 ;
@@ -869,6 +906,7 @@ HEADER "LF", "LF", F_LEAP + F_CORE, LEAF
     lda #10
     jmp stor
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- VT)   \ ascii vertical tab
 ;
@@ -876,6 +914,7 @@ HEADER "VT", "VT", F_LEAP + F_CORE, LEAF
     lda #11
     jmp stor
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- BL )   \ ascii blank space
 ;
@@ -883,6 +922,7 @@ HEADER "BL", "BL", F_LEAP + F_CORE, LEAF
     lda #32
     jmp stor
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- ; a -- a )
 ;   using absolute address !
@@ -908,6 +948,7 @@ HEADER "BRANCH", "BRANCH", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( w -- ; -- )
 ;
@@ -921,6 +962,7 @@ HEADER "0BRANCH", "ZBRANCH", F_LEAP + F_CORE, LEAF
     inx
     jmp BRANCH
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( -- ;  -- )
 ;
@@ -936,12 +978,14 @@ HEADER "NOBRANCH", "NOBRANCH", F_LEAP + F_CORE, LEAF
 @nobranch:
     jmp DROP
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( w -- ; -- w)
 ;
 HEADER "EXE", "EXE", F_LEAP + F_CORE, LEAF
     jmp TOR
 
+;---------------------------------------------------------------------
 ;
 ;   ok  (  -- w ; a -- a+CELL )
 ;
@@ -971,6 +1015,7 @@ HEADER "LIT", "LIT", F_LEAP + F_CORE, LEAF
     dex
     jmp NOBRANCH
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( a -- w )
 ;
@@ -995,6 +1040,7 @@ HEADER "@", "AT", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( w1 w2 -- )
 ;   
@@ -1021,6 +1067,7 @@ HEADER "!", "TO", F_LEAP + F_CORE, LEAF
     inx
     jmp DROP 
     
+;---------------------------------------------------------------------
 ;
 ;   ok  ( a -- c )
 ;
@@ -1044,6 +1091,7 @@ HEADER "C@", "CAT", F_LEAP + F_CORE, LEAF
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ;
 ;   ok  ( c a -- )
 ;
@@ -1066,6 +1114,7 @@ HEADER "C!", "CTO", F_LEAP + F_CORE, LEAF
     inx
     jmp DROP
     
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1  -- w2 ) \  w1 + 1
 ;
@@ -1081,6 +1130,7 @@ adcs:
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1  -- w2 ) \  w1 + 1
 ;
@@ -1088,6 +1138,7 @@ HEADER "2+", "PLUS2", F_LEAP + F_CORE, LEAF
     lda #2
     jmp adcs
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1  -- w2 ) \  w1 + 1
 ;
@@ -1095,6 +1146,7 @@ HEADER "4+", "PLUS4", F_LEAP + F_CORE, LEAF
     lda #4
     jmp adcs
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1  -- w2 ) \  w1 + ( 0 - 1 )
 ;
@@ -1102,6 +1154,7 @@ HEADER "1-", "MINUS1", F_LEAP + F_CORE, LEAF
     lda #$FF
     jmp adcs
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1  -- w2 ) \  w1 + ( 0 - 2 )
 ;
@@ -1109,6 +1162,7 @@ HEADER "2-", "MINUS2", F_LEAP + F_CORE, LEAF
     lda #$FE
     jmp adcs
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1  -- w2 ) \  w1 + ( 0 - 4 )
 ; 
@@ -1116,89 +1170,93 @@ HEADER "4-", "MINUS4", F_LEAP + F_CORE, LEAF
     lda #$FC
     jmp adcs
 
+;---------------------------------------------------------------------
 ; 
 ; ok (  -- cell )
 ;
 HEADER "CHAR", "CHAR", F_LEAP + F_CORE, LEAF
     jmp ONE
 
+;---------------------------------------------------------------------
 ; 
 ; ok (  -- cell )
 ;
 HEADER "CHAR+", "CHARPLUS", F_LEAP + F_CORE, LEAF
     jmp PLUS1
 
+;---------------------------------------------------------------------
 ; 
 ; ok (  -- cell )
 ;
 HEADER "CHAR-", "CHARMINUS", F_LEAP + F_CORE, LEAF
     jmp MINUS1
 
+;---------------------------------------------------------------------
 ; 
 ; ok (  -- cell )
 ;
 HEADER "CELL", "CELL", F_LEAP + F_CORE, LEAF
     jmp TWO
 
+;---------------------------------------------------------------------
 ; 
 ; ok (  -- cell )
 ;
 HEADER "CELL+", "CELLPLUS", F_LEAP + F_CORE, LEAF
     jmp PLUS2
 
+;---------------------------------------------------------------------
 ; 
 ; ok (  -- cell )
 ;
 HEADER "CELL-", "CELLMINUS", F_LEAP + F_CORE, LEAF
     jmp MINUS2
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 w2 -- w2 w1 )
-; using Y skips 8 cys
-; thx wilsonminesco
 ;
 HEADER "SWAP", "SWAP", F_LEAP + F_CORE, LEAF
-    ; save index
-    sty y_save
     ; swap lsb
     lda p0 + 0, x
-    ldy p0 + 2, x
+    sta a_save
+    lda p0 + 2, x
+    sta p0 + 0, x
+    lda a_save
     sta p0 + 2, x
-    sty p0 + 0, x
     ; swap msb
     lda p0 + 1, x
-    ldy p0 + 3, x
+    sta a_save 
+    lda p0 + 3, x
+    sta p0 + 1, x
+    lda a_save
     sta p0 + 3, x
-    sty p0 + 1, x
-    ; load index
-    ldy y_save
     ; continue
     jmp unnest
 
+;---------------------------------------------------------------------
 ; 
 ; ok ( w1 w2 w3 -- w2 w3 w1 )
-; using Y skips 8 cys
-; thx wilsonminesco
 ;
 HEADER "ROT", "ROT", F_LEAP + F_CORE, LEAF
-    ; save index
-    sty y_save
     ; swap lsb
-    ldy p0 + 0, x
     lda p0 + 4, x
-    sta p0 + 0, x
+    sta a_save
     lda p0 + 2, x
     sta p0 + 4, x
-    sty p0 + 2, x
+    lda p0 + 0, x
+    sta p0 + 2, x
+    lda a_save
+    sta p0 + 0, x
     ; swap msb
-    ldy p0 + 1, x
     lda p0 + 5, x
-    sta p0 + 1, x
+    sta a_save
     lda p0 + 3, x
     sta p0 + 5, x
-    sty p0 + 1, x
-    ; load index
-    ldy y_save
+    lda p0 + 1, x
+    sta p0 + 3, x
+    lda a_save
+    sta p0 + 1, x
     ; continue
     jmp unnest
 
@@ -1380,7 +1438,7 @@ HEADER "><", "NIBBLE", F_LEAP + F_CORE, LEAF
 ;------------------------------------------------------------------------------
 ; ok ( w a -- w )
 ;
-HEADER "+!", "PSTO", F_LEAP + F_CORE, LEAF
+HEADER "+!", "PLUSTO", F_LEAP + F_CORE, LEAF
     ; load address to page 0
     lda p0 + 0, x
     sta nos + 0, x
@@ -1396,7 +1454,7 @@ HEADER "+!", "PSTO", F_LEAP + F_CORE, LEAF
     adc p0 + 2, x
     sta (nos), y
     ; sum msb
-    inc y
+    iny
     lda (nos), y
     adc p0 + 3, x
     sta (nos), y
@@ -1413,7 +1471,7 @@ HEADER "+!", "PSTO", F_LEAP + F_CORE, LEAF
 HEADER "ABS", "ABS", F_LEAP + F_CORE, LEAF
     lda p0 + 1, x
     bpl @pos
-    jmp NEGATE
+    jmp INEG
 @pos:
     jmp unnest
 

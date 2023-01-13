@@ -3,7 +3,7 @@
 case $1 in
 
 a) 
-ca65 -W 1 -l main.lst -o main.o -mm near -v -v  \
+ca65 -W 1 -l main.lst -o main.o -mm near -v \
     --cpu 6502 \
     --create-full-dep main.dep \
     --list-bytes 80 \
@@ -14,12 +14,18 @@ ca65 -W 1 -l main.lst -o main.o -mm near -v -v  \
 c) 
     # cl65 -t atari -Ln main.lbl --listing main.lst --add-source -o main.xex main.s
     
-cl65 -O0 -W1 -c -T -S \
+echo " start compiling "
+
+
+cl65 -C main.cfg --no-target-lib \
     -l main.asm -m main.map -o main.obj -Ln main.lbl \
-    --add-source --create-dep main.dep \
-    -vm -v \
     --cpu 6502 \
-    main.s 1> out 2> err 
+    main.s 2> err | tee out 
+
+# --add-source --create-dep main.dep \
+# -vm -v \
+# -O0 -W1 -c -T -S \
+echo " stop compiling "
     ;;
 
 l)
