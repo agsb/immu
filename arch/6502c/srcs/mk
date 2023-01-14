@@ -38,6 +38,6 @@ x)
 
 esac
 
-grep HEADER main.s > words
+grep HEADER *.s | grep -v immu > words
 
 
