@@ -10,7 +10,7 @@
 ;  *  "Software"), to deal in the Software without restriction, including
 ;  *  without limitation the rights to use, copy, modify, merge, publish,
 ;  *  distribute, sublicense, and/or sell copies of the Software, and to
-;  *  permit per0ons to whom the Software is furnished to do so, subject to
+;  *  permit persons to whom the Software is furnished to do so, subject to
 ;  *  the following conditions"
 ;  *
 ;  *  The above copyright notice and this permission notice shall be
@@ -45,14 +45,14 @@ HEADER "2DUP", "TWODUP", F_LEAP + F_CORE, LEAF
     dex
     dex
     dex
-    lda p0 + 4, x
-    sta p0 + 0, x
-    lda p0 + 5, x
-    sta p0 + 1, x
-    lda p0 + 6, x
-    sta p0 + 2, x
-    lda p0 + 7, x
-    sta p0 + 3, x
+    lda ps + 4, x
+    sta ps + 0, x
+    lda ps + 5, x
+    sta ps + 1, x
+    lda ps + 6, x
+    sta ps + 2, x
+    lda ps + 7, x
+    sta ps + 3, x
    ; continue 
     jmp unnest
 
@@ -64,14 +64,14 @@ HEADER "2OVER", "TWOOVER", F_LEAP + F_CORE, LEAF
     dex
     dex
     dex
-    lda p0 + 8, x
-    sta p0 + 0, x
-    lda p0 + 9, x
-    sta p0 + 1, x
-    lda p0 + 10, x
-    sta p0 + 2, x
-    lda p0 + 11, x
-    sta p0 + 3, x
+    lda ps + 8, x
+    sta ps + 0, x
+    lda ps + 9, x
+    sta ps + 1, x
+    lda ps + 10, x
+    sta ps + 2, x
+    lda ps + 11, x
+    sta ps + 3, x
    ; continue 
     jmp unnest
 
@@ -80,18 +80,18 @@ HEADER "2OVER", "TWOOVER", F_LEAP + F_CORE, LEAF
 ;
 HEADER "D+", "DPLUS", F_LEAP + F_CORE, LEAF
     clc
-    lda p0 + 4
-    adc p0 + 0
-    sta p0 + 4
-    lda p0 + 5
-    adc p0 + 1
-    sta p0 + 5
-    lda p0 + 6
-    adc p0 + 2
-    sta p0 + 6
-    lda p0 + 7
-    adc p0 + 3
-    sta p0 + 7
+    lda ps + 4
+    adc ps + 0
+    sta ps + 4
+    lda ps + 5
+    adc ps + 1
+    sta ps + 5
+    lda ps + 6
+    adc ps + 2
+    sta ps + 6
+    lda ps + 7
+    adc ps + 3
+    sta ps + 7
     ; continue 
     jmp TWODROP
 
@@ -100,18 +100,18 @@ HEADER "D+", "DPLUS", F_LEAP + F_CORE, LEAF
 ;
 HEADER "D-", "DMINUS", F_LEAP + F_CORE, LEAF
     sec
-    lda p0 + 4
-    sbc p0 + 0
-    sta p0 + 4
-    lda p0 + 5
-    sbc p0 + 1
-    sta p0 + 5
-    lda p0 + 6
-    sbc p0 + 2
-    sta p0 + 6
-    lda p0 + 7
-    sbc p0 + 3
-    sta p0 + 7
+    lda ps + 4
+    sbc ps + 0
+    sta ps + 4
+    lda ps + 5
+    sbc ps + 1
+    sta ps + 5
+    lda ps + 6
+    sbc ps + 2
+    sta ps + 6
+    lda ps + 7
+    sbc ps + 3
+    sta ps + 7
     ; continue 
     jmp TWODROP
     
@@ -119,10 +119,10 @@ HEADER "D-", "DMINUS", F_LEAP + F_CORE, LEAF
 ; ok ( w1 w2 w3 w4 -- w w )
 ; logical !
 HEADER "D2*", "DTWOSTAR", F_LEAP + F_CORE, LEAF
-    asl p0 + 0
-    rol p0 + 1
-    rol p0 + 2
-    rol p0 + 3
+    asl ps + 0
+    rol ps + 1
+    rol ps + 2
+    rol ps + 3
     ; continue 
     jmp unnest
     
@@ -130,10 +130,10 @@ HEADER "D2*", "DTWOSTAR", F_LEAP + F_CORE, LEAF
 ; ok ( w1 w2 w3 w4 -- w w )
 ; logical !
 HEADER "D2/", "DTWOSLASH", F_LEAP + F_CORE, LEAF
-    lsr p0 + 3
-    ror p0 + 2
-    ror p0 + 1
-    ror p0 + 0
+    lsr ps + 3
+    ror ps + 2
+    ror ps + 1
+    ror ps + 0
     ; continue 
     jmp unnest
 
@@ -141,13 +141,13 @@ HEADER "D2/", "DTWOSLASH", F_LEAP + F_CORE, LEAF
 ; ok ( w1 w2 -- flag )
 ;
 HEADER "D0=", "DZEQU", F_LEAP + F_CORE, LEAF
-    lda p0 + 0, x
+    lda ps + 0, x
     bne dfalse
-    lda p0 + 1, x
+    lda ps + 1, x
     bne dfalse
-    lda p0 + 2, x
+    lda ps + 2, x
     bne dfalse
-    lda p0 + 3, x
+    lda ps + 3, x
     bne dfalse
 dtrue:
     jmp FTRUE
@@ -158,7 +158,7 @@ dfalse:
 ; ok ( w1 w2 -- flag )
 ;
 HEADER "D0<", "DZLESS", F_LEAP + F_CORE, LEAF
-    lda p0 + 3, x
+    lda ps + 3, x
     bmi dtrue
     bpl dfalse
 
@@ -167,18 +167,31 @@ HEADER "D0<", "DZLESS", F_LEAP + F_CORE, LEAF
 ;
 HEADER "DNEGATE", "DNEGATE", F_LEAP + F_CORE, LEAF
     lda #0
-    sbc p0 + 3, x
-    sta p0 + 3, x
+    sbc ps + 3, x
+    sta ps + 3, x
     lda #0
-    sbc p0 + 2, x
-    sta p0 + 2, x
+    sbc ps + 2, x
+    sta ps + 2, x
+
+;    alternative, jmp INEG+1
+
     lda #0
-    sbc p0 + 1, x
-    sta p0 + 1, x
+    sbc ps + 1, x
+    sta ps + 1, x
     lda #0
-    sbc p0 + 0, x
-    sta p0 + 0, x
+    sbc ps + 0, x
+    sta ps + 0, x
     ; continue
     jmp unnest
 
+;------------------------------------------------------------------------------
+; ok ( w1 w2 -- flag )
+;
+HEADER "DABS", "DABS", F_LEAP + F_CORE, LEAF
+    lda ps + 3, x
+    bmi DNEGATE
+    ; continue
+    jmp unnest
+    
+;------------------------------------------------------------------------------
 
