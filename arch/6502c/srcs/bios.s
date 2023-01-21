@@ -31,8 +31,6 @@
 ;
 .segment "VECTORS"
 
-;.org $FFFA
-
 .addr    _nmi_int  ; NMI vector
 .addr    _init     ; Reset vector
 .addr    _irq_int  ; IRQ/BRK vector
@@ -102,7 +100,7 @@ _init:
     lda #0
     tax
 
-@clean:
+@clean: ; page zero, stack, return stack, parameter stack, buffers
     sta $0000, x
     sta $0100, x
     sta $0200, x
@@ -138,29 +136,31 @@ _init:
 ;---------------------------------------------------------------------
 ;   $800X ~ $80FX, 16 ACIAs
 ;
-ACIA       =  $8000    ; The base address of the 6551 ACIA.
-ACIA_DATA  =  ACIA+0   ; Its data I/O register is at $8000.
-ACIA_RX    =  ACIA+0   ; Its data I/O register is at $8000.
-ACIA_TX    =  ACIA+0   ; Its data I/O register is at $8000.
-ACIA_STAT  =  ACIA+1   ; Its  status  register is at $8001.
-ACIA_COMM  =  ACIA+2   ; Its command  register is at $8002. 
-ACIA_CTRL  =  ACIA+3   ; Its control  register is at $8003.
+CIA       =  $8000    ; The base address of the 6551 ACIA.
+CIAZ	  =  $80F0    ; last
+CIA_DATA  =  CIA+0   ; Its data I/O register is at $8000.
+CIA_RX    =  CIA+0   ; Its data I/O register is at $8000.
+CIA_TX    =  CIA+0   ; Its data I/O register is at $8000.
+CIA_STAT  =  CIA+1   ; Its  status  register is at $8001.
+CIA_COMM  =  CIA+2   ; Its command  register is at $8002. 
+CIA_CTRL  =  CIA+3   ; Its control  register is at $8003.
 
 ;---------------------------------------------------------------------
 ;   $810X ~ $8FFX, 240 VIAs
 ;
 VIA        =  $8100    ; The base address of the 6522 VIA.
-PB         =  VIA      ; Its port B is at that address.
-PA         =  VIA+1    ; Its port A is at address $A001.
-DDRB       =  VIA+2    ; Its data-direction register for port B is at $8102.
-DDRA       =  VIA+3    ; Its data-direction register for port A is at $8103.
-T2CL       =  VIA+8    ; Its timer-2 counter's low  byte is at $8108.
-T2CH       =  VIA+9    ; Its timer-2 counter's high byte is at $8109.
-SR         =  VIA+10   ; The shift register is at $810A.
-ACR        =  VIA+11   ; The auxiliary  control register is at $810B.
-PCR        =  VIA+12   ; The peripheral control register is at $810C.
-IFR        =  VIA+13   ; The interrupt  flag  register is at $810D.
-IER        =  VIA+14   ; The interrupt enable register is at $810E.
+VIAZ	   =  $8FF0    ; last
+VIA_PB         =  VIA      ; Its port B is at that address.
+VIA_PA         =  VIA+1    ; Its port A is at address $A001.
+VIA_DDRB       =  VIA+2    ; Its data-direction register for port B is at $8102.
+VIA_DDRA       =  VIA+3    ; Its data-direction register for port A is at $8103.
+VIA_T2CL       =  VIA+8    ; Its timer-2 counter's low  byte is at $8108.
+VIA_T2CH       =  VIA+9    ; Its timer-2 counter's high byte is at $8109.
+VIA_SR         =  VIA+10   ; The shift register is at $810A.
+VIA_ACR        =  VIA+11   ; The auxiliary  control register is at $810B.
+VIA_PCR        =  VIA+12   ; The peripheral control register is at $810C.
+VIA_IFR        =  VIA+13   ; The interrupt  flag  register is at $810D.
+VIA_IER        =  VIA+14   ; The interrupt enable register is at $810E.
 
 ;---------------------------------------------------------------------
 ;
@@ -178,11 +178,11 @@ acia_init:
     pha			; Push A to stack
     ; %0001 1111 = 19200 baud, external receiver, 8 bit words, 1 stop bit
     lda #$1F     
-    sta ACIA_CTRL
+    sta CIA_CTRL
     ; %0000 1011 = odd parity, parity mode disabled, normal mode, 
     ; RTSB Low, trans int disabled, IRQB disabled, DTRB low
     lda #$0B     
-    sta ACIA_COMM
+    sta CIA_COMM
     pla             ; Restore A
     rts
 
@@ -195,8 +195,7 @@ acia_init:
 ;                   (or a little more) delay.
 ;-------------------------------------------------------------------------------
 
-acia_echo:
-    pha             ; Push A to stack
+acia_push:
 @loop:
     lda ACIA_STAT     ; Wait for TDRE bit = 1
     and #$10        ; 16, %00010000
@@ -215,10 +214,10 @@ acia_echo:
 ;   Note:         Probably not compatible with EhBASIC because it is
 ;                 blocking
 ;-------------------------------------------------------------------------------
-acia_read:
-    lda #$08
+acia_pull:
 @loop:
-    bit ACIA_STAT             ; Check to see if the buffer is full
+    lda ACIA_STAT             ; Check to see if the buffer is full
+    and #$08
     beq @loop
     ; receive
     lda ACIA_RX
@@ -236,19 +235,20 @@ delay_6551:
     pha
     txa
     pha
+
 @delay_loop: ; 2 + 2 
-;    ldy   #2    ;Get delay value (clock rate in MHz 2 clock cycles)
     ldy   #1    ;Get delay value (clock rate in MHz 1 clock cycles)
 
 @delay_y:
-;    ldx   #$68    ; original Seed X reg
     ldx   #$6C    ; Seed X reg for 526 cyc
+
 @delay_x:
     ; (2 + 3 + 2 + 3) * 68 * 1 + (68 + 1)
-    dex   	    ;Decrement low index
+    dex            ;Decrement low index
     bne @delay_x   ;Loop back until done
-    dey     	  ;Decrease by one
+    dey            ;Decrease by one
     bne @delay_y   ;Loop until done
+
 ; load, 4 + 2 + 4 + 2 + 4, 16
     pla
     tax
