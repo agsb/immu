@@ -169,10 +169,7 @@ VIA_IER        =  VIA+14   ; The interrupt enable register is at $810E.
 ;---------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
-;   Name         ACIA_INIT
-;   Desc         Configures base setup
-;                   19200,N,8,1
-;   Destroys     Nothing
+;   acia_init, configures 19200,N,8,1
 ;-------------------------------------------------------------------------------
 acia_init:
     pha			; Push A to stack
@@ -187,46 +184,46 @@ acia_init:
     rts
 
 ;-------------------------------------------------------------------------------
-;   Name:         ACIA_ECHO
-;   Desc:         Sends data to serial port
-;   Destroys:     A
-;   Note:         TODO - Add fix for 65C51 transmit bug
-;                   It was recommended to use ~521 microseconds
-;                   (or a little more) delay.
+;   acia_push, transmit a byte thru 6551
 ;-------------------------------------------------------------------------------
 
 acia_push:
+    pha
+    lda #$10 		
+; wait while full
 @loop:
-    lda ACIA_STAT     ; Wait for TDRE bit = 1
-    and #$10        ; 16, %00010000
+    bit ACIA_STAT     	
     beq @loop
-    pla             ; Pull A from stack
-    ; send
-    sta ACIA_TX     ; Send A
-    ; delay
+; transmit
+    pla             	; Pull A from stack
+    sta ACIA_TX     	; Send A
+    ; delay about 521 us (why)
     jsr delay_6551
     rts
 
 ;-------------------------------------------------------------------------------
-;   Name:         ACIA_READ
-;   Desc:         Reads data from serial port and return in A
-;   Destroys:     A
-;   Note:         Probably not compatible with EhBASIC because it is
-;                 blocking
+;   acia_pull, receive a byte thru 6551
 ;-------------------------------------------------------------------------------
 acia_pull:
+    lda #$08
+; wait while empty
 @loop:
-    lda ACIA_STAT             ; Check to see if the buffer is full
-    and #$08
+    bit ACIA_STAT	
     beq @loop
-    ; receive
+; receive
     lda ACIA_RX
     rts
 
-;
-; Delay at least about 0.524 ms
+;-------------------------------------------------------------------------------
+; Delay at least about 0.521 ms
 ; zzzz must recalcule this 
-;
+;	call, 6
+;	save, 13
+;	sets, 4
+;       loop, (2 + 3 + 2 + 3) * 68 * 1 + (68 + 1)
+;	load, 16
+;	return, 6
+;-------------------------------------------------------------------------------
 delay_6551:
 ;  call, 6
 ; save, 3 + 2 + 3 + 2 + 3, 13 cyc

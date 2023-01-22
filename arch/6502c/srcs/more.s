@@ -4,7 +4,113 @@
 ;==============================================================================   
 ; some code to study
 ;------------------------------------------------------------------------------
+
+
+http://forum.6502.org/viewtopic.php?f=9&t=7024
+
+;------------------------------------------------------------------------------
+: /MOD          ( n1 n2 -- rem quot )   \       SF39-40  F83  ANS
+   >R  S>D  R> M/MOD    ;
+
+: U/MOD         ( u1 u2 -- rem quot )   \ My own.  Faster than /MOD if you don't
+   0  SWAP  UM/MOD      ;               \ need to deal with negative numbers.
+
+: /             ( n1 n2 -- quot )       \       SF32  F83  ANS
+   /MOD  NIP            ;
+
+: U/            ( u1 u2 -- quot )       \ My own.  Faster than / if you don't
+   U/MOD NIP            ;               \ need to deal with negative numbers.
+
+: MOD           ( n1 n2 -- rem )        \       SF39-40  F83  ANS
+   /MOD  DROP           ;
+
+: UMOD          ( u1 u2 -- rem )        \ My own.  Faster than MOD if you don't
+   U/MOD DROP           ;               \ need to deal with negative numbers.
+
+;------------------------------------------------------------------------------
+
+: UD/MOD        ( d n -- rem dquot )    \ Used in #                       FNM287
+   >R  0  R@       \ ^ input_lo_cell  input_hi_cell  0  n  \ Put base on R stack
+   UM/MOD          \ ( ud base -- rem quot )  ^ in_lo_cell  rem  quot
+   R>  SWAP  >R    \ ^ in_lo_cell  rem  base           \ Put 1st quot on R stack
+   UM/MOD          \ ( ud base -- rem quot )
+   R>           ;  \ ^ rem quot2 quot1
+
+;------------------------------------------------------------------------------
+
+: HOLD          ( ASCII -- )            \               SF151-156  FIG  ANS_CORE
+   HLD  DECR
+   HLD  @  C!                   ;
+
+: >DIGIT                ( n -- ASCII_char ) ( b -- ASCII_char ) \ used in #
+   DUP 9 >              \ Greater than 9?
+   IF 7 + THEN          \ If so, add 7;  then
+   30 +         ;       \ add 30.
+
+
+: #             ( d1 -- d2 )            \               SF152-154  FIG  ANS_CORE
+   BASE @  UD/MOD
+   ROT >DIGIT HOLD              ;
+
+: ##  #  #      ( d1 -- d2 )    ;       \ No header. Used internally to save mem
+
+: #>            ( d -- addr len )       \               SF151-156  FIG  ANS_CORE
+   2DROP
+   PAD 1- HLD @ -               ;
+
+: SIGN          ( n -- )                \               SF154-155  FIG  ANS_CORE
+   0<           IF
+   ASCII - HOLD ELSE
+   DROP         THEN            ;
+
+: #S            ( d1 -- d0 )            \             SF151-154,  FIG,  ANS_CORE
+   BEGIN   # 2DUP D0=   UNTIL   ;
+
+: D.R           ( d width -- )          \               SF157,  FIG,  ANS_DOUBLE
+   >R DUP >R DABS <# #S R> SIGN #>
+   R> OVER - SPACES TYPE        ;
+
+: D.            ( d -- )                \                 SF150,155,  ANS_DOUBLE
+   0  D.R  SPACE                ;
+
+: .             ( n -- )                \            SF20,21,26,  FIG,  ANS_CORE
+   S>D  D.                      ;
+
+: ?             ( addr -- )             \                              ANS_TOOLS
+   @ .                          ;
+
+: U.            ( u -- )                \                       SF147,  ANS_CORE
+   0  D.                        ;
+
+: U.R           ( u width -- )          \                   SF148,  ANS_CORE_EXT
+   0  SWAP  D.R                 ;
+
+: .R            ( n width -- )          \         SF123,131,  FIG,  ANS_CORE_EXT
+   >R  S>D  R>  D.R             ;
+
+;------------------------------------------------------------------------------
 ;
+http://forum.6502.org/viewtopic.php?f=9&t=6945&start=15
+IamRob 	
+Post subject: Re: Why is PAD 68 bytes above the DP?
+PostPosted: Tue Jan 11, 2022 3:32 am 
+Offline
+
+Joined: Sun Apr 26, 2020 3:08 am
+Posts: 320 	
+I wrote a better description for WORD for FigForth. Instead of it clearing 34 spaces after HERE every time, it just stores one space after the enclosing the word and copying it to HERE, whether it be a definition word or a number
+
+Change from this:
+Code:
+* : WORD ( delimiterchar -- ) BLK @ IF BLK @ BLOCK ELSE TIB @ THEN IN @ +
+SWAP ENCLOSE HERE CLIT [ 22 C, ] BLANKS IN +! OVER - >R R HERE C! + HERE 1+ R> CMOVE ;
+to this:
+Code:
+: stream ( -- adr ) blk @ ?dup if block else tib @ then in @ + ;
+: word stream swap enclose >R R > if R> ddrop ddrop 0 here ! else R in +! bl R> HERE + 1+ c! over - HERE C! + HERE count cmove then ;
+This one also does some error checking if no word or number is copied to HERE but stores a zero instead. INTERPRET could then read the zero at HERE to see if there is a valid word or number at HERE and exit cleanly if not.
+
+
 ;---------------------------------------------------------------------
 ; zzzz not finished
 ;
