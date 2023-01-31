@@ -172,6 +172,55 @@ setirq:
     lda a_save
     rti
 
+
+;------------------------------------------------------------------------------
+;
+; http://forum.6502.org/viewtopic.php?f=4&t=7466
+;
+; floobydust;  Post subject: Re: Don't write to ROM 
+; Unread postPosted: Sun Jan 22, 2023 11:31 am
+;
+; Byte write code for EEPROM.
+; Note: AT28BV256 requires an unlock sequence for all write operations.
+;  This is different from earlier Atmel EEPROMs (i.e., AT28C256). The
+;  sequence must be sent first to unlock the device, then data can be
+;  sent for programming. Note that byte writes can be 1 to 64 bytes.
+;  The EEPROM is defined in constants for the Offset of the EEPROM in
+;  the hardware memory map.
+;
+BYTE_WRS        SEI                     ;Disable interrupts
+;
+                LDA     #$AA            ;Get code $AA
+                STA     EEPROM+$5555    ;Send to EEPROM
+                LDA     #$55            ;Get code $55
+                STA     EEPROM+$2AAA    ;Send to EEPROM
+                LDA     #$A0            ;Get code $A0
+                STA     EEPROM+$5555    ;Send to EEPROM
+;
+                LDA     (SRCL)          ;Get source byte
+                STA     (TGTL)          ;Write to target byte
+                LDA     (TGTL)          ;Read target byte (EEPROM)
+                AND     #%01000000      ;Mask off bit 6 - toggle bit
+BYTE_WLP        STA     TEMP3           ;Store in Temp location
+                LDA     (TGTL)          ;Read target byte again (EEPROM)
+                AND     #%01000000      ;Mask off bit 6 - toggle bit
+                CMP     TEMP3           ;Compare to last read (toggles if write mode)
+                BNE     BYTE_WLP        ;Branch back if not done
+                CLI                     ;Re-enable interrupts
+BYTE_WRE        RTS                     ;Return to caller
+;
+;------------------------------------------------------------------------------
+;
+; tipical loop for 6522
+;
+L1   <fetch the value to be written and put it in the X register>
+    LDA #$02    ; THE MASK
+L2    
+    BIT IFR     ;POLLING THE INTERRUPT FLAG REGISTER
+    BEQ L2
+    STX PORT    ;WRITE TO THE I/O REGISTER
+    JMP L1
+
 ;------------------------------------------------------------------------------
 ;   check address lines a14 to a0
 ;   http://6502.org/source/general/address_test.html
