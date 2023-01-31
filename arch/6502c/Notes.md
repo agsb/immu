@@ -1,6 +1,15 @@
 # Notes for 6502 IMMU
 
-## 10-12/10/2023
+## 30/01/2023
+
+- visiting 6502.org for Forth implementations and hardware tips. 
+    a lot of excellence work place.
+- going to get chips to make a easy board 6502+SRAM+ROM+6551+6522
+    all uptodate devices using ATmegas, for SPI, I2C, A/D, etc
+- planning merge of compound words (twigs) from f2u atmega, by using same
+    basics stuff
+
+## 10-12/01/2023
 
  - using cc65 as assembler and linker, learning sintax and caveats
  - start to separate bios.s and immu.s, assigns and macros still in immu.s
