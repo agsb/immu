@@ -207,6 +207,7 @@ makelabel "is_", label
 .endif 
 ;   6502 cpu is byte unit .align 1, $00  
 makelabel "", label
+
 .endmacro
 
 ;=====================================================================

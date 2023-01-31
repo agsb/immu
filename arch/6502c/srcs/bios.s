@@ -131,36 +131,63 @@ _init:
 ;       ZZZZ [03-00]    ports in chip
 ;
 ; must adjust the address
-; from http://wilsonminesco.com/6502primer/PgmWrite.html
+;
+;---------------------------------------------------------------------
+;
+;   $8000, reserved
+;
+;---------------------------------------------------------------------
+;   $8010, system CIA, select (R0 R1)
+;
+CIA       =  $8010    ; The base address of the 6551 ACIA.
+CIA_DATA  =  CIA+0   ; Its data I/O register
+CIA_RX    =  CIA+0   ; Its data I/O register
+CIA_TX    =  CIA+0   ; Its data I/O register
+CIA_STAT  =  CIA+1   ; Its  status  register
+CIA_COMM  =  CIA+2   ; Its command  register
+CIA_CTRL  =  CIA+3   ; Its control  register
 
 ;---------------------------------------------------------------------
-;   $800X ~ $80FX, 16 ACIAs
+;   $8020, system VIA,  select (R0 R1 R3 R4)
 ;
-CIA       =  $8000    ; The base address of the 6551 ACIA.
-CIAZ	  =  $80F0    ; last
-CIA_DATA  =  CIA+0   ; Its data I/O register is at $8000.
-CIA_RX    =  CIA+0   ; Its data I/O register is at $8000.
-CIA_TX    =  CIA+0   ; Its data I/O register is at $8000.
-CIA_STAT  =  CIA+1   ; Its  status  register is at $8001.
-CIA_COMM  =  CIA+2   ; Its command  register is at $8002. 
-CIA_CTRL  =  CIA+3   ; Its control  register is at $8003.
+VIA0        =  $8020    ; The base address of the 6522 VIA.
+VIA0_PB         =  VIA0+0    ; Its port B address
+VIA0_PA         =  VIA0+1    ; Its port A address
+VIA0_DDRB       =  VIA0+2    ; Its data-direction register for port B
+VIA0_DDRA       =  VIA0+3    ; Its data-direction register for port A
+VIA0_T1CL       =  VIA0+4    ; Its timer-1 counter's low  byte
+VIA0_T1CH       =  VIA0+5    ; Its timer-1 counter's high byte
+VIA0_T1LL       =  VIA0+6    ; Its timer-1 latcher's low  byte
+VIA0_T1LH       =  VIA0+7    ; Its timer-1 latcher's high byte
+VIA0_T2CL       =  VIA0+8    ; Its timer-2 counter's low  byte
+VIA0_T2CH       =  VIA0+9    ; Its timer-2 counter's high byte
+VIA0_SR         =  VIA0+10   ; The shift register
+VIA0_ACR        =  VIA0+11   ; The auxiliary  control register
+VIA0_PCR        =  VIA0+12   ; The peripheral control register
+VIA0_IFR        =  VIA0+13   ; The interrupt  flag  register
+VIA0_IER        =  VIA0+14   ; The interrupt enable register
+VIA0_PAH        =  VIA0+15   ; Its port A address no handshake
 
 ;---------------------------------------------------------------------
-;   $810X ~ $8FFX, 240 VIAs
+;   $8030, user VIA,  select (R0 R1 R3 R4)
 ;
-VIA        =  $8100    ; The base address of the 6522 VIA.
-VIAZ	   =  $8FF0    ; last
-VIA_PB         =  VIA      ; Its port B is at that address.
-VIA_PA         =  VIA+1    ; Its port A is at address $A001.
-VIA_DDRB       =  VIA+2    ; Its data-direction register for port B is at $8102.
-VIA_DDRA       =  VIA+3    ; Its data-direction register for port A is at $8103.
-VIA_T2CL       =  VIA+8    ; Its timer-2 counter's low  byte is at $8108.
-VIA_T2CH       =  VIA+9    ; Its timer-2 counter's high byte is at $8109.
-VIA_SR         =  VIA+10   ; The shift register is at $810A.
-VIA_ACR        =  VIA+11   ; The auxiliary  control register is at $810B.
-VIA_PCR        =  VIA+12   ; The peripheral control register is at $810C.
-VIA_IFR        =  VIA+13   ; The interrupt  flag  register is at $810D.
-VIA_IER        =  VIA+14   ; The interrupt enable register is at $810E.
+VIA1        =  $8030    ; The base address of the 6522 VIA.
+VIA1_PB         =  VIA1+0    ; Its port B address
+VIA1_PA         =  VIA1+1    ; Its port A address
+VIA1_DDRB       =  VIA1+2    ; Its data-direction register for port B
+VIA1_DDRA       =  VIA1+3    ; Its data-direction register for port A
+VIA1_T1CL       =  VIA1+4    ; Its timer-1 counter's low  byte
+VIA1_T1CH       =  VIA1+5    ; Its timer-1 counter's high byte
+VIA1_T1LL       =  VIA1+6    ; Its timer-1 latcher's low  byte
+VIA1_T1LH       =  VIA1+7    ; Its timer-1 latcher's high byte
+VIA1_T2CL       =  VIA1+8    ; Its timer-2 counter's low  byte
+VIA1_T2CH       =  VIA1+9    ; Its timer-2 counter's high byte
+VIA1_SR         =  VIA1+10   ; The shift register
+VIA1_ACR        =  VIA1+11   ; The auxiliary  control register
+VIA1_PCR        =  VIA1+12   ; The peripheral control register
+VIA1_IFR        =  VIA1+13   ; The interrupt  flag  register
+VIA1_IER        =  VIA1+14   ; The interrupt enable register
+VIA1_PAH        =  VIA1+15   ; Its port A address no handshake
 
 ;---------------------------------------------------------------------
 ;
@@ -192,11 +219,11 @@ acia_push:
     lda #$10 		
 ; wait while full
 @loop:
-    bit ACIA_STAT     	
+    bit CIA_STAT     	
     beq @loop
 ; transmit
     pla             	; Pull A from stack
-    sta ACIA_TX     	; Send A
+    sta CIA_TX     	; Send A
     ; delay about 521 us (why)
     jsr delay_6551
     rts
@@ -208,10 +235,10 @@ acia_pull:
     lda #$08
 ; wait while empty
 @loop:
-    bit ACIA_STAT	
+    bit CIA_STAT	
     beq @loop
 ; receive
-    lda ACIA_RX
+    lda CIA_RX
     rts
 
 ;-------------------------------------------------------------------------------
