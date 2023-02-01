@@ -44,4 +44,7 @@ messages:
 
     .asciiz "Git commit; Git push; And get out!", "\n"
 
+    .asciiz "Don’t comment bad code, just rewrite it.", "\n" 
+
+
 
