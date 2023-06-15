@@ -15,8 +15,10 @@ Code example using AVR code of IMMU,
 
     0x0 CONSTANT NULL
     
+    // BEGIN ... AGAIN compiles a backward branch
     : BEGIN HERE ;
     
+    // IF ... THEN compiles a forward branch
     : IF ' ZBRANCH , HERE NULL , ; // place the reference for ZBRANCH and NULL at dictionary and leave HERE at stack
 
 ### When using absolute address:
@@ -46,7 +48,7 @@ Code example using AVR code of IMMU,
         rspush nos_low, nos_high  // put absolute address into return stack
         jump _link                // continue 
 
-     : AGAIN ' BRANCH , HERE OVER - , ;  
+     : AGAIN ' BRANCH , HERE SWAP - , ;  
      
      : THEN HERE OVER - ! ; // place the offset at ZBRANCH parameter
 
