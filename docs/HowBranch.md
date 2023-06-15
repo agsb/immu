@@ -1,9 +1,9 @@
 
 (in progress)
 
-# Branch
+# Branchs
 
-In Forth, all custon controls uses BRANCH and ?BRANCH for change the sequential execution, but the offset is absolute or relative ?
+In Forth, all custon controls uses BRANCH and ZBRANCH for change the sequential execution, but the offset is absolute or relative ?
 
 __the FIG-FORTH PDP-11, 1980, uses relative branching " ADD (IP), IP "__
 
@@ -14,6 +14,8 @@ __How do "ADD (IP), IP" when there is no IP ?__ // there is no spoon
 Code example using AVR code of IMMU,
 
     0x0 CONSTANT NULL
+    
+    : BEGIN HERE ;
     
     : IF ' ZBRANCH , HERE NULL , ; // place the reference for ZBRANCH and NULL at dictionary and leave HERE at stack
 
@@ -27,6 +29,8 @@ Code example using AVR code of IMMU,
         rspush nos_low, nos_high  // put absolute address from zpm into return stack 
         jump _link                // continue 
 
+    : AGAIN ' BRANCH , , ; // place a backward branch
+    
     : THEN HERE SWAP ! ; // place the absolute address at ZBRANCH parameter
     
 ### When use relative address:
@@ -42,6 +46,8 @@ Code example using AVR code of IMMU,
         rspush nos_low, nos_high  // put absolute address into return stack
         jump _link                // continue 
 
+     : AGAIN ' BRANCH , HERE OVER - , ;  
+     
      : THEN HERE OVER - ! ; // place the offset at ZBRANCH parameter
 
 But there is a "catch 22". 
