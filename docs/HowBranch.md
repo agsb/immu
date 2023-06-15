@@ -66,4 +66,6 @@ Some MCUs, have Harvard model, with Flash and SRAM memories in diferent spaces.
 
 ### Note 
  
-All RISC_V ISA uses only relative address offsets for jumps.
+All RISC_V ISA only uses relative address offsets for jumps but using jal (jump and link) could go to a absolute address.
+
+
