@@ -28,7 +28,8 @@ For now, immu just does the MITC and primitives:
 Some minimal BIOS support for ( in schedule )
       
         KEY?, KEY, EMIT, 
-        IO!, IO@, IRQ? ( for read/write devices and interrupts )  
+        IO!, IO@, IRQ? ( for read/write devices and interrupts )
+        clock, tick ( for timers )
         flash flush ( for read/write flash memory )
 
 For mixed code, not really a good practice ( in schedule ) 
