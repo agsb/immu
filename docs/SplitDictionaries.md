@@ -4,7 +4,7 @@ __" PROGRAMMING A PROBLEM-ORIENTED LANGUAGE", Charles H. Moore, june, 1970__
 
 # Why split the dictionaries ?
 
-Essentially the Forth dictionary is a sequence of references, at fixed address, for code that is executed by the inner interpreter. After the compilation, the headers are only usefull for human understandings using SEE and SHOW.
+Essentially the Forth dictionary is a sequence of references at fixed address, for code that is executed by the inner interpreter. After the compilation, the headers are only usefull for human understandings using SEE and SHOW.
 
 When no interaction and no compilation is done, there is no need of headers. 
 
