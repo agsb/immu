@@ -5,7 +5,9 @@
 Essentially the Forth dictionary is a sequence of references, at fixed address, for code that is executed by the inner interpreter. After the compilation, the headers are only usefull for human understandings using SEE and SHOW.
 If there is no interaction and no compilation, no need of headers. 
 
-Why ? For save memory space. Eg. "A Seeed Studio GD32VF103 device is a 32-bit general-purpose microcontroller based on the RISC-V core, it provides 128 KB on-chip Flash memory and 32 KB SRAM memory", as the Forth cell is the native 32-bit double word, then it is really a "32k double word flash and 8k double word sram" memory system. 
+Why ? For save memory space. Eg. "A Seeed Studio GD32VF103 device is a 32-bit general-purpose microcontroller based on the RISC-V core, it provides 128 KB on-chip Flash memory and 32 KB SRAM memory". 
+
+The Forth cell is the native 32-bit double word, then it is really a "32k double word flash and 8k double word sram" memory system. 
 
 From Forth point of view, a waste of resources. The flash memory can not (must not) be used for buffers, values and variables. 
 
