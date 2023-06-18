@@ -17,6 +17,7 @@ Since the Forth cells use the native size of the processor registers, which on a
 But for for a bare metal system in the real problem-oriented-world, is a determinant factor and double words is a waste of resources. 
 
 The flash memory can not (must not) be used for stacks, buffers, values and variables, those must be keeped at sram.
+
 PS. for sake, a byte is 8-bit, a word is 16-bit, a double word is 32-bit, a long word is 64-bit.
 
 ### Memory Models
