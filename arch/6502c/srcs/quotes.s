@@ -28,23 +28,25 @@ messages:
 ;---------------------------------------------------------------------
 ;
 ;
-    .asciiz "Greetings professor Falken.", "\n", "Shall we play a game ?", "\n"
+    .asciiz "Greetings professor Falken.", "\n", "Shall we play a game ?"
 
-    .asciiz "Embrace the entire problem, Keep it simple, Do not speculate !", "\n"
+    .asciiz "Embrace the entire problem, Keep it simple, Do not speculate !"
 
-    .asciiz "No keyboard found. Press any key to continue.", "\n"
+    .asciiz "No keyboard found. Press any key to continue."
 
-    .asciiz "Error 404. Page not found. Release.", "\n"
+    .asciiz "Error 404. Page not found. Release."
 
-    .asciiz "It’s not a bug; it’s an undocumented feature.", "\n"
+    .asciiz "It’s not a bug; it’s an undocumented feature."
 
-    .asciiz "Programming is learned by writing programs.", "\n"
+    .asciiz "Programming is learned by writing programs."
 
-    .asciiz "1N73LL163NC3 15 7H3 4B1L17Y 70 4D4P7 70 CH4NG35.", "\n"
+    .asciiz "1N73LL163NC3 15 7H3 4B1L17Y 70 4D4P7 70 CH4NG35."
 
-    .asciiz "Git commit; Git push; And get out!", "\n"
+    .asciiz "Git commit; Git push; And get out!"
 
-    .asciiz "Don’t comment bad code, just rewrite it.", "\n" 
+    .asciiz "Don’t comment bad code, just rewrite it."
+
+    .asciiz "Crash often, crash early!"
 
 
 
