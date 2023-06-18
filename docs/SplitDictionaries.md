@@ -4,7 +4,7 @@ __" PROGRAMMING A PROBLEM-ORIENTED LANGUAGE", Charles H. Moore, june, 1970__
 
 # Why split the dictionaries ?
 
-Essentially the Forth dictionary is a sequence of references at fixed address, for code that is executed by the inner interpreter. After the compilation, the headers are only usefull for human understandings using SEE and SHOW.
+Essentially the Forth dictionary is a sequence of references to fixed address for code that is executed by the inner interpreter. After the compilation, the headers are only usefull for human understandings using SEE and SHOW.
 
 When no interaction and no compilation is done, there is no need of headers. 
 
@@ -12,12 +12,11 @@ When no interaction and no compilation is done, there is no need of headers.
 
 "A Seeed Studio GD32VF103 device is a 32-bit general-purpose microcontroller based on the RISC-V core, it provides 128 KB on-chip Flash memory and 32 KB SRAM memory", KB is kilobytes. 
 
-The Forth cell uses the native size of processor registers, in a 32-bit CPU it is a double word, then it is really a "32 k double-word flash and 8 k double-word sram" memory system, for a bare-metal system. 
+Since the Forth cells use the native size of the processor registers, which on a 32-bit CPU is a double word, it's really a "32k double-word flash and 8k double-word sram" memory system. Almost nothing in a world of gigabytes of sram at cellphones in hands, where Forth is just a application.
 
-Almost nothing in a world of Gigabytes of sram at cellphones in hands. For this world, of desktops, notebooks, tablets and cellphones, Forth is just a application in a vast system memory, but for the problem-oriented-world, only 32k dw and 8 k dw, is a Forth determinant factor.
+But for for a bare metal system in the real problem-oriented-world, is a determinant factor and double words is a waste of resources. 
 
-From the problem-oriented-world point of view, double word is a waste of resources. The flash memory can not (must not) be used for stacks, buffers, values and variables, those must be keeped at sram.
-
+The flash memory can not (must not) be used for stacks, buffers, values and variables, those must be keeped at sram.
 PS. for sake, a byte is 8-bit, a word is 16-bit, a double word is 32-bit, a long word is 64-bit.
 
 ### Memory Models
