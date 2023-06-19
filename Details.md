@@ -80,7 +80,7 @@ All primitive words does three jumps.
 
 Also in optimized codes, NEXT is executed two times, and is placed between UNNEST and NEST.
 
-Both IP and WR do not need be preserved, all references are keeped into return stack only.
+the IP register must be preserved between calls.
 
 ## A proposal for **minimal indirect thread code**   
 
@@ -136,6 +136,8 @@ All composite word references are directly, placed and removed, onto the return 
 Uses jump and link, as call model, as modern RISC-V processors does.
 
 Does just a compare per Forth word, to decide if executes a NEST or a JUMP.
+
+Both IP and WR do not need be preserved, all references are keeped into return stack only.
 
 ## More with less 
 
