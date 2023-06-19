@@ -80,6 +80,7 @@ All primitive words does three jumps.
 
 Also in optimized codes, NEXT is executed two times, and is placed between UNNEST and NEST.
 
+Both IP and WR do not need be preserved, all references are keeped into return stack only.
 
 ## A proposal for **minimal indirect thread code**   
 
