@@ -28,25 +28,35 @@ messages:
 ;---------------------------------------------------------------------
 ;
 ;
-    .asciiz "Greetings professor Falken.", "\n", "Shall we play a game ?"
+    .asciiz "Greetings professor Falken.", "\n", "Shall we play a game ?", "\n"
 
-    .asciiz "Embrace the entire problem, Keep it simple, Do not speculate !"
+    .asciiz "Embrace the entire problem, Keep it simple, Do not speculate !", "\n"
 
-    .asciiz "No keyboard found. Press any key to continue."
+    .asciiz "No keyboard found. Press any key to continue.", "\n"
 
-    .asciiz "Error 404. Page not found. Release."
+    .asciiz "Error 404. Page not found. Release.", "\n"
 
-    .asciiz "It’s not a bug; it’s an undocumented feature."
+    .asciiz "It’s not a bug; it’s an undocumented feature.", "\n"
 
-    .asciiz "Programming is learned by writing programs."
+    .asciiz "Programming is learned by writing programs.", "\n"
 
-    .asciiz "1N73LL163NC3 15 7H3 4B1L17Y 70 4D4P7 70 CH4NG35."
+    .asciiz "1N73LL163NC3 15 7H3 4B1L17Y 70 4D4P7 70 CH4NG35.", "\n"
 
-    .asciiz "Git commit; Git push; And get out!"
+    .asciiz "Git commit; Git push; And get out!", "\n"
 
-    .asciiz "Don’t comment bad code, just rewrite it."
+    .asciiz "Don’t comment bad code, just rewrite it.", "\n" 
 
-    .asciiz "Crash often, crash early!"
+    .asciiz "Crash often, (but) crash early!"
+
+    .asciiz "If you want to go somewhere, a goto is the best way to get there.", "\n"
+
+    .asciiz "Intelligence is the ability to avoid doing work, yet getting the work done.", "\n"
+
+    .asciiz "Talk is cheap. Show me the code.", "\n"
+
+    .asciiz "I really worry about everything going to the cloud.", "\n"
+
+    .asciiz "labels, gotos, ifs, and, not", "\n"
 
 
 
