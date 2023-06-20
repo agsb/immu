@@ -9,7 +9,7 @@ Immu Forth will be for RiscV processors, that have single fundaments:
   1. All memory in a continuous address;
   2. All memory is accessed in bytes;
   3. Any registers could load from and store into main memory; 
-  4. There is no stack.
+  4. There is no stack register.
     
 Better, there are a group of registers that must be saved before used, "callee" as in ISA specifications, https://github.com/riscv/riscv-isa-manual/releases/download/Ratified-IMAFDQC/riscv-spec-20191213.pdf> by RTFM.
 
