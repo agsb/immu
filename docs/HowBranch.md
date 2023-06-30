@@ -19,8 +19,9 @@ Code example using AVR code of IMMU,
     : BEGIN HERE ;
     
     // IF ... THEN compiles a forward branch
-    : IF ' ZBRANCH , HERE NULL , ; // place the reference for ZBRANCH and NULL at dictionary and leave HERE at stack
-
+    // place the reference for ZBRANCH and NULL at dictionary and leave HERE at stack
+    : IF ' ZBRANCH , HERE NULL , ; 
+    
 ### When using absolute address:
 
     //  branch for absolute address.
