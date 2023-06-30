@@ -6,7 +6,7 @@ The S and R are sequential access indexes for cells and their values are limited
       
 The I and D are random access indexes for the array of cells, usually I points to a any cell to be interpreted and the D always points to the next free cell at the set.
 
-Also is used a cursor T, for a terminal input buffer whith only two operations: reset T (I) -> T, load value (T) -> (S).
+Also is used a cursor T, for a terminal input buffer with only two operations: reset T (I) -> T, load value (T) -> (S).
 
 ## Combinations
      
@@ -25,23 +25,23 @@ To describe and evaluate how this works, we need to investigate the possible com
 
 Some of these operations are well know, examples are:
 
-    reset s (I) -> S, reset r (I) -> R, reset d (I) -> D  // reset pointers
+    reset s (I) -> S, reset r (I) -> R, reset d (I) -> D,  // reset pointers
    
-    safe s S -> (I), safe r R -> (I), safe d D -> (I)     // safe state 
+    safe s S -> (I), safe r R -> (I), safe d D -> (I),     // safe state 
     
     next (I) -> I,  nest I -> (R), unnest (R) -> I,       // the inner interpreter of Forth
 
-    s@ S -> (S), r@ R -> (S), s! (S) -> S, r! (S) -> R, // load and save stacks
+    s@ S -> (S), r@ R -> (S), s! (S) -> S, r! (S) -> R,   // load and save stacks
     
-    >r (S) -> (R), r> (R) -> (S)                            
+    >r (S) -> (R), r> (R) -> (S),    // exchange values, return stack and parameter stack                          
 
-    dovar I -> (S), dodoes I -> (D), dolit (I) -> (D)
+    dovar I -> (S), dodoes I -> (D), dolit (I) -> (D), 
 
-    store ! (S) -> (I), fetch @ (I) -> (S)
+    store ! (S) -> (I), fetch @ (I) -> (S),
 
-    here D -> (S), allot (S) -> D, comma (S) -> (D)
+    here D -> (S), allot (S) -> D, comma (S) -> (D),
 
-    branch (I) -> (R), exec (S) -> I
+    branch (I) -> (R), exec (S) -> I,
     
 
 But some of these operations are non-sense, examples are:
@@ -57,11 +57,9 @@ But some of these operations are non-sense, examples are:
     I -> S, I -> R, I -> D, D -> S, D -> R, D -> I
 
     To copy absolute values to:
-    
     R -> (R), R -> (D), S -> (R), S -> (D), D -> (R), D -> (D)
 
     Not used ???
-    
     (R) -> S, (R) -> R, (R) -> D, (R) -> (D), (R) -> (I), I -> (I)
 
  
