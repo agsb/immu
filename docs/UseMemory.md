@@ -37,7 +37,7 @@ Notes:
 
 ### The dictionary
 
-The dictionary of words is composed by two lists, name and code. At begging of Forth these lists are separate: The name list was a linked list with references to next name and to code of word; The code list is just a sequence of pieces of codes. The name list grows backwards form end of free memoty and the code list grows from begin from free memory.
+The dictionary of words is composed by two lists, name and code. In the beginining of Forth, these lists are separate: The name list was a linked list with references to next name and to code of word; The code list is just a sequence of pieces of codes. The name list grows backwards from end of free memory and the code list grows from begin from free memory. The name list have a format as [REFERENCE TO NEXT WORD, SIZE and FLAGS, NAME OF WORD, REFERENCE TO CODE] and name list 
 
 
 
