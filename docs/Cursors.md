@@ -44,7 +44,7 @@ Some of these operations are well know, examples are:
     branch (I) -> (R), exec (S) -> I
     
 
-Some of these operations are non-sense, examples are:
+But some of these operations are non-sense, examples are:
 
     To move over self: // maybe usefull as no operation :?
     x S -> S, R -> R, I -> I, D -> D, (S) -> (S), (R) -> (R), (I) -> (I), (D) -> (D) 
