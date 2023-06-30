@@ -38,7 +38,7 @@ For mixed code, not really a good practice ( in schedule )
         
 ## Working
 
-I'm requesting for comments about immu, an extended indirect thread code for forth. 
+I'm requesting for comments about immu, an minimal indirect thread code for forth. 
 
 I welcome your patience.
 
