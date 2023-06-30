@@ -22,13 +22,14 @@ __must find better names__
 | flash | copy a page from Flash memory to SRAM| page size vary uC |
 | | | |
 
-More functions
+More device functions
 
 - getUSB (device),
 - putUSB (byte, device),
+- getSPI (device),
+- putSPI (byte, device),
 - getI2C (device),
 - putI2C (byte, device),
-
 - getline()
 - putline()
 
