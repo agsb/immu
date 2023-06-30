@@ -50,6 +50,6 @@ As showed, SWIP as atomic is a good choice for design of a primitive words.
 
 # About OVER
 
-OVER is used often to copy arguments. It must be implemented in assembler and deserves to be atomic.
+OVER is used often to copy arguments. Chales Moore prefer it over SWAP, and must be implemented in assembler and deserves to be atomic.
 
 
