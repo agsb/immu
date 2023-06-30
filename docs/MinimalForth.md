@@ -95,10 +95,11 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 
 | constants | used for | reference |
 | -- | -- | -- |
-| SP0 | real cpu stack start | reserved for external routines |
+| SP0 | system stack start | reserved non forth routines |
 | RS0 | forth return stack start | internal forth stack |
 | PS0 | forth parameter stack start | internal forth stack |
 | TIB0 | forth terminal input buffer start | internal forth buffer |
+| #SP | size of system stack in cells | |
 | #RS | size of return stack in cells | |
 | #PS | size of paremeter stack in cells | |
 | #TIB | size of forth terminal input buffer in cells | |
@@ -107,7 +108,7 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 
 | variables | used for | reference |
 | -- | -- | -- |
-| >TIB | cursor at TIB | next char in TIB |
+| TOIN | cursor at TIB | next char in TIB |
 | STATE | state of forth word interpreter | interpret, compiling, executing |
 | BASE | radix for number conversion | reference for number digits |
 | DP | dictionary pointer | next cell for dictionary entry |
@@ -119,8 +120,6 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 | CSP | keep sp | transacional |
 | HND | handler | catch and throw | 
 | HLD | convert | <# # #> SIGN | 
-
-
 
 ### if CPU have math: 
 
@@ -152,4 +151,6 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 | EE | heap eeprom pointer | next cell for eeprom, forward |
 | HP | heap sram pointer | next cell for sram, forward |
 | UP | last sram pointer | last cell for sram, backward |
+
+
 
