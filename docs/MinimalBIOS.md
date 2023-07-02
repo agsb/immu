@@ -37,7 +37,8 @@ Some POSIX
 
 - create_file(),
 - remove_file(),
-- access_file(), 
+- get_access_file(), 
+- set_access_file(), 
 - open_file(),
 - read_file(),
 - write_file(),
