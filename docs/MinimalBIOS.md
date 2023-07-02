@@ -43,5 +43,7 @@ Some POSIX
 - write_file(),
 - close_file(),
 
-- 
+Same for directories as files. Maybe devices also ?
+
+
 
