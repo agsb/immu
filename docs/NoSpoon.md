@@ -34,8 +34,7 @@ Mohamed "Donn" Gaber, does a riscv simulator in js, https://github.com/donn/Oak.
 
 ## Simplifly
 
-In F83, the Fig-Forth doVAR was replace by doCREATE 
-In F83, it comes with doDOES and doDEFER
+In F83, the Fig-Forth doVAR was replace by doCREATE, it comes with doDOES and doDEFER
 
   - doVAR ( push the address of next cell onto data stack )
   - doCON ( push the content of next cell onto data stack ), aka doLIT 
