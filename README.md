@@ -8,7 +8,7 @@ The minimal indirect thread code [MITC](https://github.com/agsb/f2u/blob/main/sm
 
 More information in [Details](https://github.com/agsb/immu/blob/main/Details.md)
 
-In 2023, the immu Forth was splitted for ISAs: 6502, Atmega328, RiscV
+In 2023, the immu Forth was splitted for ISAs: 6502, Atmega328, and RiscV
 
 ## Go Slow
 
