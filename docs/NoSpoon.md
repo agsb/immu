@@ -34,13 +34,22 @@ Mohamed "Donn" Gaber, does a riscv simulator in js, https://github.com/donn/Oak.
 
 ## Simplifly
 
-doVAR ( push the address of next cell onto data stack )
-doCON ( push the content of next cell onto data stack ) 
-doVAL ( pull the content of next cell from data stack )
+the Fig-Forth doVar was replace by doCREATE in F83
 
+When
+
+  - doVAR ( push the address of next cell onto data stack )
+  - doCON ( push the content of next cell onto data stack ) 
+  - doVAL ( pull the content of next cell from data stack )
+
+then 
+  
+  - doDOES is a doVAR
+
+```
 / to test
 : VARIABLE CREATE DOES> ' doVAR ' 0 ;
 : CONSTANT VARIABLE @ ;
 : VALUE VARIABLE ! ;
-
+```
 
