@@ -8,6 +8,8 @@ _"For a hundred years, Zen was passed from mouth to mouth, and from heart to hea
 
 based in "eForth and Zen" by Dr. C. H. Ting, Ofeete Enterprises, 2013
 
+Code for a CPU 8086 and a old PC-MSDOS system.
+
 ## What I like
 
   - use of interrupt 021H interface of DOS.
@@ -16,7 +18,9 @@ based in "eForth and Zen" by Dr. C. H. Ting, Ofeete Enterprises, 2013
 eliminated from a target system which does not use an interpreter.";
   - use of pointer to basic routines 'QKEY, 'EMIT, 'EXPECT, 'ECHO, 'PROMPT, 'EVAL, 'NUMBER, 'TAP;
   - use a common user area for forth variables and variables that return pointers inside that area;
-  - use of vocabularies with current, context and a list for vocabularies
+  - use of vocabularies with current, context and a list for vocabularies;
+  - use of serial classic interface, Universal Synchronous Asynchronous Receiver Transmitter (USART);
+  - use of FOR NEXT instead of DO LOOP (+LOOP -LOOP ...)
 
 ## What I do not 
 
@@ -29,6 +33,7 @@ eliminated from a target system which does not use an interpreter.";
   - that user area variables are not referenced by offsets;
   - a small, and fixed size, list for vocabularies;
   - only <0 as primitive;
+  - FOR counts to <0;
 
 ## 
 
