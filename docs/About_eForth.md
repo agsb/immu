@@ -1,8 +1,12 @@
 # About eForth
 
-(this fie is a stub)
+(this file is a stub)
+
+_"For a hundred years, Zen was passed from mouth to mouth, and from heart to heart."_
 
 ## Greetings to eForth
+
+based in "eForth and Zen" by Dr. C. H. Ting, Ofeete Enterprises, 2013
 
 ## What I like
 
@@ -25,4 +29,6 @@ eliminated from a target system which does not use an interpreter.";
   - that user area variables are not referenced by offsets;
   - a small, and fixed size, list for vocabularies;
   - only <0 as primitive;
+
+## 
 
