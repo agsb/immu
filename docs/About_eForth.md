@@ -18,22 +18,25 @@ Code for a CPU 8086 and a old PC-MSDOS system.
 eliminated from a target system which does not use an interpreter.";
   - use of pointer to basic routines 'QKEY, 'EMIT, 'EXPECT, 'ECHO, 'PROMPT, 'EVAL, 'NUMBER, 'TAP;
   - use a common user area for forth variables and variables that return pointers inside that area;
+  - that user area variables are referenced by offsets;
   - use of vocabularies with current, context and a list for vocabularies;
   - use of serial classic interface, Universal Synchronous Asynchronous Receiver Transmitter (USART);
   - use of FOR NEXT instead of DO LOOP (+LOOP -LOOP ...)
+  - no multi-task but expect a round-robin linked list at top of user area;
 
 ## What I do not 
 
   - direct thread code;
-  - no multi-task concept;
+  
   - direct address branch, absolute instead of relative;
-  - use o 'call doLST' at begin of "colon words", wich ends in EXIT;
+  - use o 'CALL doLIST' at begin of "colon words" and ends with 'magic' EXIT;
   - share TIB and return stack;
-  - where is the DOS/SO stack;
-  - that user area variables are not referenced by offsets;
+  - where is the DOS/SO stack ? Somewhere inside 0-100H;
+  - 
   - a small, and fixed size, list for vocabularies;
   - only <0 as primitive;
   - FOR counts to <0;
+  - All primitives using data stack must 'POP BX'
 
-## 
+##
 
