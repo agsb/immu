@@ -1,11 +1,10 @@
-# Notes for 6502 IMMU
+# Notes for ATmega328 IMMU
 
 - 08/01/2023
 
     for now, doing 6502 stuff and review of how do MITC and primitives
 
-    reference for BIOS routines at
-    https://github.com/theandrew168/derzforth/blob/main/derzforth.asm
+    see github.com/agsb/f2u
 
  ### the MITC inner interpreter
 

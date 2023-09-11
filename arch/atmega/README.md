@@ -10,6 +10,8 @@ More information in [Details](https://github.com/agsb/immu/blob/main/Details.md)
 
 In 2023, the immu Forth was splitted for ISAs: 6502, Atmega328, RiscV
 
+For Atmega328, still not ported, see https:github.com/agsb/f2u
+
 I'm requesting for comments about immu, an extended indirect thread code for forth. 
 
 I welcome your patience.
