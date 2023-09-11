@@ -1,0 +1,44 @@
+db	"T3XFORTH.BLK", 0
+db	$04, "COLD "	; cold
+db	$03, "BYE  "	; bye
+db	$45, "(LIT)"	; do-literal
+db	$47, "(COLO"	; do-colon
+db	$45, "(VAR)"	; do-variable
+db	$47, "(CONS"	; do-constant
+db	$47, "(DOES"	; do-does
+db	$07, "EXECU"	; execute
+db	$04, "EXIT "	; exit
+db	$48, "(BRAN"    ; branch
+db	$49, "(0BRA"	; question-branch
+db	$44, "(DO) "	; do-do
+db	$47, "(+LOO"	; do-plus-loop
+db	$46, "(LOOP"	; do-loop
+db	$47, "(/LOO"	; do-up-loop
+db	$01, "!    "	; store
+db	$01, "@    "	; fetch
+db	$02, "C!   "	; c-store
+db	$02, "C@   "	; c-fetch
+db	$03, "RP!  "	; r-p-store
+db	$03, "RP@  "	; r-p-fetch
+db	$02, ">R   "	; to-r
+db	$02, "R@   "	; r-fetch
+db	$01, "I    "	; I
+db	$02, "R>   "	; r-from
+db	$03, "SP!  "	; s-p-store
+db	$03, "SP@  "	; s-p-fetch
+db	$04, "DROP "	; drop
+db	$03, "DUP  "	; dupe
+db	$04, "SWAP "	; swap
+db	$04, "OVER "	; over
+db	$02, "0<   "	; zero-less
+db	$03, "AND  "	; and
+db	$02, "OR   "	; or
+db	$03, "XOR  "	; or
+db	$06, "LSHIF"	    ; l-shift
+db	$06, "RSHIF"	    ; r-shift
+db	$03, "UM+  "	; u-m-plus
+db	$05, "?SAME"	; question-same
+db	$03, "TX!  "	; t-x-store
+db	$03, "RX?  "	; r-x-question
+db	$0A, "READ-"
+db	$0B, "WRITE"
