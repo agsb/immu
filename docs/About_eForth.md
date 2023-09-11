@@ -27,16 +27,14 @@ eliminated from a target system which does not use an interpreter.";
 ## What I do not 
 
   - direct thread code;
-  
   - direct address branch, absolute instead of relative;
   - use o 'CALL doLIST' at begin of "colon words" and ends with 'magic' EXIT;
   - share TIB and return stack;
   - where is the DOS/SO stack ? Somewhere inside 0-100H;
-  - 
   - a small, and fixed size, list for vocabularies;
   - only <0 as primitive;
   - FOR counts to <0;
-  - All primitives using data stack must 'POP BX'
-
+  - No TOS, NOS or TOR, primitives using stacks must ever pop ('POP BX')
+  - No CREATE DOES> DEFER IS VALUE TO ASSIGN :NONAME 
 ##
 
