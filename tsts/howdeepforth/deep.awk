@@ -50,7 +50,7 @@ END {
 
     for (key in dict_qtde) {
 
-        print key " (" dict_cnte[key] ") (" dict_qtde[key] ") // "dict_line[key] ;
+        print dict_qtde[key] " " key " " dict_cnte[key] " " dict_qtde[key] "  "dict_line[key] ;
     
         }
 
