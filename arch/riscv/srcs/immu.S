@@ -105,7 +105,8 @@ else many stack operations are need
 #define XOFF_     0x13    //#; ascii DC3 ^S
 
 // #define CAN_      0x18    //#; ascii cancel ^C
-// #define ESC_      0x1B    //#; ascii escape ^[
+
+#define ESC_      0x1B    //#; ascii escape ^[
 
 // #define TL_       0x7E    //#; ascii tilde
 // #define DEL_      0x7F    //#; ascii del
@@ -118,10 +119,12 @@ else many stack operations are need
 
 #define BL_       0x20    //#; ascii space
 
-#define NUL_      0x00    //#; ascii NUL ^@
+#define NL_       0x00    //#; ascii NUL ^@
  
 //---------------------------------------------------------------------
- 
+
+// RISC-V callee saved registers
+
 #define  Psp s4    //#   parameter stack
 #define  Rsp s5    //#   return stack 
 #define  Top s6    //#   hold, the top on parameter stack
@@ -219,11 +222,11 @@ is_\label:
 VOID:
 
 // return stack
-XRSP:
+XRP:
 .fill STACK, CELL, 0x0
 
 //parameter stack
-XPSP:
+XSP:
 .fill STACK, CELL, 0x0
 
 // terminal input buffer
@@ -604,27 +607,27 @@ header "R@", "rat", , F_RESERVED, LEAF
 
 //----------------------------------------------------------------------
 //   ( rs -- )
-header "RS!", "rsto", , F_RESERVED, LEAF
+header "RP!", "rsto", , F_RESERVED, LEAF
     add Rsp, Top, zero 
     jal zero, _drop
     
 //----------------------------------------------------------------------
 //   ( ps -- )
-header "PS!", "psto", , F_RESERVED, LEAF
+header "SP!", "psto", , F_RESERVED, LEAF
     add Psp, Top, zero
     jal zero, _drop
 
 //----------------------------------------------------------------------
 //   ( rs -- )
-header "RS@", "rsat", , F_RESERVED, LEAF
-    	spush Psp, Top
+header "RP@", "rsat", , F_RESERVED, LEAF
+    spush Psp, Top
     add Top, Rsp, zero 
     jal zero, _drop
     
 //----------------------------------------------------------------------
 //   ( ps -- )
-header "PS@", "psat", , F_RESERVED, LEAF
-    	spush Psp, Top
+header "SP@", "psat", , F_RESERVED, LEAF
+    spush Psp, Top
     add Top, Psp, zero
     jal zero, _drop
 
