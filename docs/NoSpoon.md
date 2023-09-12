@@ -31,3 +31,12 @@ Cesar Blum makes a minimal Forth, for x86 using https://github.com/cesarblum/sec
 Andrew Dailey, does it for riscv boards, https://github.com/theandrew168/derzforth
 
 Mohamed "Donn" Gaber, does a riscv simulator in js, https://github.com/donn/Oak.js
+
+## Simplifly
+
+In F83, the Fig-Forth doVAR was replace by doCREATE, it comes with doDOES and doDEFER
+
+  - doVAR ( push the address of next cell onto data stack )
+  - doCON ( push the content of next cell onto data stack ), aka doLIT 
+  - doVAL ( pull the content of next cell from data stack )
+

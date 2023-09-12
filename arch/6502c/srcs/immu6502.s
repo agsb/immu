@@ -672,7 +672,7 @@ HEADER "SP@", "PSAT", F_LEAP + F_CORE, LEAF
 ;
 ;   ok  ( -- wrk )
 ;
-HEADER "RS@", "RSAT", F_LEAP + F_CORE, LEAF
+HEADER "RP@", "RSAT", F_LEAP + F_CORE, LEAF
     tya
     jmp stor
 

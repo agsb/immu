@@ -6,7 +6,7 @@ The S and R are sequential access indexes for cells and their values are limited
       
 The I and D are random access indexes for the array of cells, usually I points to a any cell to be interpreted and the D always points to the next free cell at the set.
 
-Also is used a cursor T, for a terminal input buffer whith only two operations: reset T (I) -> T, load value (T) -> (S).
+Also is used a cursor T, for a terminal input buffer with only two operations: reset T (I) -> T, load value (T) -> (S).
 
 ## Combinations
      
@@ -23,45 +23,51 @@ To describe and evaluate how this works, we need to investigate the possible com
   
 ## Operations
 
-Some of these operations are well know, examples are:
+Some of these operations of transfer are well know, examples are:
 
-    reset s (I) -> S, reset r (I) -> R, reset d (I) -> D  // reset pointers
-   
-    safe s S -> (I), safe r R -> (I), safe d D -> (I)     // safe state 
+    // reset pointers
+    reset s, (I) -> S; reset r, (I) -> R; reset d, (I) -> D;  
+
+    // safe state
+    safe s, S -> (I); safe r, R -> (I); safe d, D -> (I);      
+
+    // the inner ITC interpreter of Forth
+    next, (I) -> I;  nest, I -> (R); unnest, (R) -> I;       
+
+    // save and load stacks
+    s@, S -> (S); r@, R -> (S); s!, (S) -> S; r!, (S) -> R;       
+
+    // exchange values, return stack and parameter stack                          
+    >r, (S) -> (R); r>, (R) -> (S); 
+
+    // core actions
+    dovar, I -> (S); dodoes I -> (D); dolit (I) -> (D); 
+
+    // store or fetch values
+    store !, (S) -> (I); fetch @, (I) -> (S); 
+
+    // use space 
+    here, D -> (S); allot (S) -> D; comma, (S) -> (D);
+
+    // branch or execute
+    branch, (I) -> (R); exec, (S) -> I;
     
-    next (I) -> I,  nest I -> (R), unnest (R) -> I,       // the inner interpreter of Forth
+But some of these operations are non-sense, examples are:
 
-    s@ S -> (S), r@ R -> (S), s! (S) -> S, r! (S) -> R, // load and save stacks
-    
-    >r (S) -> (R), r> (R) -> (S)                            
-
-    dovar I -> (S), dodoes I -> (D), dolit (I) -> (D)
-
-    store ! (S) -> (I), fetch @ (I) -> (S)
-
-    here D -> (S), allot (S) -> D, comma (S) -> (D)
-
-    branch (I) -> (R), exec (S) -> I
-    
-
-Some of these operations are non-sense, examples are:
-
-    To move over self: // maybe usefull as no operation :?
+    // To move over self, maybe usefull as no operation
     x S -> S, R -> R, I -> I, D -> D, (S) -> (S), (R) -> (R), (I) -> (I), (D) -> (D) 
 
-    To move random contents (D) to :
+    // To move random contents (D) to :
     x (D) -> S, (D) -> R, (D) -> I, (D) -> D, (D) -> (S), (D) -> (R), (D) -> (I)
 
-    To move absolute values between :
+    // To move absolute values between :
     S -> R, S -> I, S -> D, R -> S, R -> I, R -> D, 
     I -> S, I -> R, I -> D, D -> S, D -> R, D -> I
 
-    To copy absolute values to:
-    
+    // To copy absolute values to:
     R -> (R), R -> (D), S -> (R), S -> (D), D -> (R), D -> (D)
 
-    Not used ???
-    
+    // Not used ???
     (R) -> S, (R) -> R, (R) -> D, (R) -> (D), (R) -> (I), I -> (I)
 
  

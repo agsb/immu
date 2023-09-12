@@ -14,7 +14,9 @@ Those need be assembled and uses as registers:
       - SP, system return stack reserved
       - ZR, zero hardware register
       
-PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting. 
+PS. 
+      Most ideas from eForth, from Bill Muench and Chen-Hanson Ting. 
+      Assuming a 16-bit big endian processor, (one is 0x0001)
 
 ### primitives
 
@@ -22,23 +24,18 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 | -- | -- | -- |
 | ENDS | address interpreter | next, nest, unnest, jump, link |
 | NOP | no operation | ( -- ) |
-| FALSE | false flag, puts 0x0000 at TOS | ( -- F ) |
-| TRUE | true flag, puts 0xFFFF at TOS  | ( -- T ) |
+| FALSE | false flag, puts flag at TOS | ( -- F ) |
+| TRUE | true flag, puts flag at TOS  | ( -- T ) |
 | 0= | test if w == 0 | ( w -- F or T ) |
 | 0< | test if w < 0 | ( w -- F or T ) |
-| = | test if w1 == w2 | ( w1 w2 -- F or T ) |
-| < | test if w1 < w2 | ( w1 w2 -- F or T ) |
 | AND | logical AND | ( u u -- w ) |
 | OR | logical OR | ( u u -- w ) |
 | XOR | logical XOR | ( u u -- w ) |
 | NAND | logical NOT AND | ( u u -- w ) |
-| NEGATE | arithmetic inverse 0x02 ~ 0xFE | ( u -- v ) |
-| INVERT | logic inverse 0x00 ~ 0xFF | ( u -- v ) |
+| INVERT | one complement 0x00 ~ 0xFF | ( u -- v ) |
+| NEGATE | two complement 0x02 ~ 0xFE | ( u -- v ) |
 | LSHR | logic shift right, zero padded | ( u -- u ) |
 | LSHL | logic shift left, zero padded | ( u -- u ) |
-| ASHR (2/)| math 2's shift right, sign preserved | ( w -- w ) |
-| ASHL (2*)| math 2's shift left, sign preserved | ( w -- w ) |
-| >< | exchanges lsb and msb, 0x0102 ~ 0x0201 | ( uv -- vu )
 | UM+ | unsigned add with carry | ( w1 w2 -- w3 carry ) |
 | UM< | unsigned less than | ( w1 w2 -- flag ) |
 | BRANCH | branches to next absolute reference | ( -- ) |
@@ -53,32 +50,33 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 | SWAP | exchange first and second | ( w1 w2 -- w2 w1 ) |
 | ROT |  cycle order of stack | ( w1 w2 w3 -- w2 w3 w1 ) |
 | >R | place TOS at top of return stack | ( w -- ; -- w ) |
-| R> | place top of return stack at TOS | (  -- w ; w -- ) |
-| R@ | copy top of return stack to TOS | ( w -- ; -- w ) |
-| RS! | place TOS at RS | ( w -- ; -- ) |
-| PS! | place TOS at PS | ( w -- ; -- ) |
-| RS@ | place RS at TOS | ( w -- ; -- ) |
-| PS@ | place PS at TOS | ( w -- ; -- ) |
-| CHAR | size of a char to TOS | (  -- cell ) |
-| CHAR+ | add the size of a char to TOS | (  -- cell ) |
-| CHAR- | add the size of a char to TOS | (  -- cell ) |
+| R> | place top of return stack at TOS | ( -- w ; w -- ) |
+| R@ | copy top of return stack to TOS | ( w -- w ; -- w ) |
+| RP! | place TOS at RP | ( w -- ; -- ) |
+| SP! | place TOS at SP | ( w -- ; -- ) |
+| RP@ | place RP at TOS | ( -- w ; -- ) |
+| SP@ | place SP at TOS | ( -- w ; -- ) |
+| CHAR | size of a char to TOS | (  -- char ) |
+| CHAR+ | add the size of a char to TOS | ( w -- w + char ) |
+| CHAR- | add the size of a char to TOS | ( w -- w - char ) |
 | CELL | size of a cell to TOS | (  -- cell ) |
-| CELL+ | add the size of a cell to TOS | (  -- cell ) |
-| CELL- | add the size of a cell to TOS | (  -- cell ) |
-| ALIGNED | align a address into cell size | ( w -- w+ ) |
-| 0 | place 0x0000 into TOS | ( -- 0 ) |
-| 1 | place 0x0001 into TOS | ( -- 1 ) |
-| 2 | place 0x0002 into TOS | ( -- 2 ) |
-| 4 | place 0x0004 into TOS | ( -- 4 ) |
-| 1+ | add 0x0001 into TOS | ( w -- w+1 ) |
-| 2+ | add 0x0002 into TOS | ( w -- w+2 ) |
-| 4+ | add 0x0004 into TOS | ( w -- w+4 ) |
-| 1- | sub 0x0001 into TOS | ( w -- w-1 ) |
-| 2- | sub 0x0002 into TOS | ( w -- w-2 ) |
-| 4- | sub 0x0004 into TOS | ( w -- w-4 ) |
+| CELL+ | add the size of a cell to TOS | (  w -- w + cell ) |
+| CELL- | add the size of a cell to TOS | (  w -- w - cell ) |
+| ALIGNED | align a address into cell size | ( w -- +w+ ) |
+|  0 | place 0x0000 into TOS | ( -- 0 ) |
 | LIT | places the value of next cell at return stack into TOS, advance next cell |
 | EXE | places the value from TOS into next cell at return stack |
+
+| word | does | obs |
+| -- | -- | -- |
 | JMP | execute a jump (faith) to assembler code at TOS address | ( a -- ) |
+| = | test if w1 == w2 | ( w1 w2 -- F or T ) |
+| < | test if w1 < w2 | ( w1 w2 -- F or T ) |
+| ASHR (2/)| math 2's shift right, sign preserved | ( w -- w ) |
+| ASHL (2*)| math 2's shift left, sign preserved | ( w -- w ) |
+| >< | exchanges lsb and msb, 0x0102 ~ 0x0201 | ( uv -- vu )
+| +1 | place 0x0001 into TOS | ( -- 1 ) |
+| -1 | place 0xFFFF into TOS | ( -- 2 ) |
 
 ### BIOS dependent
 
@@ -88,26 +86,33 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 | KEY? | check if have a char from standart usart | ( -- c ) bios |
 | KEY | get a char from standart usart | ( -- c ) bios |
 | EMIT | put a char into standart usart | ( c -- ) bios |
+
+| word | does | obs |
+| -- | -- | -- |
 | PEEK | get a byte from a I/O port | ( io -- c ) bios |
 | POKE | put a byte into a I/O port | ( c io -- ) bios |
+| _IRQR_ | declare a interrupt routine |
 
 ### Constants
 
 | constants | used for | reference |
 | -- | -- | -- |
-| SP0 | real cpu stack start | reserved for external routines |
-| RS0 | forth return stack start | internal forth stack |
-| PS0 | forth parameter stack start | internal forth stack |
+| FALSE | value for Forth flag FALSE | wide wild walk |
+| TRUE | value for Forth flag TRUE | wide wild walk |
+| SS0 | system stack start | reserved non forth routines |
+| RP0 | forth return stack start | internal forth stack |
+| SP0 | forth parameter stack start | internal forth stack |
 | TIB0 | forth terminal input buffer start | internal forth buffer |
-| #RS | size of return stack in cells | |
-| #PS | size of paremeter stack in cells | |
+| #SS | size of system stack in cells | depends |
+| #RP | size of return stack in cells | depends |
+| #SP | size of parameter stack in cells | depends |
 | #TIB | size of forth terminal input buffer in cells | |
 
 ### Variables
 
 | variables | used for | reference |
 | -- | -- | -- |
-| >TIB | cursor at TIB | next char in TIB |
+| TOIN | cursor at TIB | next char in TIB |
 | STATE | state of forth word interpreter | interpret, compiling, executing |
 | BASE | radix for number conversion | reference for number digits |
 | DP | dictionary pointer | next cell for dictionary entry |
@@ -119,8 +124,6 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 | CSP | keep sp | transacional |
 | HND | handler | catch and throw | 
 | HLD | convert | <# # #> SIGN | 
-
-
 
 ### if CPU have math: 
 
@@ -152,4 +155,6 @@ PS. Most ideas from eForth, from Bill Muench and Chen-Hanson Ting.
 | EE | heap eeprom pointer | next cell for eeprom, forward |
 | HP | heap sram pointer | next cell for sram, forward |
 | UP | last sram pointer | last cell for sram, backward |
+
+
 

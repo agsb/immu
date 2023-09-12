@@ -1,3 +1,4 @@
+_“Thou shalt not PICK; and Thou shalt never ROLL.”_
 
 from: http://forum.6502.org/viewtopic.php?f=9&t=7013
 by dclxvi 	
@@ -7,6 +8,7 @@ PostPosted: Sun Feb 06, 2022 10:51 pm
 On side 1 is 1978 6502 FIG-Forth. 
 On side 2 is a Forth tutorial which contains this all-time gem:
 
+```
 SCR # 95
  0 FRAME #86 THE FORTH COMMANDMENTS                               
  1  1. I AM THY 'WORD', THOU SHALT SEPARATE ME BY SPACES.         
@@ -24,4 +26,8 @@ SCR # 95
 13  9. THOU SHALT COVET 'BEGIN...UNTIL' AND 'LOOP' TO EXECUTE AT   
 14     LEAST ONCE.                                                 
 15 10. THOU SHALT COVET A SCREEN WITH 'FLUSH'. 'GO' SPREAD WORD.
+```
 
+
+
+`

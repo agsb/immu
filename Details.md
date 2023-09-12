@@ -57,8 +57,7 @@ The operations of a **classic indirect thread code** inner interpreter, in non o
 ```
 NEXT: 
   Fetch the address pointed by IP onto WR
-  Increment IP by address size
-  
+  Increment IP by address size 
   Jump to WR
 
 NEST: (aka ENTER, DOCOLON, at start of words)
@@ -106,7 +105,6 @@ The operations of a **minimal indirect thread code** inner interpreter, in non o
 NEXT: 
   Fetch the address pointed by IP onto WR  
   Increment IP by address size
-
   if WR is NULL, then Execute JUMP
   else Execute NEST
 
@@ -192,8 +190,10 @@ In _dependent vocabularies_ :
   
         Relocate the references within vocabularies ? Position independent code
         
-        Manage the linked vocabularies ?
+        Manage the linked vocabularies ? Ma(i)stery Linked Lists.
 
+        Split dictionary for Code and Headers. As older Forths.
+        
 ## Conclusion
 
 I see Forth as a model of the RNA-DNA type. The inner interpreter acts as RNA and vocabularies acts as DNA. 

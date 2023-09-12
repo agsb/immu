@@ -1,4 +1,3 @@
-
 ;---------------------------------------------------------------------
 ; /*
 ;  *  DISCLAIMER"
@@ -191,9 +190,44 @@ VIA1_PAH        =  VIA1+15   ; Its port A address no handshake
 
 ;---------------------------------------------------------------------
 ;
-;   adapted from http://forum.6502.org/viewtopic.php?f=4&t=5495
+;   adapted from http://forum.6502.org/
 ;
 ;---------------------------------------------------------------------
+
+irq_isr:
+	; scan for via0
+scan_via0:
+	bit via0_ifr
+	bpl skip_via0
+	jsr service_via0
+skip_via0:
+
+scan_via1:
+	bit via1_ifr
+	bpl skip_via1
+	jsr service_via1
+skip_via1:
+
+ends_isr:
+	rti
+
+;	attend interrupt 
+service_via0:
+	pha
+	lda #$7F
+	sta via0_ifr;
+	pla
+	rti
+;	attend interrupt 
+service_via1:
+	pha
+	lda #$7F
+	sta via1_ifr;
+	pla
+	rti
+; 	default
+ret_isr:
+	rti
 
 ;-------------------------------------------------------------------------------
 ;   acia_init, configures 19200,N,8,1

@@ -10,7 +10,7 @@ For use onto stacks, usually there are seven { DROP DUP OVER SWAP >R R> R@ } ato
 
 Lets make a list, to change 3 cells at top (O= is the number of atomic operations) :
 
-![Three Balls](https://github.com/agsb/immu/blob/main/180px-Permutations_RGB.svg.png "Text to show on mouseover")
+[Three Balls](https://github.com/agsb/immu/blob/main/docs/180px-Permutations_RGB.svg.png "permutations of 3 balls")
 
 ```
 note: ( left is down, right is up -- result )
@@ -50,7 +50,6 @@ As showed, SWIP as atomic is a good choice for design of a primitive words.
 
 # About OVER
 
-OVER is used often to copy arguments. It must be implemented
-as DUP in assembler and deserves to be atomic.
+OVER is used often to copy arguments. Charles Moore prefer it over SWAP, deserves to be atomic and be implemented in assembler.
 
 
