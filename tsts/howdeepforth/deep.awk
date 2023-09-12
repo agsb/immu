@@ -7,6 +7,8 @@ BEGIN {
 
     RS = "\n";
 
+    SUBSEP = " ";
+
     cnt = 0;
 
     colon = ":";
@@ -14,6 +16,8 @@ BEGIN {
     semis = ";";
 
     cnt = 0 ;
+
+    dp = 0;
 }
 
 #
@@ -21,19 +25,23 @@ BEGIN {
 #
 {
 
-    # print " raw: >" $1 " >" $NF " (" $0 ") "
-
     if ( $1 == ":" && $(NF) == ";" ) {
 
-        dict_qtde[$2] = NF - 3 ;
+        key = $2 
+
+        qtde[key] = NF - 3 ;
          
-        dict_line[$2] = $0 ;
+        for (n = 0; n < qtde[key]; n++) {
+            word[key,n+3] = $(n);
+            }
 
-        for (n = 2; n < NF; n++) {
+        if (qtde[key] > 1) {
 
-            dict_cnte[$(n)] = dict_cnte[$(n)] + 1
+        for (n = 3; n < NF; n++) {
+            cnte[$(n)] = cnte[$(n)] + 1
             
             }
+        }
 
         cnt++;
 
@@ -42,18 +50,46 @@ BEGIN {
 } 
 
 
-function deep ( ) {
+function deep( key ) {
+
+    print ">> " dp " : " key
+
+    if (qtde[key] > 1) {
+
+        for (n = 0; n < qtde[key]; n++) {
+
+            nex = word[key,n]
+
+            dp++
+
+            deep( nex );
+            
+            dp--
+
+            }
+
+        }
+
+    return (0)
 
     }
 
+
 END {
 
-    for (key in dict_qtde) {
+    for (key in qtde) {
 
-        print dict_qtde[key] " " key " " dict_cnte[key] " " dict_qtde[key] "  "dict_line[key] ;
+        print qtde[key] " " cnte[key] " " key 
     
-        }
+            dp = 0 ;
+            
+            deep(key)
 
-}
+            }
+
+         print " ~~~~ "
+
+     }
+
         
 
