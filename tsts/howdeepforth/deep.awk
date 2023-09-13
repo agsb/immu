@@ -3,21 +3,26 @@
 #
 BEGIN {
 
-    FS = " ";
+  FS = " ";
 
-    RS = "\n";
+  RS = "\n";
 
-    SUBSEP = " ";
+  SUBSEP = " ";
 
-    cnt = 0;
+  cnt = 0;
 
-    colon = ":";
-    
-    semis = ";";
+  colon = ":";
+  
+  semis = ";";
 
-    cnt = 0 ;
+  cnt = 0 ;
 
-    dp = 0;
+  dp = 0;
+
+  ct = 0;
+  
+  nt = 0;
+
 }
 
 #
@@ -25,71 +30,87 @@ BEGIN {
 #
 {
 
-    if ( $1 == ":" && $(NF) == ";" ) {
+  if ( $1 == ":" && $(NF) == ";" ) {
 
-        key = $2 
+    key = $2 
 
-        qtde[key] = NF - 3 ;
-         
-        for (n = 0; n < qtde[key]; n++) {
-            word[key,n+3] = $(n);
-            }
+    qtde[key] = NF - 3 ;
+  
+  # print "~~~~~~~~~~~~"
 
-        if (qtde[key] > 1) {
+    for (n = 3; n < NF; n++) {
+        
+        #print key " " n " " $(n) 
+        
+        word[key,n - 3] = $(n);
+        
+        cnte[$(n)] = cnte[$(n)] + 1
+    
+    }
 
-        for (n = 3; n < NF; n++) {
-            cnte[$(n)] = cnte[$(n)] + 1
-            
-            }
-        }
+  cnt++;
 
-        cnt++;
-
-        }
+  }
 
 } 
 
 
 function deep( key ) {
 
-    print ">> " dp " : " key
+  dp++;
 
-    if (qtde[key] > 1) {
+  if (dp > ct) ct = dp
 
-        for (n = 0; n < qtde[key]; n++) {
+  m = qtde[key]
 
-            nex = word[key,n]
+  for (n = 0; n < m; n++) {
 
-            dp++
+    nex = word[key,n]
 
-            deep( nex );
-            
-            dp--
+    print " >>> ", dp " " key " " n " " m " " nex 
 
-            }
-
-        }
-
-    return (0)
-
+    if ( qtde[nex] > 1) { deep( nex ) } 
+    else { nt++ }
+  
     }
+    
+  dp--
+
+  print " <<< ", dp " " key " " n " " m 
+
+  return (dp);
+  }
 
 
 END {
 
-    for (key in qtde) {
 
-        print qtde[key] " " cnte[key] " " key 
-    
-            dp = 0 ;
-            
-            deep(key)
+  for (key in qtde) {
 
+    print qtde[key] " " cnte[key] " " key 
+  
+    if (0) {
+        for (n = 0; n < qtde[key]; n++) {
+            printf " %s", word[key,n]
             }
+        print
+        }
+    
+    ct = 0
 
-         print " ~~~~ "
+    nt = 0
 
-     }
+    dp = 0 
+  
+    if (qtde[key] > 1) { deep(key); }
 
-        
+    print " ~ " ct " " nt " " qtde[key] " " key
+
+    }
+
+  print " ~~~~ "
+
+  }
+
+  
 
