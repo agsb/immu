@@ -88,15 +88,15 @@ _"Forth is free to reinvent the wheel, and I think that is a marvelous concept. 
 ```
 proposed format
 
-defword:  ; only a UNNEST, (where did NEST go ?)
-+-------+---+---+---+---+---+---+---+---+-----+------+---------+
-| LINK  | 6 | D | O | U | B | L | E | 0 | DUP | PLUS | UNNEST  |    
-+-------+---+---+---+---+---+---+---+---+-----+------+---------+
+defword:  ; only a ENDS,
++-------+---+---+---+---+---+---+---+---+-----+------+------+
+| LINK  | 6 | D | O | U | B | L | E | 0 | DUP | PLUS | ENDS |    
++-------+---+---+---+---+---+---+---+---+-----+------+------+
        
-defcode:  ; a NULL and a jump, (where did self reference go ?)
-+-------+---+---+---+---+------+------+------+------+-----------+
-| LINK  | 3 | D | U | P | NULL | code | code | code | jump link |
-+-------+---+---+---+---+------+------+-------+-----+-----------+
+defcode:  ; a NULL and a jump link:
++-------+---+---+---+---+------+------+------+------+------------+
+| LINK  | 3 | D | U | P | NULL | code | code | code | jump link: |
++-------+---+---+---+---+------+------+-------+-----+------------+
 ```
 
 The operations of a **minimal indirect thread code** inner interpreter, in non optimized pseudo code, are :
@@ -117,12 +117,14 @@ UNNEST:
   Pull IP from call stack
   Execute NEXT
 
-JUMP:  
+JUMP:
+  Pull WR from call stack
   Jump to address in IP
 
-LINK: 
-  Execute UNNEST
-
+LINK:
+  Copy WR to IP
+  Execute NEXT
+  
 ```
 
 **_"Explain all that", said the Mock Turtle.“, Lewis Carol, "Alice's Adventures in Wonderland"_**
@@ -131,11 +133,11 @@ The code above only executes jumps when references to primitives words, marked w
 
 All composite word references are directly, placed and removed, onto the return stack, do not executing any jump.
 
-Uses jump and link, as call model, as modern RISC-V processors does.
+Uses jump and link, as modern RISC-V processors does.
 
 Does just a compare per Forth word, to decide if executes a NEST or a JUMP.
 
-Both IP and WR do not need be preserved, all references are keeped into return stack only.
+The pointer IP do not need be preserved. The pointer WR, as link register, must be reserved.
 
 ## More with less 
 
@@ -211,26 +213,23 @@ The proposed small change for **extended indirect thread code** allows these com
 ```
 /* 
 basic RISCV, Using R32I, 32 bits cell,
-Extended Indirect Thread Code
-s5, return stack, grows downwards
-s6, next reference, aka instruction pointer
-s9, Wrk, temporary, not preserve
-zero, is always zero
 
-s6 must always points to a reference to be used by _next,
-   and could be intentionally changed
+Minimal Indirect Thread Code
+s5, RP, return stack, grows downwards
+s6, IP, aka instruction pointer
+s9, Wr, aka link pointer
+zero, is always zero
 
 header is a macro, does the Forth dictionary header
 
-EXIT reference, ends all compound words, also is a primitive word;
+all compound words ends with a reference to ENDS
 
-jump (jal zero,) _link, ends all primitive words, also is a "hook" for debug before jump _next;
+all primitive words ends with jump _link 
 
 */
 
-header "ends","ends"
-    .word 0x0
-    
+header "ENDS","ends"
+    .word 0x0    
 _unnest: ; pull
     lw s6, 0(s5)
     addi s5, s5, CELL
@@ -239,19 +238,21 @@ _unnest: ; pull
 _next: ; cast
     lw s9, 0 (s6)
     addi s6, s6, CELL
+
     beq s9, zero, _jump
     ; jal zero _nest
     
 _nest: ; push  
     addi s5, s5, -1*CELL
     sw s6, 0(s5)
+
+_link: ; link
     add s6, s9, zero
     jal zero, _next
     
-_link:  ; link  
-    jal zero, _unnest
-    
 _jump:  ; jump
+    lw s6, 0(s5)
+    addi s5, s5, CELL
     jalr zero, s9, 0
 
 ```  
