@@ -27,12 +27,19 @@ BEGIN {
 
 }
 
+function trimspc( line ) {
+
+	return (line)
+
+}
 #
 # loop 
 #
 {
+	
+	gsub(/[ ]+/," ", $0)
 
-  if ( $1 == colon && $(NF) == semis ) {
+  	if ( $1 == colon && $(NF) == semis ) {
 
     word = $2 
 
@@ -76,15 +83,17 @@ function deep( key ) {
 
         line = line " " nex
 
-        }
+  	print " <<< ", dp " " key " " n " " m 
+
+  	return (dp);
+        
+	}
   
     }
     
   dp--
 
-  print " <<< ", dp " " key " " n " " m 
 
-  return (dp);
   }
 
 
