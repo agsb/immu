@@ -4,11 +4,15 @@ An implementation of Forth with inner interpreter using minimal indirect thread 
   
 _Only the inner interpreter and vocabularies related to systems, drives and primitives are machine dependent._
 
-The minimal indirect thread code [MITC](https://github.com/agsb/immu/blob/main/small%20MITC%20Forth%20en.pdf) gives to Forth inner interpreter the decision of when use "push and pull" or "jump and link".
+The minimal indirect thread code [MITC](https://github.com/agsb/immu/blob/main/The%20words%20in%20MITC%20Forth%20en.pdf) gives to Forth inner interpreter the decision of when use "push and pull" or "jump and link".
 
 More information in [Details](https://github.com/agsb/immu/blob/main/Details.md)
 
-In 2023, the immu Forth was splitted for ISAs: 6502, Atmega328, and RiscV. Still not syncrone updates.
+In 2023, the immu Forth was splitted for ISAs: 6502, Atmega328, and RiscV. 
+
+In september, 2023, a better code for MITC was born, using deep-first search.
+
+see a presentation at [the words in MITC](https://github.com/agsb/immu/blob/main/The%20words%20in%20MITC%20Forth%20en.pdf)
 
 ## Go Slow
 
