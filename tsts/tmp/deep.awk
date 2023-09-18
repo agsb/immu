@@ -27,19 +27,14 @@ BEGIN {
 
 }
 
-function trimspc( line ) {
-
-	return (line)
-
-}
 #
 # loop 
 #
 {
 	
-	gsub(/[ ]+/," ", $0)
+    gsub(/[ ]+/," ", $0)
 
-  	if ( $1 == colon && $(NF) == semis ) {
+    if ( $1 == colon && $(NF) == semis ) {
 
     word = $2 
 
@@ -76,7 +71,7 @@ function deep( key ) {
 
     print " >>> ", dp " " key " " n " " m " " nex 
 
-    if ( qtde[nex] > 1) { deep( nex ) } 
+    if ( qtde[nex] > 0) { deep( nex ) } 
     else { 
         
         nt++ 
@@ -85,14 +80,14 @@ function deep( key ) {
 
   	print " <<< ", dp " " key " " n " " m 
 
-  	return (dp);
+  	return (dp)
         
 	}
   
     }
     
   dp--
-
+  return (dp) 
 
   }
 
@@ -118,7 +113,6 @@ END {
 
     }
 
-  print " ~~~~ "
 
   }
 

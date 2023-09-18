@@ -45,13 +45,14 @@ must be saved by subroutines (calee)
 ( a PDP-11 )
 s4 ~X20~ as Rsp, return stack pointer
 s5 ~X21~ as Psp, parameter stack pointer
-s6 ~X22~ as Top, Top on stack
-s7 ~X23~ as Nos, Next on stack, pull when need
-s8 ~X24~ as Wrk, temporary scratch register
+s6 ~X25~ as Lnk, Link pointer, reserved  
+s7 ~X24~ as Wrk, temporary scratch register
+s8 ~X22~ as Top, Top on stack, reserved
+s9 ~X23~ as Nos, Next on stack, when need
 
 ( extras )
-s9  ~X25~ as T0, temporary extra
-s10 ~X26~ as T1, temporary extra
+s10 ~X26~ as T0, temporary extra
+s11 ~X27~ as T1, temporary extra
 
 Why T0 and T1 ? 
 
@@ -138,20 +139,24 @@ else many stack operations are need
 // could have hooks for check over/under
 //
 
-// pull decrements
+// pull increases
 .macro spull stack, register
     lw \register, 0 (\stack)
-    addi \stack, \stack, -1*CELL
+    addi \stack, \stack, CELL
 .endm
 
-// push increments
+// push decreases
 .macro spush stack, register
+    addi \stack, \stack, -1 * CELL
     sw \register, 0 (\stack)
-    addi \stack, \stack, CELL
 .endm
 
 .macro scopy stack, register, index
     lw \register, \index * CELL (\stack)
+.endm
+
+.macro move destin, origin
+    add \destin, \origin, \zero
 .endm
 
 .macro link address
@@ -221,7 +226,8 @@ is_\label:
 
 VOID:
 
-// return stack
+// return stack:1
+
 XRP:
 .fill STACK, CELL, 0x0
 
@@ -286,31 +292,34 @@ _forth_:
 
 //----------------------------------------------------------------------
 //
-// Nos and Wrk are free for use, only Top hold values
+//  Lnk, aka link pointer to caller
+//  Wrk, aka self pointer to callee
 //
+// _inner: 
+//
+
 header "ENDS", "ends", F_RESERVED, LEAF
-_inner: 
 
 _unnest:
-    spull Rsp, Nos
+    spull Rsp, Wrk
 
 _next: 
-    lw Wrk, 0(Nos)
-    addi Nos, Nos, CELL
-    beq Wrk, zero, _jump
+    spull Wrk, Lnk
+    beq Lnk, zero, _jump
 
 _nest: 
-    spush Rsp, Nos
-    add Nos, Wrk, zero
-    jal zero, _next
-//
-// real execute, also a place for extras
-// 
-_jump:   
-    jalr zero, Nos, 0
+    spush Rsp, Wrk
 
-_link:    
-    jal zero, _unnest
+_link:
+    move Wrk, Lnk
+    jal zero, _next
+
+_jump:
+    spull Rsp, Lnk   
+    jalr zero, Wrk, 0
+
+// at end of primitives    
+//      jal zero, _link
 
 //----------------------------------------------------------------------
 
@@ -439,16 +448,14 @@ header "NEGATE", "negate", F_RESERVED, LEAF
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( u v -- u>>v )
+// ( v -- v<<1 )
 header "2*", "twostar", F_RESERVED, LEAF
-    spull Psp, Nos
     srli Top, Top, 1
     jal zero, _link
 
 //----------------------------------------------------------------------
-// ( u v -- u>>v )
+// ( v -- 1>>v )
 header "2/", "twoslash", F_RESERVED, LEAF
-    spull Psp, Nos
     slli Top, Top, 1
     jal zero, _link
 
@@ -634,7 +641,7 @@ header "SP@", "psat", , F_RESERVED, LEAF
 //----------------------------------------------------------------------
 //   ( u w -- u )
 header "DROP", "drop", , F_RESERVED, LEAF
-    _drop:
+_drop:
     spull Psp, Top
     jal zero, _link
 
@@ -653,7 +660,7 @@ header "?DUP", "zdup", , F_RESERVED, LEAF
 //----------------------------------------------------------------------
 //   ( u w -- u w w )
 header "DUP", "dup", , F_RESERVED, LEAF
-    _dup:
+_dup:
     spush Psp, Top 
     jal zero, _link
 
@@ -734,18 +741,21 @@ header "MAX", "max", , F_RESERVED, LEAF
     blt Nos, Top, _noop 
     beq zero, zero, _n2t
   
+zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
 //----------------------------------------------------------------------
 // trick, 
+// ????
 header "LIT", "lit", , F_RESERVED, LEAF
-    dolit:
+dolit:
     spush Psp, Top 
     spull Rsp, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
 // trick,
+// ????
 header "EXE", "exe", , F_RESERVED, LEAF
-    dolit:
+dolit:
     spush Rsp, Top 
     spull Psp, Top
     jal zero, _link
@@ -759,7 +769,7 @@ header "?BRANCH", "zbranch", , F_RESERVED, LEAF
 //----------------------------------------------------------------------
 // all absolut reference, no more offsets
 header "BRANCH", "branch", , F_RESERVED, LEAF
-    _branch:    
+_branch:    
     spull Rsp, Wrk
     lbu Wrk, 0 (Wrk)
     spush Rsp, Wrk
