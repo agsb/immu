@@ -45,10 +45,10 @@ must be saved by subroutines (calee)
 ( a PDP-11 )
 s4 ~X20~ as Rsp, return stack pointer
 s5 ~X21~ as Psp, parameter stack pointer
-s6 ~X25~ as Lnk, Link pointer, reserved  
-s7 ~X24~ as Wrk, temporary scratch register
-s8 ~X22~ as Top, Top on stack, reserved
-s9 ~X23~ as Nos, Next on stack, when need
+s6 ~X22~ as Lnk, Link pointer, reserved  
+s7 ~X23~ as Top, Top on stack, reserved
+s8 ~X24~ as Nos, Next on stack, when need
+s9 ~X25~ as Wrk, temporary scratch register
 
 ( extras )
 s10 ~X26~ as T0, temporary extra
@@ -69,6 +69,7 @@ else many stack operations are need
 
 /* using a GCC compiler */
 
+/* F83 std */
 #define  TRUE -1
 #define  FALSE 0
 #define  BYTE  1
@@ -128,11 +129,12 @@ else many stack operations are need
 
 #define  Psp s4    //#   parameter stack
 #define  Rsp s5    //#   return stack 
-#define  Top s6    //#   hold, the top on parameter stack
-#define  Nos s7    //#   work, scratch  
-#define  Wrk s8    //#   work, scratch
-#define  T0  s9    //#   temporary
-#define  T1  s10   //#   temporary
+#define  Lnk s6    //#   link reference
+#define  Top s7    //#   hold, the top on parameter stack
+#define  Nos s8    //#   work, scratch  
+#define  Wrk s9    //#   work, scratch
+#define  T0  s10   //#   temporary
+#define  T1  s11   //#   temporary
 
 //----------------------------------------------------------------------
 // stack macros
@@ -504,7 +506,7 @@ header "NAND", "nandf",, F_RESERVED, LEAF
 
 //----------------------------------------------------------------------
 // ( -- 0x20 )
-header "BL", "bl", , F_RESERVED, LEAF
+header "BL", "BL", , F_RESERVED, LEAF
     spush Psp, Top 
     addi Top, zero, BL_
     jal zero, _link
@@ -590,9 +592,7 @@ header "CHAR+", "charplus", , F_RESERVED, LEAF
 //----------------------------------------------------------------------
 // put at 2nd to preserve the immediate next reference 
 header ">R", "tor", , F_RESERVED, LEAF
-    spull Rsp, Nos
     spush Rsp, Top
-    spush Rsp, Nos
     spull Psp, Top 
     jal zero, _link
 
@@ -600,16 +600,14 @@ header ">R", "tor", , F_RESERVED, LEAF
 // get at 2nd to preserve the immediate next reference 
 header "R>", "rto", , F_RESERVED, LEAF
     spush Psp, Top 
-    spull Rsp, Nos
-    spull Rsp, Top 
-    spush Rsp, Nos
+    spull Rsp, Top
     jal zero, _link
 
 //----------------------------------------------------------------------
 // copy from 2nd to preserve the immediate next reference 
 header "R@", "rat", , F_RESERVED, LEAF
     spush Psp, Top 
-    lw Top, 1 (Rsp)
+    lw Top, 0 (Rsp)
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -693,7 +691,8 @@ _n2t:
 header "SWAP", "swap", , F_RESERVED, LEAF
     lw Nos, 0 (Psp)
     sw Top, 0 (Psp)
-    beq zero, zero, _n2t
+    // beq zero, zero, _n2t    // yes ! it is a relative jump
+    jal zero, _n2t
 
 //----------------------------------------------------------------------
 //   (v u w -- u w v)
@@ -702,7 +701,7 @@ header "ROT", "rot", , F_RESERVED, LEAF
     lw Nos, CELL (Psp)
     sw Wrk, CELL (Psp)
     sw Top, 0 (Psp)
-    beq zero, zero, _n2t
+    jal zero, _n2t
     
 //----------------------------------------------------------------------
 //   (v u w -- w v u)
@@ -711,14 +710,14 @@ header "-ROT", "nrot", , F_RESERVED, LEAF
     lw Wrk, CELL (Psp)
     sw Top, CELL (Psp)
     sw Wrk, 0 (Psp)
-    beq zero, zero, _n2t
+    jal zero, _n2t
     
 //----------------------------------------------------------------------
 //   (v u w -- w u v)
 header "FLIP", "flip", , F_RESERVED, LEAF
     lw Nos, CELL (Psp)
     sw Top, CELL (Psp)
-    beq zero, zero, _n2t
+    jal zero, _n2t
     
 //----------------------------------------------------------------------
 //   ( v u w -- u v w )
@@ -733,22 +732,21 @@ header "SWIP", "swip", , F_RESERVED, LEAF
 header "MIN", "min", , F_RESERVED, LEAF
     spull Psp, Nos
     blt Top, Nos, _noop 
-    beq zero, zero, _n2t
+    jal zero, _n2t
   
 //----------------------------------------------------------------------
 header "MAX", "max", , F_RESERVED, LEAF
     spull Psp, Nos
     blt Nos, Top, _noop 
-    beq zero, zero, _n2t
+    jal zero, _n2t
   
-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
 //----------------------------------------------------------------------
 // trick, 
 // ????
 header "LIT", "lit", , F_RESERVED, LEAF
 dolit:
     spush Psp, Top 
-    spull Rsp, Top
+    spull Top, Lnk 
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -756,8 +754,8 @@ dolit:
 // ????
 header "EXE", "exe", , F_RESERVED, LEAF
 dolit:
-    spush Rsp, Top 
-    spull Psp, Top
+    spush Rsp, Lnk 
+    spull Psp, Lnk
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -767,12 +765,10 @@ header "?BRANCH", "zbranch", , F_RESERVED, LEAF
     jal zero, _link
     
 //----------------------------------------------------------------------
-// all absolut reference, no more offsets
+// all absolute reference, no more offsets
 header "BRANCH", "branch", , F_RESERVED, LEAF
 _branch:    
-    spull Rsp, Wrk
-    lbu Wrk, 0 (Wrk)
-    spush Rsp, Wrk
+    lw Lnk, 0 (Lnk)
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -781,7 +777,7 @@ _branch:
 header "C!", "cto", , F_RESERVED, LEAF
     spull Psp, Nos
     sb Nos, 0 (Top)
-    beq zero, zero, _drop
+    jal zero, _drop
   
 //----------------------------------------------------------------------
 //   ( a -- b )
@@ -798,7 +794,7 @@ header "+!", "plusto", , F_RESERVED, LEAF
     lw Wrk, 0 (Top)
     add Wrk, Wrk, Nos
     sw Wrk, 0 (Top)
-    beq zero, zero, _drop
+    jal zero, _drop
   
 //----------------------------------------------------------------------
 // from amforth 6.9
@@ -817,12 +813,12 @@ header "ALIGNED", "aligned", , F_RESERVED, LEAF
 
 *******************************************************************************/
 // -----------------------------------------------------------------------------
-// ok multiply ( w1 w2 w3 -- ((w1 * w2) / w3) ) zzzz
+// ok multiply ( w1 w2 w3 -- ((w1 * w2) / w3) ) 
 header "*/", "starslash", , F_RESERVED, LEAF
     spull Psp, Nos
-    mul Top, Top, Nos
-    spull Psp, Nos
-    div Top, Top, Nos
+    spull Psp, Wrk
+    mul Nos, Nos, Wrk
+    div Top, Nos, Top
     jal zero, _link
 
 // -----------------------------------------------------------------------------
@@ -835,18 +831,14 @@ header "*", "star", , F_RESERVED, LEAF
 // -----------------------------------------------------------------------------
  // ok unsigned multiply ( w1 w2 -- w1 * w2 )
 header "m*", "mstar", , F_RESERVED, LEAF
-    lw Nos, 0 (Psp)
-    mul Wrk, Top, Nos
-    sw Wrk, 0 (Psp)
-    mulh Top, Top, Nos
+    spull Psp, Nos
+    mul Top, Top, Nos
     jal zero, _link
 
 // -----------------------------------------------------------------------------
 // ok unsigned multiply ( w1 w2 -- w1 * w2 )
 header "um*", "umstar", , F_RESERVED, LEAF
-    lw Nos, 0 (Psp)
-    mul Wrk, Top, Nos
-    sw Wrk, 0 (Psp)
+    spull Psp, Nos
     mulhu Top, Top, Nos
     jal zero, _link
 
@@ -861,7 +853,7 @@ header "/", "slash", , F_RESERVED, LEAF
 // ok module ( w1 w2 -- remainder ) 
 header "mod", "module", , F_RESERVED, LEAF
     spull Psp, Nos
-    rem Top,  Nos, Top
+    rem Top, Nos, Top
     jal zero, _link
 
 // -----------------------------------------------------------------------------
@@ -887,6 +879,8 @@ header "u/mod", "uslashmod", , F_RESERVED, LEAF
     iterative loops
 
 *******************************************************************************/
+
+zzzz
 
 //----------------------------------------------------------------------
 // copy a cell from return stack
