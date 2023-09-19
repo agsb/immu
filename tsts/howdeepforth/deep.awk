@@ -22,6 +22,8 @@ BEGIN {
   ct = 0;
   
   nt = 0;
+   
+  line = "";
 
 }
 
@@ -29,22 +31,22 @@ BEGIN {
 # loop 
 #
 {
+	
+    gsub(/[ ]+/," ", $0)
 
-  if ( $1 == ":" && $(NF) == ";" ) {
+    if ( $1 == colon && $(NF) == semis ) {
 
-    key = $2 
+    word = $2 
 
-    qtde[key] = NF - 3 ;
+    qtde[word] = NF - 3 ;
   
-  # print "~~~~~~~~~~~~"
-
     for (n = 3; n < NF; n++) {
         
-        #print key " " n " " $(n) 
-        
-        word[key,n - 3] = $(n);
+        words[word,n - 3] = $(n);
         
         cnte[$(n)] = cnte[$(n)] + 1
+
+        lines[word] = $0
     
     }
 
@@ -65,20 +67,28 @@ function deep( key ) {
 
   for (n = 0; n < m; n++) {
 
-    nex = word[key,n]
+    nex = words[key,n]
 
     print " >>> ", dp " " key " " n " " m " " nex 
 
-    if ( qtde[nex] > 1) { deep( nex ) } 
-    else { nt++ }
+    if ( qtde[nex] > 0) { deep( nex ) } 
+    else { 
+        
+        nt++ 
+
+        line = line " " nex
+
+  	print " <<< ", dp " " key " " n " " m 
+
+  	return (dp)
+        
+	}
   
     }
     
   dp--
+  return (dp) 
 
-  print " <<< ", dp " " key " " n " " m 
-
-  return (dp);
   }
 
 
@@ -87,28 +97,22 @@ END {
 
   for (key in qtde) {
 
-    print qtde[key] " " cnte[key] " " key 
+    print qtde[key] " " cnte[key] " " key " " lines[key]
   
-    if (0) {
-        for (n = 0; n < qtde[key]; n++) {
-            printf " %s", word[key,n]
-            }
-        print
-        }
-    
     ct = 0
 
     nt = 0
 
     dp = 0 
   
+    line = "";
+
     if (qtde[key] > 1) { deep(key); }
 
-    print " ~ " ct " " nt " " qtde[key] " " key
+    print " ~ " ct " " nt " " qtde[key] " : " key " " line " ; "
 
     }
 
-  print " ~~~~ "
 
   }
 
