@@ -58,7 +58,7 @@ END {
 
       deep(key) 
 
-        #print " ~ " key " " np " " qtde[key]   
+      print " ~ " key " " np " " qtde[key]   
 
       }
 
@@ -73,14 +73,12 @@ function deep( key ) {
   if (dp > np) np = dp
 
   m = qtde[key]
-   
-  print " = " key
+
+    print " > " key 
 
   for (n = 0; n < m; n++) {
     
     yek = words[key,n]
-
-        printf " %s ", yek
 
     if ( qtde[yek] > 1) { deep( yek ) } 
     

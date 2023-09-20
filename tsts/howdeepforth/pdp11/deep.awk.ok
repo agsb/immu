@@ -56,7 +56,7 @@ END {
       
       np = 0
 
-   #   deep(key) 
+      deep(key) 
 
       print " ~ " key " " np " " qtde[key]   
 
