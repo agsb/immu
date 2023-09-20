@@ -10,6 +10,15 @@ Flash memory write cycle needs a specific CPU/MCU routine, that erase a pages, c
 
 Flash memory is better for static content, and SRAM memory for dynamic content.
 
+## Classic Map
+
+In PolyForth the memory map 
+
+for a interactive task is 
+          LOW RAM [--user dictionary---->|DP------|SP<----SP0|TIB0---->IN----#TIB|------|RP<----RP0|--- user area ---] HIGH RAM
+
+for a non-interative task
+          LOW RAM [|SP<----SP0||RP<----RP0|--- user area ---] HIGH RAM
 
 ### groups
 
