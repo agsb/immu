@@ -74,8 +74,6 @@ function deep( key ) {
 
   m = qtde[key]
 
-    print " > " key 
-
   for (n = 0; n < m; n++) {
     
     yek = words[key,n]
