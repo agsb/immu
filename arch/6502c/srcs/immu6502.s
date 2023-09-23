@@ -63,16 +63,16 @@ irqcnt = lnk + 26  ; nested
 irqvec = lnk + 28  ; resolver
 
 ;---------------------------------------------------------------------
-; parameter stack, $0300, grows backwards
-zsp0 = $0300
+; parameter stack, $0300, grows forwards 
+spz = $0300
 
 ;---------------------------------------------------------------------
-; return stack, $0400, grows backwards
-zrp0 = $0400
+; return stack, $0400, grows backwards 
+rpz = $0400
 
 ;---------------------------------------------------------------------
 ; terminal input buffer, $0400, grows forwards
-ztib0 = $0400
+tib0 = $0400
 ztz = tib0 + TIB_SIZE
 
 ;---------------------------------------------------------------------
@@ -120,6 +120,9 @@ scr = tz + 38   ; screen number
 ;   words to do...
 ;
 COLD:
+    ldx #0
+    ldy #0
+
 WARM:
 TIME:
 WATCH:
@@ -159,52 +162,51 @@ _halt:
 ;
 ;   CELL is 2-bytes
 ;
-;   ??? all BRANCH are absolute references. No offsets.
+;   Using stacks at absolute address.
 ;
-;   rp0 top of return stack, y index
-;   sp0 top of parameter stack, x index
+;   rpz top of return stack, y index
+;   spz top of parameter stack, x index
 ;
 ;   both stacks limited to 128 cells
 ;
-;   the processor sp and page one are reserved for BIOS.
+;   the processor sp and page one ($0100) are reserved for BIOS.
 ;
-;   word  rp0, sp0, lnk, tos, nos, wrk, cnt are pseudo 16 registers at page zero
+;   word  rp, sp, lnk, tos, nos, wrk, cnt are pseudo 16 registers at page zero
 ;   bytes a_save, x_save, y_save, s_save, r_save keep 6502 registers values
 ;
-;   |top ...                | stack
-;   | 1st   2nd   3nd   4th | cells
-;   |[0,1] [2,3] [4,5] [6,7]| offsets at stack, [LSB,MSB]
-;   |low                high| address
-;
-;   att: never use negative offsets as -1, -2, etc 
+;   forth stacks grows backwards !
 ;
 ;   use of jumps for reduce code size;
 ;   minimal use of JSR/RTS, PHA, PLA;
 ;   minimal use of page zero;
 ;   acumulator used as is.
 ;
-;   sp0, x   parameter stack
-;   rp0, y   return stack
+;   spz, x   parameter stack
+;   rpz, y   return stack
 ;
 ;   ATT: KEEP THE WORDS AT BRANCH OFFSETS (-127 to +127) or COLAPSE
 ;
 HEADER "ENDS", "ENDS", F_LEAP, LEAF
 unnest:  ; aka semis:
     ; pull from return stack
-    lda (rp), y
-    sta wrk + 0
     iny
-    lda (rp), y
+    lda rpz, y
     sta wrk + 1
     iny
+    lda rpz, y
+    sta wrk + 0
+    dey
 
 next:
     ; as is, classic ITC from fig-forth 6502
+    ; does not need compare low byte
+    ;sty y_save
+    ;ldy #0
+    ; lda (wrk), y
+    ; sta lnk + 0
+    ;iny
     sty y_save
-    ldy #0
-    lda (wrk), y
-    sta lnk + 0
-    iny
+    ldy #1
     lda (wrk), y
     sta lnk + 1
     ldy y_save
@@ -229,12 +231,12 @@ leaf:
 nest:   
     ; aka docol
     ; push into return stack
-    dey
+    iny
     lda nos + 1
-    sta (rp), y
-    dey
+    sta rpz, y
+    iny
     lda nos + 0
-    sta (rp), y
+    sta rpz, y
 
 link:
     ; next reference
@@ -246,15 +248,14 @@ link:
 
 jump:
     ; pull from return stack
-    lda (rp), y
+    lda rpz, y
     sta lnk + 0
-    iny
-    lda (rp), y
+    dey
+    lda rpz, y
     sta lnk + 1
-    iny
+    dey
     ; do the jump
     jmp (wrk)
-
 
 ;---------------------------------------------------------------------
 
@@ -285,10 +286,10 @@ HEADER "TRUE", "FTRUE", F_LEAP + F_CORE, LEAF
 ; ok flags are 0x0000 and 0xFFFF
 ;
 fflag:
-    dex
-    sta (sp, x)
-    dex
-    sta (sp, x)
+    inx
+    sta spz, x
+    inx
+    sta spz, x
     ; continue
     jmp link
 
@@ -297,10 +298,10 @@ fflag:
 ; ok ( w -- false | true ) \ test w = 0
 ;
 HEADER "0=", "ZEQU", F_LEAP + F_CORE, LEAF
-    lda (sp, x)
-    inx
-    ora (sp, x)
-    inx
+    lda spz, x
+    dex
+    ora spz, x
+    dex
     bne FFALSE
     beq FTRUE
 
@@ -309,52 +310,49 @@ HEADER "0=", "ZEQU", F_LEAP + F_CORE, LEAF
 ; ok ( w -- false | true ) \ test w < 0
 ;
 HEADER "0<", "ZLESS", F_LEAP + F_CORE, LEAF
-    inx
-    inx
-    lda (sp), x
+    ; lda spz, x
+    dex 
+    lda spz, x
+    dex
     bmi FTRUE
     bpl FFALSE
 
 ;---------------------------------------------------------------------
 ; 
 false2:
-    inx
-    inx
+    dex
+    dex
 
 ;---------------------------------------------------------------------
 ; 
 false1:
-    inx
-    inx
+    dex
+    dex
     jmp FFALSE
 
 ;---------------------------------------------------------------------
 ; 
 true2:
-    inx
-    inx
+    dex
+    dex
 
 ;---------------------------------------------------------------------
 ; 
 true1:
-    inx
-    inx
+    dex
+    dex
     jmp FTRUE
-
-zzzzzzzzzzzz
 
 ;---------------------------------------------------------------------
 ;
 ; ok ( w1 w2  -- false | true ) \ test w1 > w2
 ;
 HEADER "=", "EQU", F_LEAP + F_CORE, LEAF
-    lda (sp0), x
-    inx
-    inx
-    cmp (sp0), x
+    lda spz + 0, x
+    cmp spz + 2, x
     bne false2
-    dex
-    lda (sp0), x
+    lda spz + 1, x
+    cmp spz + 3, x
     bne false2
     beq true2 
 
@@ -363,16 +361,16 @@ HEADER "=", "EQU", F_LEAP + F_CORE, LEAF
 ; ok ( w1 w2  -- false | true ) \ test w1 < w2
 ; look no overflow, SO pin free 
 HEADER "<", "LESS", F_LEAP + F_CORE, LEAF
-    lda sp0 + 1, x
+    lda spz + 1, x
     eor #$80
     sta a_save
-    lda sp0 + 3, x
+    lda spz + 3, x
     eor #$80
     cmp a_save
     bcc true2
     bne false2
-    lda sp0 + 0, x
-    cmp sp0 + 2, x
+    lda spz + 0, x
+    cmp spz + 2, x
     bcc true2
     bcs false2
 
@@ -381,12 +379,12 @@ HEADER "<", "LESS", F_LEAP + F_CORE, LEAF
 ;   ok  ( w1 w2 -- flag ) \ w1 < w2 
 ;
 HEADER "U<", "UMLESS", F_LEAP + F_CORE, LEAF
-    lda sp0 + 3, x
-    cmp sp0 + 1, x
+    lda spz + 3, x
+    cmp spz + 1, x
     bcc true2
     bne false2
-    lda sp0 + 2, x
-    cmp sp0 + 0, x
+    lda spz + 2, x
+    cmp spz + 0, x
     bcc true2
     bcs false2
 
@@ -396,17 +394,17 @@ HEADER "U<", "UMLESS", F_LEAP + F_CORE, LEAF
 ;
 HEADER "U+", "UMPLUS", F_LEAP + F_CORE, LEAF
     clc
-    lda sp0 + 2, x
-    adc sp0 + 0, x
-    sta sp0 + 2, x
-    lda sp0 + 3, x
-    adc sp0 + 1, x
-    sta sp0 + 3, x
+    lda spz + 2, x
+    adc spz + 0, x
+    sta spz + 2, x
+    lda spz + 3, x
+    adc spz + 1, x
+    sta spz + 3, x
     ; save carry flag
     lda #0
-    sta sp0 + 1, x
+    sta spz + 1, x
     adc #0
-    sta sp0 + 0, x
+    sta spz + 0, x
     ; continue
     jmp link
 
@@ -415,8 +413,8 @@ HEADER "U+", "UMPLUS", F_LEAP + F_CORE, LEAF
 ; ok ( w1 -- w2 ) \  rotate right
 ;
 HEADER "SHR", "LSHR", F_LEAP + F_CORE, LEAF
-    lsr sp0 + 1, x
-    ror sp0 + 0, x
+    lsr spz + 1, x
+    ror spz + 0, x
     ; continue
     jmp link
 
@@ -425,8 +423,8 @@ HEADER "SHR", "LSHR", F_LEAP + F_CORE, LEAF
 ; ok ( w1 -- w2 ) \  rotate left
 ;
 HEADER "SHL", "LSHL", F_LEAP + F_CORE, LEAF
-    asl sp0 + 0, x
-    rol sp0 + 1, x
+    asl spz + 0, x
+    rol spz + 1, x
     ; continue
     jmp link
 
@@ -436,16 +434,16 @@ HEADER "SHL", "LSHL", F_LEAP + F_CORE, LEAF
 ; by book
 HEADER "2/", "ASHR", F_LEAP + F_CORE, LEAF
     ; copy sign bit
-    lda sp0 + 1, x
+    lda spz + 1, x
     and #$80
     sta a_save
     ; shift
-    lsr sp0 + 1, x
-    ror sp0 + 0, x
+    lsr spz + 1, x
+    ror spz + 0, x
     ; mask sign bit
-    lda sp0 + 1, x
+    lda spz + 1, x
     ora a_save
-    sta sp0 + 1, x
+    sta spz + 1, x
     ; continue
     jmp link
 
@@ -455,16 +453,16 @@ HEADER "2/", "ASHR", F_LEAP + F_CORE, LEAF
 ; by book
 HEADER "2*", "ASHL", F_LEAP + F_CORE, LEAF
     ; copy sign bit
-    lda sp0 + 1, x
+    lda spz + 1, x
     and #$80
     sta a_save
     ; shift
-    asl sp0 + 0, x
-    rol sp0 + 1, x
+    asl spz + 0, x
+    rol spz + 1, x
     ; mask sign bit
-    lda sp0 + 1, x
+    lda spz + 1, x
     ora a_save
-    sta sp0 + 1, x
+    sta spz + 1, x
     ; continue
     jmp link
 
@@ -474,10 +472,10 @@ HEADER "2*", "ASHL", F_LEAP + F_CORE, LEAF
 ;
 HEADER "INVERT", "IINV", F_LEAP + F_CORE, LEAF
     lda #$FF
-    eor sp0 + 0, x
-    sta sp0 + 0, x
-    eor sp0 + 1, x
-    sta sp0 + 1, x
+    eor spz + 0, x
+    sta spz + 0, x
+    eor spz + 1, x
+    sta spz + 1, x
     jmp link
 
 ;---------------------------------------------------------------------
@@ -487,11 +485,11 @@ HEADER "INVERT", "IINV", F_LEAP + F_CORE, LEAF
 HEADER "NEGATE", "INEG", F_LEAP + F_CORE, LEAF
     sec
     lda #0
-    sbc sp0 + 1, x
-    sta sp0 + 1, x
+    sbc spz + 1, x
+    sta spz + 1, x
     lda #0
-    sbc sp0 + 0, x
-    sta sp0 + 0, x
+    sbc spz + 0, x
+    sta spz + 0, x
     jmp link
 
 ;---------------------------------------------------------------------
@@ -500,12 +498,12 @@ HEADER "NEGATE", "INEG", F_LEAP + F_CORE, LEAF
 ;
 HEADER "+", "PLUS", F_LEAP + F_CORE, LEAF
     clc
-    lda sp0 + 2, x
-    adc sp0 + 0, x
-    sta sp0 + 2, x
-    lda sp0 + 3, x
-    adc sp0 + 1, x
-    sta sp0 + 3, x
+    lda spz + 2, x
+    adc spz + 0, x
+    sta spz + 2, x
+    lda spz + 3, x
+    adc spz + 1, x
+    sta spz + 3, x
     jmp DROP
 
 ;---------------------------------------------------------------------
@@ -514,12 +512,12 @@ HEADER "+", "PLUS", F_LEAP + F_CORE, LEAF
 ;
 HEADER "-", "MINUS", F_LEAP + F_CORE, LEAF
     sec
-    lda sp0 + 2, x
-    sbc sp0 + 0, x
-    sta sp0 + 2, x
-    lda sp0 + 3, x
-    sbc sp0 + 1, x
-    sta sp0 + 3, x
+    lda spz + 2, x
+    sbc spz + 0, x
+    sta spz + 2, x
+    lda spz + 3, x
+    sbc spz + 1, x
+    sta spz + 3, x
     jmp DROP
 
 ;---------------------------------------------------------------------
@@ -527,12 +525,12 @@ HEADER "-", "MINUS", F_LEAP + F_CORE, LEAF
 ; ok ( w1 w2  -- w3 ) \  w1 AND w2
 ;
 HEADER "AND", "IAND", F_LEAP + F_CORE, LEAF
-    lda sp0 + 2, x
-    and sp0 + 0, x
-    sta sp0 + 2, x
-    lda sp0 + 3, x
-    and sp0 + 1, x
-    sta sp0 + 3, x
+    lda spz + 2, x
+    and spz + 0, x
+    sta spz + 2, x
+    lda spz + 3, x
+    and spz + 1, x
+    sta spz + 3, x
     jmp DROP
 
 ;---------------------------------------------------------------------
@@ -540,12 +538,12 @@ HEADER "AND", "IAND", F_LEAP + F_CORE, LEAF
 ; ok ( w1 w2  -- w3 ) \  w1 OR w2
 ;
 HEADER "OR", "IOR", F_LEAP + F_CORE, LEAF
-    lda sp0 + 2, x
-    ora sp0 + 0, x
-    sta sp0 + 2, x
-    lda sp0 + 3, x
-    ora sp0 + 1, x
-    sta sp0 + 3, x
+    lda spz + 2, x
+    ora spz + 0, x
+    sta spz + 2, x
+    lda spz + 3, x
+    ora spz + 1, x
+    sta spz + 3, x
     jmp DROP
 
 ;---------------------------------------------------------------------
@@ -553,12 +551,12 @@ HEADER "OR", "IOR", F_LEAP + F_CORE, LEAF
 ; ok ( w1 w2  -- w3 ) \  w1 XOR w2
 ;
 HEADER "XOR", "IXOR", F_LEAP + F_CORE, LEAF
-    lda sp0 + 2, x
-    eor sp0 + 0, x
-    sta sp0 + 2, x
-    lda sp0 + 3, x
-    eor sp0 + 1, x
-    sta sp0 + 3, x
+    lda spz + 2, x
+    eor spz + 0, x
+    sta spz + 2, x
+    lda spz + 3, x
+    eor spz + 1, x
+    sta spz + 3, x
     jmp DROP
 
 ;---------------------------------------------------------------------
@@ -576,8 +574,8 @@ HEADER "DROP", "DROP", F_LEAP + F_CORE, LEAF
 ; ok ( w -- w w ) \  
 ;
 HEADER "?DUP", "QDUP", F_LEAP + F_CORE, LEAF
-    lda sp0 + 0, x
-    ora sp0 + 1, x
+    lda spz + 0, x
+    ora spz + 1, x
     bne @nodup
     jmp DUP
 @nodup:
@@ -589,10 +587,10 @@ HEADER "?DUP", "QDUP", F_LEAP + F_CORE, LEAF
 HEADER "DUP", "DUP", F_LEAP + F_CORE, LEAF
     dex
     dex
-    lda sp0 + 2, x
-    sta sp0 + 0, x
-    lda sp0 + 3, x
-    sta sp0 + 1, x
+    lda spz + 2, x
+    sta spz + 0, x
+    lda spz + 3, x
+    sta spz + 1, x
     ; continue
     jmp link
 
@@ -603,10 +601,10 @@ HEADER "DUP", "DUP", F_LEAP + F_CORE, LEAF
 HEADER "OVER", "OVER", F_LEAP + F_CORE, LEAF
     dex
     dex
-    lda sp0 + 4, x
-    sta sp0 + 0, x
-    lda sp0 + 5, x
-    sta sp0 + 1, x
+    lda spz + 4, x
+    sta spz + 0, x
+    lda spz + 5, x
+    sta spz + 1, x
     ; continue
     jmp link
 
@@ -615,7 +613,7 @@ HEADER "OVER", "OVER", F_LEAP + F_CORE, LEAF
 ;   ok  ( -- wrk )
 ;
 HEADER "SP!", "PSTO", F_LEAP + F_CORE, LEAF
-    lda sp0 + 0, x
+    lda spz + 0, x
     tax
     jmp DROP 
 
@@ -624,7 +622,7 @@ HEADER "SP!", "PSTO", F_LEAP + F_CORE, LEAF
 ;   ok  ( -- wrk )
 ;
 HEADER "RP!", "RSTO", F_LEAP + F_CORE, LEAF
-    lda sp0 + 0, x
+    lda spz + 0, x
     tay
     jmp DROP
 
@@ -637,9 +635,9 @@ HEADER ">R", "TOR", F_LEAP + F_CORE, LEAF
     dey
     dey
     ; move values
-    lda sp0 + 0, x
+    lda spz + 0, x
     sta rp0 + 0, y
-    lda sp0 + 1, x
+    lda spz + 1, x
     sta rp0 + 1, y
     inx
     inx
@@ -656,9 +654,9 @@ HEADER "R>", "RTO", F_LEAP + F_CORE, LEAF
     dex
     ; move values
     lda rp0 + 0, y
-    sta sp0 + 0, x
+    sta spz + 0, x
     lda rp0 + 1, y
-    sta sp0 + 1, x
+    sta spz + 1, x
     iny
     iny
     ; continue
@@ -672,9 +670,9 @@ HEADER "R>", "RTO", F_LEAP + F_CORE, LEAF
 HEADER "R@", "RAT", F_LEAP + F_CORE, LEAF
     ; move values
     lda rp0 + 0, y
-    sta sp0 + 0, x
+    sta spz + 0, x
     lda rp0 + 1, y
-    sta sp0 + 1, x
+    sta spz + 1, x
     ; continue
     jmp link
 
@@ -741,10 +739,10 @@ HEADER "4", "FOUR", F_LEAP + F_CORE, LEAF
 stor:
     dex
     dex
-    sta sp0 + 0, x
+    sta spz + 0, x
     ; clear msb
     lda #0
-    sta sp0 + 1, x
+    sta spz + 1, x
     ; continue
     jmp link
 
@@ -809,9 +807,9 @@ HEADER "BRANCH", "BRANCH", F_LEAP + F_CORE, LEAF
 ;
 HEADER "0BRANCH", "ZBRANCH", F_LEAP + F_CORE, LEAF
     lda #0
-    cmp sp0 + 0, x
+    cmp spz + 0, x
     bne NOBRANCH
-    cmp sp0 + 1, x
+    cmp spz + 1, x
     bne NOBRANCH
     inx
     inx
@@ -863,20 +861,20 @@ HEADER "LIT", "LIT", F_LEAP + F_CORE, LEAF
 ;
 HEADER "@", "AT", F_LEAP + F_CORE, LEAF
     ; load address to page zero
-    lda sp0 + 0, x
+    lda spz + 0, x
     sta nos + 0
-    lda sp0 + 1, x
+    lda spz + 1, x
     sta nos + 1
     ; save index
     sty y_save
     ; copy lsb
     ldy #0
     lda (nos), y
-    sta sp0 + 0, x
+    sta spz + 0, x
     ; copy msb
     iny
     lda (nos), y
-    sta sp0 + 1, x
+    sta spz + 1, x
     ; load index
     ldy y_save
     ; continue
@@ -888,19 +886,19 @@ HEADER "@", "AT", F_LEAP + F_CORE, LEAF
 ;   
 HEADER "!", "TO", F_LEAP + F_CORE, LEAF
     ; load address to page zero
-    lda sp0 + 0, x
+    lda spz + 0, x
     sta nos + 0
-    lda sp0 + 1, x
+    lda spz + 1, x
     sta nos + 1
     ; save index
     sty y_save
     ; copy lsb
     ldy #0
-    lda sp0 + 2, x
+    lda spz + 2, x
     sta (nos), y
     ; copy msb
     iny
-    lda sp0 + 3, x
+    lda spz + 3, x
     sta (nos), y
     ; load index
     ldy y_save
@@ -915,19 +913,19 @@ HEADER "!", "TO", F_LEAP + F_CORE, LEAF
 ;
 HEADER "C@", "CAT", F_LEAP + F_CORE, LEAF
     ; load address to page zero
-    lda sp0 + 0, x
+    lda spz + 0, x
     sta nos + 0
-    lda sp0 + 1, x
+    lda spz + 1, x
     sta nos + 1
     ; save index
     sty y_save
     ; copy lsb
     ldy #0
     lda (nos), y
-    sta sp0 + 0, x
+    sta spz + 0, x
     ; clear msb
     lda #0
-    sta sp0 + 1, x
+    sta spz + 1, x
     ; load index
     ldy y_save
     ; continue
@@ -939,15 +937,15 @@ HEADER "C@", "CAT", F_LEAP + F_CORE, LEAF
 ;
 HEADER "C!", "CTO", F_LEAP + F_CORE, LEAF
     ; load address to page 0
-    lda sp0 + 0, x
+    lda spz + 0, x
     sta nos + 0
-    lda sp0 + 1, x
+    lda spz + 1, x
     sta nos + 1
     ; save index
     sty y_save
     ; copy only lsb
     ldy #0
-    lda sp0 + 2, x
+    lda spz + 2, x
     sta (nos), y
     ; load index
     ldy y_save
@@ -964,11 +962,11 @@ HEADER "1+", "PLUS1", F_LEAP + F_CORE, LEAF
     lda #1
 adcs:
     clc
-    adc sp0 + 0, x
-    sta sp0 + 0, x
+    adc spz + 0, x
+    sta spz + 0, x
     lda #0
-    adc sp0 + 1, x
-    sta sp0 + 1, x
+    adc spz + 1, x
+    sta spz + 1, x
     ; continue
     jmp link
 
@@ -1074,19 +1072,19 @@ HEADER "CELL-", "CELLMINUS", F_LEAP + F_CORE, LEAF
 ;
 HEADER "SWAP", "SWAP", F_LEAP + F_CORE, LEAF
     ; swap lsb
-    lda sp0 + 0, x
+    lda spz + 0, x
     sta a_save
-    lda sp0 + 2, x
-    sta sp0 + 0, x
+    lda spz + 2, x
+    sta spz + 0, x
     lda a_save
-    sta sp0 + 2, x
+    sta spz + 2, x
     ; swap msb
-    lda sp0 + 1, x
+    lda spz + 1, x
     sta a_save 
-    lda sp0 + 3, x
-    sta sp0 + 1, x
+    lda spz + 3, x
+    sta spz + 1, x
     lda a_save
-    sta sp0 + 3, x
+    sta spz + 3, x
     ; continue
     jmp link
 
@@ -1096,23 +1094,23 @@ HEADER "SWAP", "SWAP", F_LEAP + F_CORE, LEAF
 ;
 HEADER "ROT", "ROT", F_LEAP + F_CORE, LEAF
     ; swap lsb
-    lda sp0 + 4, x
+    lda spz + 4, x
     sta a_save
-    lda sp0 + 2, x
-    sta sp0 + 4, x
-    lda sp0 + 0, x
-    sta sp0 + 2, x
+    lda spz + 2, x
+    sta spz + 4, x
+    lda spz + 0, x
+    sta spz + 2, x
     lda a_save
-    sta sp0 + 0, x
+    sta spz + 0, x
     ; swap msb
-    lda sp0 + 5, x
+    lda spz + 5, x
     sta a_save
-    lda sp0 + 3, x
-    sta sp0 + 5, x
-    lda sp0 + 1, x
-    sta sp0 + 3, x
+    lda spz + 3, x
+    sta spz + 5, x
+    lda spz + 1, x
+    sta spz + 3, x
     lda a_save
-    sta sp0 + 1, x
+    sta spz + 1, x
     ; continue
     jmp link
 
@@ -1126,42 +1124,42 @@ HEADER "U*", "USTAR", F_LEAP + F_CORE, LEAF
     sty y_save
 
     ; copy multiplier
-    lda sp0 + 2, x
+    lda spz + 2, x
     sta nos
-    lda sp0 + 3, x
+    lda spz + 3, x
     sta nos + 1
 
     ; clear multiplier
     lda #0
-    sta sp0 + 2, x
-    sta sp0 + 3, x
+    sta spz + 2, x
+    sta spz + 3, x
 
     ; counter for 16 bits
     ldy #$10        
 
 @loop:
     ; multiply by 2
-    asl sp0 + 2, x
-    rol sp0 + 3, x
-    rol sp0 + 0, x
-    rol sp0 + 1, x
+    asl spz + 2, x
+    rol spz + 3, x
+    rol spz + 0, x
+    rol spz + 1, x
     bcc @end
 
     ; add multiplier
     clc
     lda nos
-    adc sp0 + 2, x
-    sta sp0 + 2, x
+    adc spz + 2, x
+    sta spz + 2, x
     lda nos + 1
-    adc sp0 + 3, x
-    sta sp0 + 3, x
+    adc spz + 3, x
+    sta spz + 3, x
     bcc @end
 
     ; increase product
     ; lda #0, adc, sta
-    inc sp0 + 0
+    inc spz + 0
     bne @end
-    inc sp0 + 1
+    inc spz + 1
 
 @end:
     dey
@@ -1191,24 +1189,24 @@ HEADER "U/", "USLASH", F_LEAP + F_CORE, LEAF
 
     ; verify
     sec
-    lda  sp0 + 2, x    ; Subtract hi cell of dividend by
-    sbc  sp0 + 0, x    ; divisor to see if there's an overflow condition.
-    lda  sp0 + 3, x
-    sbc  sp0 + 1, x
+    lda  spz + 2, x    ; Subtract hi cell of dividend by
+    sbc  spz + 0, x    ; divisor to see if there's an overflow condition.
+    lda  spz + 3, x
+    sbc  spz + 1, x
     bcs  @oflow        ; Branch if /0 or overflow.
 
     ; counter
     ldy #11H         ; Loop 17x.
 
 @loop:  
-    rol  sp0 + 4, x    ; Rotate dividend lo cell left one bit.
-    rol  sp0 + 5, x
+    rol  spz + 4, x    ; Rotate dividend lo cell left one bit.
+    rol  spz + 5, x
     
     dey               ; Decrement loop counter.
     beq  @end         ; If we're done, then branch to end.
 
-    rol  sp0 + 2, x    ; Otherwise rotate dividend hi cell left one bit.
-    rol  sp0 + 3, x
+    rol  spz + 2, x    ; Otherwise rotate dividend hi cell left one bit.
+    rol  spz + 3, x
     
     lda  #0           ; save carry
     sta  nos + 0
@@ -1216,12 +1214,12 @@ HEADER "U/", "USLASH", F_LEAP + F_CORE, LEAF
 
     ; Subtract dividend cell minus divisor.
     sec
-    lda  sp0 + 2, x    
-    sbc  sp0 + 0, x
+    lda  spz + 2, x    
+    sbc  spz + 0, x
     sta  wrk + 0      ; Put result temporarily in N+2 (lo byte)
     
-    lda  sp0 + 3, x     
-    sbc  sp0 + 1, x
+    lda  spz + 3, x     
+    sbc  spz + 1, x
     sta  wrk + 1      ; Put result temporarily in N+3 (hi byte)
 
     ; verify carry
@@ -1231,17 +1229,17 @@ HEADER "U/", "USLASH", F_LEAP + F_CORE, LEAF
 
     ; update dividend
     lda  wrk + 0      ; If that didn't cause a borrow,
-    sta  sp0 + 2, x    ; make the result from above to
+    sta  spz + 2, x    ; make the result from above to
     lda  wrk + 1
-    sta  sp0 + 3, x    ; be the new dividend hi cell
+    sta  spz + 3, x    ; be the new dividend hi cell
     bcs  @loop        ; and then brach up. (NMOS 6502 can use BCS here.)
 
 @oflow:
     lda  #$FF         ; If overflow or /0 condition found,
-    sta  sp0 + 2, x    ; just put FFFF in both the remainder
-    sta  sp0 + 3, x
-    sta  sp0 + 4, x    ; and the quotient.
-    sta  sp0 + 5, x
+    sta  spz + 2, x    ; just put FFFF in both the remainder
+    sta  spz + 3, x
+    sta  spz + 4, x    ; and the quotient.
+    sta  spz + 5, x
 
 @end:  
     ; load index
@@ -1264,9 +1262,9 @@ HEADER "UM/MOD", "UMMOD", F_LEAP + F_CORE, LEAF
 ; wise end with 'jmp link'
 ;
 HEADER "JUMP", "JUMP", F_LEAP + F_CORE, LEAF 
-    lda sp0 + 0, y
+    lda spz + 0, y
     sta nos + 0
-    lda sp0 + 1, y
+    lda spz + 1, y
     sta nos + 1
     iny
     iny
@@ -1283,12 +1281,12 @@ HEADER "ALIGNED", "ALIGNED", F_LEAP + F_CORE, LEAF
 ; ok ( w -- w )
 ;
 HEADER "><", "NIBBLE", F_LEAP + F_CORE, LEAF
-    lda sp0 + 0, x
+    lda spz + 0, x
     sta nos + 0
-    lda sp0 + 1, x
-    sta sp0 + 0, x
+    lda spz + 1, x
+    sta spz + 0, x
     lda nos + 0
-    sta sp0 + 1, x
+    sta spz + 1, x
     jmp link
 
 ;------------------------------------------------------------------------------
@@ -1296,9 +1294,9 @@ HEADER "><", "NIBBLE", F_LEAP + F_CORE, LEAF
 ;
 HEADER "+!", "PLUSTO", F_LEAP + F_CORE, LEAF
     ; load address to page 0
-    lda sp0 + 0, x
+    lda spz + 0, x
     sta nos + 0, x
-    lda sp0 + 1, x
+    lda spz + 1, x
     sta nos + 1, x
     ; save index
     sty y_save
@@ -1307,12 +1305,12 @@ HEADER "+!", "PLUSTO", F_LEAP + F_CORE, LEAF
     ; sum lsb
     ldy #0
     lda (nos), y
-    adc sp0 + 2, x
+    adc spz + 2, x
     sta (nos), y
     ; sum msb
     iny
     lda (nos), y
-    adc sp0 + 3, x
+    adc spz + 3, x
     sta (nos), y
     ; load index
     ldy y_save
@@ -1325,7 +1323,7 @@ HEADER "+!", "PLUSTO", F_LEAP + F_CORE, LEAF
 ; ok ( w a -- w )
 ;
 HEADER "ABS", "ABS", F_LEAP + F_CORE, LEAF
-    lda sp0 + 1, x
+    lda spz + 1, x
     bpl @pos
     jmp INEG
 @pos:
@@ -1338,9 +1336,9 @@ HEADER "DP", "DP", F_LEAP + F_CORE, LEAF
     dex
     dex
     lda #<list
-    lda sp0 + 0, x
+    lda spz + 0, x
     lda #>list
-    lda sp0 + 1, x
+    lda spz + 1, x
     jmp link
 
 ;======================================================================
