@@ -41,10 +41,11 @@ main.s:HEADER ">R", "TOR", F_LEAP + F_CORE, LEAF
 main.s:HEADER "R>", "RTO", F_LEAP + F_CORE, LEAF
 main.s:HEADER "R@", "RAT", F_LEAP + F_CORE, LEAF
 main.s:HEADER "SP@", "PSAT", F_LEAP + F_CORE, LEAF
-main.s:HEADER "RS@", "RSAT", F_LEAP + F_CORE, LEAF
+main.s:HEADER "RP@", "RSAT", F_LEAP + F_CORE, LEAF
 main.s:HEADER "0", "ZERO", F_LEAP + F_CORE, LEAF
 main.s:HEADER "1", "ONE", F_LEAP + F_CORE, LEAF
 main.s:HEADER "2", "TWO", F_LEAP + F_CORE, LEAF
+main.s:HEADER "3", "TRI", F_LEAP + F_CORE, LEAF
 main.s:HEADER "4", "FOUR", F_LEAP + F_CORE, LEAF
 main.s:HEADER "CR", "CR", F_LEAP + F_CORE, LEAF
 main.s:HEADER "LF", "LF", F_LEAP + F_CORE, LEAF

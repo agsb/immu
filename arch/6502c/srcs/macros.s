@@ -94,14 +94,16 @@
 ;   code, .words, array of references or code
 ;   ends, .word, jump or reference to unnest
 ;
+;   if first reference is null then is code
+;   else is a list of refe
 ;---------------------------------------------------------------------
 ;
 ;   forth words flags
 ; 
-    F_RESERVED  = $80   ; old sytle 
-    F_IMMEDIATE = $40
-    F_COMPILE   = $20
-    F_HIDDEN    = $10   ; old SMUDGE
+    F_IMMEDIATE = $80
+    F_COMPILE   = $40
+    F_HIDDEN    = $20   ; old SMUDGE
+    F_RESERVED  = $10   ; old sytle 
 
 ;
     F_TOMASK = $F0
@@ -131,9 +133,15 @@
 ;   just a static line, receives a line until a CR or CR LF
 ;   uses BS, for edit last char
 ;
+;   decimal
+;
     ESC_    =   27    ; ascii escape ^[
+ 
     XON_    =   17    ; ascii DC1 ^Q
     XOFF_   =   19    ; ascii DC3 ^S
+
+    ACK_    =    6    ; ascii ACK
+    NAK_    =   21    ; ascii ACK
 
     CR_     =   13    ; ascci carriage return ^M
     LF_     =   10    ; ascii line feed ^J
