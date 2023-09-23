@@ -40,7 +40,9 @@ So _absolute,Y_ and _Y,indirect_ are the choices for make a stack and Forth need
 
 - Use _Y,indirect_ and the cpu stack itself. One stack contents must be copied for multi-tasks or multi-user. That is used by the original FIG-Forth and is not multi-task or multi-user.
 
-In any case the limit of stack is 127 words. Charles H Moore uses stacks of 18 to 21 words. Using 21 words, could have six tasks or users, without need to copy stack contents.
+In any case the limit of stack is 127 words. Charles H Moore uses stacks of 18 to 21 words. 
+
+Using absolute address indexed by Y and X and each with 21 words, could have six tasks or users, without need to copy stack contents, a good trade-off.
 
 
 
