@@ -4,9 +4,7 @@ An implementation of Forth for 6502 ISA, with inner interpreter using minimal in
   
 In 2023, the immu Forth was splitted for ISAs: 6502, Atmega328, RiscV
 
-This is the adapted review of Fig-Forth-6502, updated for some 1979, 1983, 2012 standart
-
-changes:
+This is the adapted review of Fig-Forth-6502, updated for some 1979, 1983, 2012 standarts, changes:
 
         FALSE is 0x0000, TRUE is 0xFFFF
 
@@ -14,7 +12,7 @@ changes:
 
         FOR NEXT masks offsets with 0x8000, as Forth-83, and counts down to zero, as eforth
 
-A review of code, changing the inner interpreter to hold the link reference and a memory map to allow free size of stacks.
+A review of code, changing the inner interpreter to use push-pull and jump-link, with explicit deep-first search.
 
-## notes
+More details in  [Notes](https://github.com/agsb/immu/blob/main/arch/6502c/Notes.md)
 
