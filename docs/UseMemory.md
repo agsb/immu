@@ -10,7 +10,7 @@ Flash memory write cycle needs a specific CPU/MCU routine, that erase a pages, c
 
 Flash memory is better for static content, and SRAM memory for dynamic content.
 
-## Classic Map
+### Classic Map
 
 ( using name and code dictionaries mixed in one linked list )
 
@@ -24,6 +24,8 @@ for a non-interative task
           
 _LOW RAM \[|SP<--SP0||RP<--RP0|-- user area --\] HIGH RAM_
 
+### Review Map
+
 A review of organization, by place the user area before stacks, and considering the user area as a place holder and some rellocations
 
 _LOW RAM \[ --user area |--<--SP0|--<--RP0| \] HIGH RAM_
@@ -36,13 +38,14 @@ inside user variables
 
 | name | use |
 | -- | -- |
+|    | _for each task_ |
 | UM | size of task block |
 | DP0 | start of dictionary |
 | TB0 | start of terminal input buffer |
 | TBZ | end of terminal input buffer |
 | SP0 | start of parameter stack |
 | RP0 | start of return stack |
-| | |
+| | _for this task_ |
 | STATE | |
 | BASE | |
 | DP | |
