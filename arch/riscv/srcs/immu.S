@@ -31,8 +31,9 @@
 /*
 A Forth with minimal indirect thread code
 
-(S: w1 w2 w3 -- w1 w3) parameter stack, before -- after, w3 at top
-(R: w1 w2 w3 -- w1 w3) return stack, before -- after, w3 at top
+( w1 w2 -- w3), before -- after, w3 at top
+
+( -- ) ( -- ), parameter stack, return stack
 
 simetric division, floored to zero
 
@@ -62,6 +63,13 @@ two for address sources, two for contents bytes,
 and maybe a counter.
 else many stack operations are need
 
+
+    // yes, is a relative jump
+    // beq zero, zero, _label
+
+    // yes, is a direct jump
+    // jal zero, _n2t
+
 ```
 */
 
@@ -78,16 +86,17 @@ else many stack operations are need
 #define  BUFFER 80
 #define  LENGTH 16
 
-#define  FLASHPAGE 1024    # page of flash memory for flush in GD32VF103CBT6
+// # page of flash memory for flush in GD32VF103CBT6
+#define  FLASHPAGE 1024    
 
-#define F_RESERVED 0x80
-#define F_IMMEDIATE 0x40
-#define F_COMPILE 0x20
-#define F_HIDDEN  0x10
-#define F_COMMON  0x00
+#define F_IMMEDIATE 0x80
+#define F_COMPILE   0x40
+#define F_HIDDEN    0x20
+#define F_RESERVED  0x10
+#define F_COMMON    0x00
 
-#define F_TOMASK  0xF0
-#define F_UNMASK  0x0F
+#define F_TOMASK    0xF0
+#define F_UNMASK    0x0F
 
 #define IS_COMPILE  0x01
 #define IS_EXECUTE  0x00
@@ -95,23 +104,21 @@ else many stack operations are need
 //---------------------------------------------------------------------
 // Flow Control
 // assumes that all line edit is done at remote!
-// no delete, no moving cursor, just a static line.
+// no delete, no moving cursor, just backspace and a static line.
 // works as a screen or block, just receives a line till a CR or CR LF
-// uses ESC, CAN, XON, XOFF, for control
+// uses XON, XOFF, ESC, CAN, for control
 //
 :
 // #define EOF_      0x05    //#; ascii eof ^D
 // #define TB_       0x09    //#; ascii horizontal ^I
 
 #define XON_      0x11    //#; ascii DC1 ^Q
+
 #define XOFF_     0x13    //#; ascii DC3 ^S
 
-// #define CAN_      0x18    //#; ascii cancel ^C
+#define CAN_      0x18    //#; ascii cancel ^C
 
 #define ESC_      0x1B    //#; ascii escape ^[
-
-// #define TL_       0x7E    //#; ascii tilde
-// #define DEL_      0x7F    //#; ascii del
 
 #define CR_       0x0d    //#; ascci carriage return ^M
 
@@ -157,7 +164,7 @@ else many stack operations are need
     lw \register, \index * CELL (\stack)
 .endm
 
-.macro move destin, origin
+.macro copy destin, origin
     add \destin, \origin, \zero
 .endm
 
@@ -313,7 +320,7 @@ _nest:
     spush Rsp, Wrk
 
 _link:
-    move Wrk, Lnk
+    copy Wrk, Lnk
     jal zero, _next
 
 _jump:
@@ -575,6 +582,13 @@ header "CELL+", "cellplus", , F_RESERVED, LEAF
     jal zero, _link
 
 //----------------------------------------------------------------------
+// ( u -- u+CELL )
+// CELL is 4, add a CELL size
+header "CELL-", "cellminus", , F_RESERVED, LEAF
+    addi Top, Top, -1*CELL
+    jal zero, _link
+
+//----------------------------------------------------------------------
 // CHAR is one byte, just add zero 
 // ( u -- u*BYTE )
 // hook 
@@ -682,7 +696,8 @@ header "TUCK", "tuck", , F_RESERVED, LEAF
 header "OVER", "over", , F_RESERVED, LEAF
     lw Nos, 0 (Psp)
     spush Psp, Top
-_n2t:
+// Nos to Tos
+_n2t: 
     add Top, Nos, zero
     jal zero, _link
     
@@ -746,7 +761,7 @@ header "MAX", "max", , F_RESERVED, LEAF
 header "LIT", "lit", , F_RESERVED, LEAF
 dolit:
     spush Psp, Top 
-    spull Top, Lnk 
+    spull Lnk, Top 
     jal zero, _link
 
 //----------------------------------------------------------------------
@@ -813,7 +828,7 @@ header "ALIGNED", "aligned", , F_RESERVED, LEAF
 
 *******************************************************************************/
 // -----------------------------------------------------------------------------
-// ok multiply ( w1 w2 w3 -- ((w1 * w2) / w3) ) 
+// ok scale ( w1 w2 w3 -- ((w1 * w2) / w3) ) 
 header "*/", "starslash", , F_RESERVED, LEAF
     spull Psp, Nos
     spull Psp, Wrk
@@ -999,7 +1014,7 @@ header "CFILL", "cfill", F_RESERVED, LEAF
 // point next non c
 // returns 0 at end of buffer
 //
-header "cskip", "cskip", F_RESERVED, LEAF
+header "CSKIP", "cskip", F_RESERVED, LEAF
     // get the separator char
     spull Psp, Nos
 
@@ -1020,7 +1035,7 @@ header "cskip", "cskip", F_RESERVED, LEAF
 // point next c
 // returns 0 at end of buffer
 //
-header "cscan", "cscan", F_RESERVED, LEAF
+header "CSCAN", "cscan", F_RESERVED, LEAF
     // get the separator char
     spull Psp, Nos
 
@@ -1041,7 +1056,7 @@ header "cscan", "cscan", F_RESERVED, LEAF
 // point next word between <ch><ch><ch>sssssss<ch>
 // returns 0 at end of buffer
 //
-header "sscan", "sscan", F_RESERVED, LEAF
+header "SSCAN", "sscan", F_RESERVED, LEAF
     // get the separator char
     spull Psp, Nos
 
@@ -1080,7 +1095,7 @@ header "sscan", "sscan", F_RESERVED, LEAF
 // return a3 (lfa) or zero
 // bytes: link(4),flags(1),size(1),name(n),pads(?)
 //
-header "sfind", "sfind", F_RESERVED, LEAF
+header "SFIND", "sfind", F_RESERVED, LEAF
     1:
     // copy cstr address
     scopy Psp, Nos, 0
@@ -1124,6 +1139,8 @@ header "sfind", "sfind", F_RESERVED, LEAF
 9: 
     jal zero, _link 
 //----------------------------------------------------------------------
+
+// zzzzz
 
 /***********************************************************************
     
