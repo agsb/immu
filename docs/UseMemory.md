@@ -12,13 +12,57 @@ Flash memory is better for static content, and SRAM memory for dynamic content.
 
 ## Classic Map
 
+( using name and code dictionaries mixed in one linked list )
+
 In PolyForth the memory map 
 
 for a interactive task is 
-          LOW RAM [--user dictionary---->|DP------|SP<----SP0|TIB0---->IN----#TIB|------|RP<----RP0|--- user area ---] HIGH RAM
+         
+_LOW RAM \[|DP0--user dictionary-->|DP----|SP<--SP0|TIB0-->IN----#TIB|----|RP<--RP0|-- user area --\] HIGH RAM_
 
 for a non-interative task
-          LOW RAM [|SP<----SP0||RP<----RP0|--- user area ---] HIGH RAM
+          
+_LOW RAM \[|SP<--SP0||RP<--RP0|-- user area --\] HIGH RAM_
+
+A review of organization, by place the user area before stacks, and considering the user area as a place holder and some rellocations
+
+_LOW RAM \[ --user area |--<--SP0|--<--RP0| \] HIGH RAM_
+
+user area as 
+
+\[ user variables |DP0 --user dicitonary-->|DP -->-- |PAD -->--|TIB0 -->IN--|TIB# \]
+
+inside user variables
+
+| name | use |
+| -- | -- |
+| UM | size of task block |
+| DP0 | start of dictionary |
+| TB0 | start of terminal input buffer |
+| TBZ | end of terminal input buffer |
+| SP0 | start of parameter stack |
+| RP0 | start of return stack |
+| | |
+| STATE | |
+| BASE | |
+| DP | |
+| TOIN | |
+| HLD | |
+| CSP | |
+| CRP | |
+| DSK | |
+| BLK | |
+| SCR | |
+| ERRO | |
+| WARN | |
+| CONTENT | |
+| CURRENT | |
+| LATEST | |
+| 'QUERY | |
+| 'EXPECT | |
+| 'KEY | |
+| 'EMIT | |
+| 'KEY? | |
 
 ### groups
 
@@ -27,21 +71,22 @@ For a generic Forth system,
 | name | type | memory | size | used |
 | --- | --- | --- | --- | --- |
 | BIOS | static | flash | vary | routines for input/output system |
-| SS | dynamic | sram  |18 cells | passing parameters between routines, aka system stack |
 | CORE | static | flash | vary | processor specific routines for Forth, aka primitives |
 | FORTH | static | flash | vary | generic routines for Forth, aka compounds |
-| DS | dynamic | sram | 18 cells | data stack for Forth, aka the parameter data stack |
-| RS | dynamic | sram | 18 cells | return stack for Forth, aka return stack |
+| SP | dynamic | sram | 18 cells | data stack for Forth, aka the parameter data stack |
+| RP | dynamic | sram | 18 cells | return stack for Forth, aka return stack |
+| OS | dynamic | sram  | 18 cells | passing parameters between routines, aka system stack |
 | TIB | dynamic | sram | 80 bytes | terminal input/output buffer| 
 | PAD | dynamic | sram | 84 bytes | scratch area for Forth |
-| POB | dynamic | sram | 36 bytes | scratch area for Forth format numbers | 
+| BOB | dynamic | sram | 36 bytes | scratch area for Forth format numbers | 
 | DICIONARY | static | vary | vary | generic routines for Forth, aka dictionary |
-| VARS | dynamic | sram | vary | keep values of Forth variables |
+| USER VARS | dynamic | sram | vary | keep values of Forth variables |
 | | | | |
 
 Notes:
+
 - The values for TIB, PAD, BOB are mininal size, as defined by standart Forth 1994 and Forth 2012;
-- The values for stacks are enough, as said by Charles Moore
+- The values for stacks are minimal enough, as said by Charles Moore
 - About TIB there is a quote, from old days of IBM paper card, " 72 is continue ";
 
 ### The dictionary
