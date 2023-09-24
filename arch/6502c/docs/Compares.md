@@ -52,30 +52,38 @@ The alternative must copy the address from memory to zero page, then use it. The
         
 Incorring in 10 bytes and 16 cycles every indirect access as:
  
-        ; using Y
+        ;
+        ; load indirect to zero page using y
+        ;
         ; save index
         sty y_save
         ; copy lsb
         ldy #0
         lda (azp), y
-        sta abs, x
+        sta bzp + 0
         ; copy msb
-        iny
+        ldy #1
         lda (azp), y
-        sta abs+1, x
-        ;load index
+        sta bzp + 1
+        ; load index
         ldy y_save
         
-        ; using Y
+        ;
+        ;   increase a cell 
+        ; using y
+        ; save index
         sty y_save
         ldy #0
-        lda (azp), Y
-        sta abs, x
-        inc azp
-        bne noinc
-        inc azp+1
-        lda (azp), Y
-        sta abs+1, x
-        
+        lda (azp), y
+        adc #2
+        sta (azp), y
+        bcc noinc
+        ldy #1
+        lda (azp), y
+        adc #1
+        sta (azp), y
+    noinc:
+        ; load index
+        ldy y_save
         
         

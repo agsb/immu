@@ -35,7 +35,7 @@ HEADER "2DROP", "TWODROP", F_LEAP + F_CORE, LEAF
     inx
     inx
     inx
-    jmp unnest
+    jmp link
 
 ;------------------------------------------------------------------------------
 ; ok ( w1 w2 -- w1 w2 w1 w2 )
@@ -54,7 +54,7 @@ HEADER "2DUP", "TWODUP", F_LEAP + F_CORE, LEAF
     lda ps + 7, x
     sta ps + 3, x
    ; continue 
-    jmp unnest
+    jmp link
 
 ;------------------------------------------------------------------------------
 ; ok ( w1 w2 w3 w4 -- w1 w2 w3 w4 w1 w2 ))
@@ -73,7 +73,7 @@ HEADER "2OVER", "TWOOVER", F_LEAP + F_CORE, LEAF
     lda ps + 11, x
     sta ps + 3, x
    ; continue 
-    jmp unnest
+    jmp link
 
 ;------------------------------------------------------------------------------
 ; ok ( w1 w2 w3 w4 -- w w )
@@ -124,7 +124,7 @@ HEADER "D2*", "DTWOSTAR", F_LEAP + F_CORE, LEAF
     rol ps + 2
     rol ps + 3
     ; continue 
-    jmp unnest
+    jmp link
     
 ;------------------------------------------------------------------------------
 ; ok ( w1 w2 w3 w4 -- w w )
@@ -135,19 +135,17 @@ HEADER "D2/", "DTWOSLASH", F_LEAP + F_CORE, LEAF
     ror ps + 1
     ror ps + 0
     ; continue 
-    jmp unnest
+    jmp link
 
 ;------------------------------------------------------------------------------
 ; ok ( w1 w2 -- flag )
 ;
 HEADER "D0=", "DZEQU", F_LEAP + F_CORE, LEAF
     lda ps + 0, x
-    bne dfalse
-    lda ps + 1, x
+    ora ps + 1, x
     bne dfalse
     lda ps + 2, x
-    bne dfalse
-    lda ps + 3, x
+    ora ps + 3, x
     bne dfalse
 dtrue:
     jmp FTRUE
@@ -182,7 +180,7 @@ HEADER "DNEGATE", "DNEGATE", F_LEAP + F_CORE, LEAF
     sbc ps + 0, x
     sta ps + 0, x
     ; continue
-    jmp unnest
+    jmp link
 
 ;------------------------------------------------------------------------------
 ; ok ( w1 w2 -- flag )
@@ -191,7 +189,7 @@ HEADER "DABS", "DABS", F_LEAP + F_CORE, LEAF
     lda ps + 3, x
     bmi DNEGATE
     ; continue
-    jmp unnest
+    jmp link  
     
 ;------------------------------------------------------------------------------
 

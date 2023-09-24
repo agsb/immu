@@ -1343,30 +1343,29 @@ HEADER "><", "NIBBLE", F_LEAP + F_CORE, LEAF
     sta spz + 1, x
     jmp link
 
-zzzzz
 ;------------------------------------------------------------------------------
 ; ok ( w a -- )
 ;
 HEADER "+!", "PLUSTO", F_LEAP + F_CORE, LEAF
     ; load address to page 0
     lda spz + 0, x
-    sta nos + 0, x
+    sta wrk + 0, x
     lda spz + 1, x
-    sta nos + 1, x
+    sta wrk + 1, x
     ; save index
     sty y_save
     ; process
     clc
     ; sum lsb
     ldy #0
-    lda (nos), y
+    lda (wrk), y
     adc spz + 2, x
-    sta (nos), y
+    sta (wrk), y
     ; sum msb
-    iny
-    lda (nos), y
+    ldy #1
+    lda (wrk), y
     adc spz + 3, x
-    sta (nos), y
+    sta (wrk), y
     ; load index
     ldy y_save
     ; continue
@@ -1399,7 +1398,6 @@ HEADER "DP", "DP", F_LEAP + F_CORE, LEAF
 ;======================================================================
 
 .include "double.s"
-
 
 ;======================================================================
 .END
