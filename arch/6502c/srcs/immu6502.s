@@ -105,6 +105,10 @@ sct = tz + 34   ; sector number
 scr = tz + 36   ; screen number
 
 ;=====================================================================
+
+.P02
+
+;=====================================================================
 ;
 ; ??? bios must be a end of address
 ;
@@ -634,9 +638,9 @@ HEADER ">R", "TOR", F_LEAP + F_CORE, LEAF
     dey
     ; move values
     lda spz + 0, x
-    sta rp0 + 0, y
+    sta rpz + 0, y
     lda spz + 1, x
-    sta rp0 + 1, y
+    sta rpz + 1, y
     inx
     inx
     ; continue
@@ -651,9 +655,9 @@ HEADER "R>", "RTO", F_LEAP + F_CORE, LEAF
     dex
     dex
     ; move values
-    lda rp0 + 0, y
+    lda rpz + 0, y
     sta spz + 0, x
-    lda rp0 + 1, y
+    lda rpz + 1, y
     sta spz + 1, x
     iny
     iny
@@ -669,9 +673,9 @@ HEADER "R@", "RAT", F_LEAP + F_CORE, LEAF
     ; move values
     dex
     dex
-    lda rp0 + 0, y
+    lda rpz + 0, y
     sta spz + 0, x
-    lda rp0 + 1, y
+    lda rpz + 1, y
     sta spz + 1, x
     ; continue
     jmp link
@@ -871,11 +875,11 @@ HEADER "LIT", "LIT", F_LEAP + F_CORE, LEAF
     ldy #0
     lda (lnk), y
     dex
-    sta (spz), x
+    sta spz, x
     ldy #1
     lda (lnk), y
     dex
-    sta (spz), x
+    sta spz, x
     ; load index
     ldy y_save
     jmp NOBRANCH
@@ -1025,7 +1029,7 @@ HEADER "4+", "PLUS4", F_LEAP + F_CORE, LEAF
 ;
 HEADER "1-", "MINUS1", F_LEAP + F_CORE, LEAF
     lda #$FF
-    jmp adcs
+    jmp adds
 
 ;---------------------------------------------------------------------
 ; 
@@ -1033,7 +1037,7 @@ HEADER "1-", "MINUS1", F_LEAP + F_CORE, LEAF
 ;
 HEADER "2-", "MINUS2", F_LEAP + F_CORE, LEAF
     lda #$FE
-    jmp adcs
+    jmp adds
 
 ;---------------------------------------------------------------------
 ; 
@@ -1041,7 +1045,7 @@ HEADER "2-", "MINUS2", F_LEAP + F_CORE, LEAF
 ;
 HEADER "3-", "MINUS3", F_LEAP + F_CORE, LEAF
     lda #$FD
-    jmp adcs
+    jmp adds
 
 ;---------------------------------------------------------------------
 ; 
@@ -1049,7 +1053,7 @@ HEADER "3-", "MINUS3", F_LEAP + F_CORE, LEAF
 ; 
 HEADER "4-", "MINUS4", F_LEAP + F_CORE, LEAF
     lda #$FC
-    jmp adcs
+    jmp adds
 
 ;---------------------------------------------------------------------
 ; 
@@ -1327,7 +1331,7 @@ HEADER "ALIGNED", "ALIGNED", F_LEAP + F_CORE, LEAF
     sta spz + 1, x
 algn:    
     lda spz + 0, x
-    and #FE
+    and #$FE
     sta spz + 0, x
     jmp link
 

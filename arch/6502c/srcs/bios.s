@@ -197,13 +197,13 @@ VIA1_PAH        =  VIA1+15   ; Its port A address no handshake
 irq_isr:
 	; scan for via0
 scan_via0:
-	bit via0_ifr
+	bit VIA0_IFR
 	bpl skip_via0
 	jsr service_via0
 skip_via0:
 
 scan_via1:
-	bit via1_ifr
+	bit VIA1_IFR
 	bpl skip_via1
 	jsr service_via1
 skip_via1:
@@ -215,14 +215,14 @@ ends_isr:
 service_via0:
 	pha
 	lda #$7F
-	sta via0_ifr;
+	sta VIA0_IFR;
 	pla
 	rti
 ;	attend interrupt 
 service_via1:
 	pha
 	lda #$7F
-	sta via1_ifr;
+	sta VIA1_IFR;
 	pla
 	rti
 ; 	default

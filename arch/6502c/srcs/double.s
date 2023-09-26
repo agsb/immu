@@ -45,14 +45,14 @@ HEADER "2DUP", "TWODUP", F_LEAP + F_CORE, LEAF
     dex
     dex
     dex
-    lda ps + 4, x
-    sta ps + 0, x
-    lda ps + 5, x
-    sta ps + 1, x
-    lda ps + 6, x
-    sta ps + 2, x
-    lda ps + 7, x
-    sta ps + 3, x
+    lda spz + 4, x
+    sta spz + 0, x
+    lda spz + 5, x
+    sta spz + 1, x
+    lda spz + 6, x
+    sta spz + 2, x
+    lda spz + 7, x
+    sta spz + 3, x
    ; continue 
     jmp link
 
@@ -64,14 +64,14 @@ HEADER "2OVER", "TWOOVER", F_LEAP + F_CORE, LEAF
     dex
     dex
     dex
-    lda ps + 8, x
-    sta ps + 0, x
-    lda ps + 9, x
-    sta ps + 1, x
-    lda ps + 10, x
-    sta ps + 2, x
-    lda ps + 11, x
-    sta ps + 3, x
+    lda spz + 8, x
+    sta spz + 0, x
+    lda spz + 9, x
+    sta spz + 1, x
+    lda spz + 10, x
+    sta spz + 2, x
+    lda spz + 11, x
+    sta spz + 3, x
    ; continue 
     jmp link
 
@@ -80,18 +80,18 @@ HEADER "2OVER", "TWOOVER", F_LEAP + F_CORE, LEAF
 ;
 HEADER "D+", "DPLUS", F_LEAP + F_CORE, LEAF
     clc
-    lda ps + 4
-    adc ps + 0
-    sta ps + 4
-    lda ps + 5
-    adc ps + 1
-    sta ps + 5
-    lda ps + 6
-    adc ps + 2
-    sta ps + 6
-    lda ps + 7
-    adc ps + 3
-    sta ps + 7
+    lda spz + 4
+    adc spz + 0
+    sta spz + 4
+    lda spz + 5
+    adc spz + 1
+    sta spz + 5
+    lda spz + 6
+    adc spz + 2
+    sta spz + 6
+    lda spz + 7
+    adc spz + 3
+    sta spz + 7
     ; continue 
     jmp TWODROP
 
@@ -100,18 +100,18 @@ HEADER "D+", "DPLUS", F_LEAP + F_CORE, LEAF
 ;
 HEADER "D-", "DMINUS", F_LEAP + F_CORE, LEAF
     sec
-    lda ps + 4
-    sbc ps + 0
-    sta ps + 4
-    lda ps + 5
-    sbc ps + 1
-    sta ps + 5
-    lda ps + 6
-    sbc ps + 2
-    sta ps + 6
-    lda ps + 7
-    sbc ps + 3
-    sta ps + 7
+    lda spz + 4
+    sbc spz + 0
+    sta spz + 4
+    lda spz + 5
+    sbc spz + 1
+    sta spz + 5
+    lda spz + 6
+    sbc spz + 2
+    sta spz + 6
+    lda spz + 7
+    sbc spz + 3
+    sta spz + 7
     ; continue 
     jmp TWODROP
     
@@ -119,10 +119,10 @@ HEADER "D-", "DMINUS", F_LEAP + F_CORE, LEAF
 ; ok ( w1 w2 w3 w4 -- w w )
 ; logical !
 HEADER "D2*", "DTWOSTAR", F_LEAP + F_CORE, LEAF
-    asl ps + 0
-    rol ps + 1
-    rol ps + 2
-    rol ps + 3
+    asl spz + 0
+    rol spz + 1
+    rol spz + 2
+    rol spz + 3
     ; continue 
     jmp link
     
@@ -130,10 +130,10 @@ HEADER "D2*", "DTWOSTAR", F_LEAP + F_CORE, LEAF
 ; ok ( w1 w2 w3 w4 -- w w )
 ; logical !
 HEADER "D2/", "DTWOSLASH", F_LEAP + F_CORE, LEAF
-    lsr ps + 3
-    ror ps + 2
-    ror ps + 1
-    ror ps + 0
+    lsr spz + 3
+    ror spz + 2
+    ror spz + 1
+    ror spz + 0
     ; continue 
     jmp link
 
@@ -141,11 +141,11 @@ HEADER "D2/", "DTWOSLASH", F_LEAP + F_CORE, LEAF
 ; ok ( w1 w2 -- flag )
 ;
 HEADER "D0=", "DZEQU", F_LEAP + F_CORE, LEAF
-    lda ps + 0, x
-    ora ps + 1, x
+    lda spz + 0, x
+    ora spz + 1, x
     bne dfalse
-    lda ps + 2, x
-    ora ps + 3, x
+    lda spz + 2, x
+    ora spz + 3, x
     bne dfalse
 dtrue:
     jmp FTRUE
@@ -156,7 +156,7 @@ dfalse:
 ; ok ( w1 w2 -- flag )
 ;
 HEADER "D0<", "DZLESS", F_LEAP + F_CORE, LEAF
-    lda ps + 3, x
+    lda spz + 3, x
     bmi dtrue
     bpl dfalse
 
@@ -165,20 +165,20 @@ HEADER "D0<", "DZLESS", F_LEAP + F_CORE, LEAF
 ;
 HEADER "DNEGATE", "DNEGATE", F_LEAP + F_CORE, LEAF
     lda #0
-    sbc ps + 3, x
-    sta ps + 3, x
+    sbc spz + 3, x
+    sta spz + 3, x
     lda #0
-    sbc ps + 2, x
-    sta ps + 2, x
+    sbc spz + 2, x
+    sta spz + 2, x
 
 ;    alternative, jmp INEG+1
 
     lda #0
-    sbc ps + 1, x
-    sta ps + 1, x
+    sbc spz + 1, x
+    sta spz + 1, x
     lda #0
-    sbc ps + 0, x
-    sta ps + 0, x
+    sbc spz + 0, x
+    sta spz + 0, x
     ; continue
     jmp link
 
@@ -186,7 +186,7 @@ HEADER "DNEGATE", "DNEGATE", F_LEAP + F_CORE, LEAF
 ; ok ( w1 w2 -- flag )
 ;
 HEADER "DABS", "DABS", F_LEAP + F_CORE, LEAF
-    lda ps + 3, x
+    lda spz + 3, x
     bmi DNEGATE
     ; continue
     jmp link  

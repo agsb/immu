@@ -1,0 +1,43 @@
+#! /usr/bin/bash
+
+case $1 in
+
+a) 
+ca65 -W 1 -l $1.lst -o $1.o -mm near -v \
+    --cpu 6502 \
+    --create-full-dep $1.dep \
+    --list-bytes 80 \
+    --pagelength 36 \
+    $1.s
+    ;;
+
+c) 
+    # cl65 -t atari -Ln $1.lbl --listing $1.lst --add-source -o $1.xex $1.s
+    
+echo " start compiling "
+
+
+cl65 -C $1.cfg --no-target-lib \
+    -l $1.asm -m $1.map -o $1.obj -Ln $1.lbl \
+    --cpu 6502 \
+    $1.s 2> err | tee out 
+
+# --add-source --create-dep $1.dep \
+# -vm -v \
+# -O0 -W1 -c -T -S \
+echo " stop compiling "
+    ;;
+
+l)
+ld65 -o $1.bin -m $1.map -Ln $1.lbs -C $1.cfg $1.obj
+    ;;
+
+x)
+    rm a $1.obj $1.dep $1.asm $1.map $1.lbl out err c64/*
+    ;;
+
+esac
+
+grep HEADER *.s | grep -v immu > words
+
+
