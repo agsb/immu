@@ -51,37 +51,42 @@ _nmi_int:
     rti
 
 _irq_int:
+
     ; save registers
-    pha
-    txa
     pha
     tya
     pha
-    
-    ; verify status
+    txa
+    pha
+
+    ; copy sp to x
     tsx
-    inx
-    inx
-    lda STACK, x
+    inx     ; x
+    inx     ; y
+    inx     ; a
+    inx     ; p
+    lda #$100, x    ; load offset in stack
     and #$10
-    bne _break
+    bne _irq_soft
+    
+_irq_hard:
     
     ;
     ; do something somewhere sometime
     ;
 
-_irq:
     ; load registers
     pla
-    tay
-    pla
     tax
+    pla
+    tay
     pla
 
     ; return 
     rti
 
-_break:
+_irq_soft:
+
     jmp _halt
     
 ;---------------------------------------------------------------------
@@ -121,10 +126,10 @@ _init:
 
 ;=====================================================================
 ;
-;   reserved one 4k page $8000-$8FFF for I/O 6522VIA 6551CIA
+;   reserved one 4k page $C000-$CFFF for I/O 6522VIA 6551CIA
 ;   external 74hc glue logic for phi2 LOW and address
 ;   bit mapped as
-;       1000 [15-12]    IOS == select IO == 74HC logic
+;       1100 [15-12]    IOS == select IO == 74HC logic
 ;       XXXX [11-08]    IOS and XXXX == select chip 0-3
 ;       YYYY [07-04]    IOS and YYYY == select chip 0-3
 ;       ZZZZ [03-00]    ports in chip
@@ -133,12 +138,12 @@ _init:
 ;
 ;---------------------------------------------------------------------
 ;
-;   $8000, reserved
+;   $C000-$C00F, reserved
 ;
 ;---------------------------------------------------------------------
-;   $8010, system CIA, select (R0 R1)
+;   $C010, system CIA, select (R0 R1)
 ;
-CIA       =  $8010    ; The base address of the 6551 ACIA.
+CIA       =  $C010    ; The base address of the 6551 ACIA.
 CIA_DATA  =  CIA+0   ; Its data I/O register
 CIA_RX    =  CIA+0   ; Its data I/O register
 CIA_TX    =  CIA+0   ; Its data I/O register
@@ -147,46 +152,46 @@ CIA_COMM  =  CIA+2   ; Its command  register
 CIA_CTRL  =  CIA+3   ; Its control  register
 
 ;---------------------------------------------------------------------
-;   $8020, system VIA,  select (R0 R1 R3 R4)
+;   $C020, system VIA,  select (R0 R1 R3 R4)
 ;
-VIA0        =  $8020    ; The base address of the 6522 VIA.
-VIA0_PB         =  VIA0+0    ; Its port B address
-VIA0_PA         =  VIA0+1    ; Its port A address
-VIA0_DDRB       =  VIA0+2    ; Its data-direction register for port B
-VIA0_DDRA       =  VIA0+3    ; Its data-direction register for port A
-VIA0_T1CL       =  VIA0+4    ; Its timer-1 counter's low  byte
-VIA0_T1CH       =  VIA0+5    ; Its timer-1 counter's high byte
-VIA0_T1LL       =  VIA0+6    ; Its timer-1 latcher's low  byte
-VIA0_T1LH       =  VIA0+7    ; Its timer-1 latcher's high byte
-VIA0_T2CL       =  VIA0+8    ; Its timer-2 counter's low  byte
-VIA0_T2CH       =  VIA0+9    ; Its timer-2 counter's high byte
-VIA0_SR         =  VIA0+10   ; The shift register
-VIA0_ACR        =  VIA0+11   ; The auxiliary  control register
-VIA0_PCR        =  VIA0+12   ; The peripheral control register
-VIA0_IFR        =  VIA0+13   ; The interrupt  flag  register
-VIA0_IER        =  VIA0+14   ; The interrupt enable register
-VIA0_PAH        =  VIA0+15   ; Its port A address no handshake
+VIA0        =  $C020    ; The base address of the 6522 VIA.
+VIA0_PB     =  VIA0+0    ; Its port B address
+VIA0_PA     =  VIA0+1    ; Its port A address
+VIA0_DDRB   =  VIA0+2    ; Its data-direction register for port B
+VIA0_DDRA   =  VIA0+3    ; Its data-direction register for port A
+VIA0_T1CL   =  VIA0+4    ; Its timer-1 counter's low  byte
+VIA0_T1CH   =  VIA0+5    ; Its timer-1 counter's high byte
+VIA0_T1LL   =  VIA0+6    ; Its timer-1 latcher's low  byte
+VIA0_T1LH   =  VIA0+7    ; Its timer-1 latcher's high byte
+VIA0_T2CL   =  VIA0+8    ; Its timer-2 counter's low  byte
+VIA0_T2CH   =  VIA0+9    ; Its timer-2 counter's high byte
+VIA0_SR     =  VIA0+10   ; The shift register
+VIA0_ACR    =  VIA0+11   ; The auxiliary  control register
+VIA0_PCR    =  VIA0+12   ; The peripheral control register
+VIA0_IFR    =  VIA0+13   ; The interrupt  flag  register
+VIA0_IER    =  VIA0+14   ; The interrupt enable register
+VIA0_PAH    =  VIA0+15   ; Its port A address no handshake
 
 ;---------------------------------------------------------------------
 ;   $8030, user VIA,  select (R0 R1 R3 R4)
 ;
-VIA1        =  $8030    ; The base address of the 6522 VIA.
-VIA1_PB         =  VIA1+0    ; Its port B address
-VIA1_PA         =  VIA1+1    ; Its port A address
-VIA1_DDRB       =  VIA1+2    ; Its data-direction register for port B
-VIA1_DDRA       =  VIA1+3    ; Its data-direction register for port A
-VIA1_T1CL       =  VIA1+4    ; Its timer-1 counter's low  byte
-VIA1_T1CH       =  VIA1+5    ; Its timer-1 counter's high byte
-VIA1_T1LL       =  VIA1+6    ; Its timer-1 latcher's low  byte
-VIA1_T1LH       =  VIA1+7    ; Its timer-1 latcher's high byte
-VIA1_T2CL       =  VIA1+8    ; Its timer-2 counter's low  byte
-VIA1_T2CH       =  VIA1+9    ; Its timer-2 counter's high byte
-VIA1_SR         =  VIA1+10   ; The shift register
-VIA1_ACR        =  VIA1+11   ; The auxiliary  control register
-VIA1_PCR        =  VIA1+12   ; The peripheral control register
-VIA1_IFR        =  VIA1+13   ; The interrupt  flag  register
-VIA1_IER        =  VIA1+14   ; The interrupt enable register
-VIA1_PAH        =  VIA1+15   ; Its port A address no handshake
+VIA1        =  $C030    ; The base address of the 6522 VIA.
+VIA1_PB     =  VIA1+0    ; Its port B address
+VIA1_PA     =  VIA1+1    ; Its port A address
+VIA1_DDRB   =  VIA1+2    ; Its data-direction register for port B
+VIA1_DDRA   =  VIA1+3    ; Its data-direction register for port A
+VIA1_T1CL   =  VIA1+4    ; Its timer-1 counter's low  byte
+VIA1_T1CH   =  VIA1+5    ; Its timer-1 counter's high byte
+VIA1_T1LL   =  VIA1+6    ; Its timer-1 latcher's low  byte
+VIA1_T1LH   =  VIA1+7    ; Its timer-1 latcher's high byte
+VIA1_T2CL   =  VIA1+8    ; Its timer-2 counter's low  byte
+VIA1_T2CH   =  VIA1+9    ; Its timer-2 counter's high byte
+VIA1_SR     =  VIA1+10   ; The shift register
+VIA1_ACR    =  VIA1+11   ; The auxiliary  control register
+VIA1_PCR    =  VIA1+12   ; The peripheral control register
+VIA1_IFR    =  VIA1+13   ; The interrupt  flag  register
+VIA1_IER    =  VIA1+14   ; The interrupt enable register
+VIA1_PAH    =  VIA1+15   ; Its port A address no handshake
 
 ;---------------------------------------------------------------------
 ;
