@@ -1,23 +1,25 @@
 #! /usr/bin/bash
 
+echo " start compiling "
+
 case $1 in
 
 a) 
-ca65 -W 1 -l $2.lst -o $2.o -mm near -v \
+
+    ca65 -W 1 -l $2.lst -o $2.o -mm near -v \
     --cpu 6502 \
+    --debug-info \
     --create-full-dep $2.dep \
     --list-bytes 80 \
     --pagelength 36 \
-    $2.s
+    $2.s 2> err | tee out
+
     ;;
 
 c) 
     # cl65 -t atari -Ln $2.lbl --listing $2.lst --add-source -o $2.xex $2.s
     
-echo " start compiling "
-
-
-cl65 -C $2.cfg --no-target-lib \
+    cl65 -C $2.cfg --no-target-lib \
     -l $2.asm -m $2.map -o $2.obj -Ln $2.lbl \
     --cpu 6502 \
     $2.s 2> err | tee out 
@@ -25,18 +27,23 @@ cl65 -C $2.cfg --no-target-lib \
 # --add-source --create-dep $2.dep \
 # -vm -v \
 # -O0 -W1 -c -T -S \
-echo " stop compiling "
+
     ;;
 
 l)
-ld65 -o $2.bin -m $2.map -Ln $2.lbs -C $2.cfg $2.obj
+
+    ld65 -o $2.bin -m $2.map -Ln $2.lbs -C $2.cfg $2.obj
+    
     ;;
 
 x)
     rm $2.obj $2.dep $2.asm $2.map $2.lbl $2.lst out err c64/*
+    
     ;;
 
 esac
+
+echo " stop compiling "
 
 grep HEADER *.s | grep -v immu > words
 

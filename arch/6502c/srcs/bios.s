@@ -30,9 +30,9 @@
 ;
 .segment "VECTORS"
 
-.addr    _nmi_int  ; NMI vector
+.addr    _nmi_init  ; NMI vector
 .addr    _init     ; Reset vector
-.addr    _irq_int  ; IRQ/BRK vector
+.addr    _irq_init  ; IRQ/BRK vector
 
 ;---------------------------------------------------------------------
 ;
@@ -46,11 +46,11 @@
 ;---------------------------------------------------------------------
 ; interrups stubs
 ;
-_nmi_int:
+_nmi_init:
     ; return
     rti
 
-_irq_int:
+_irq_init:
 
     ; save registers
     pha
@@ -65,7 +65,7 @@ _irq_int:
     inx     ; y
     inx     ; a
     inx     ; p
-    lda #$100, x    ; load offset in stack
+    lda $0100, x    ; load offset in stack
     and #$10
     bne _irq_soft
     
@@ -75,6 +75,9 @@ _irq_hard:
     ; do something somewhere sometime
     ;
 
+    jmp _irq_return
+
+_irq_return:
     ; load registers
     pla
     tax
@@ -87,7 +90,11 @@ _irq_hard:
 
 _irq_soft:
 
-    jmp _halt
+    ;
+    ; do something somewhere sometime
+    ;
+
+    jmp _irq_return
     
 ;---------------------------------------------------------------------
 ;
@@ -113,6 +120,12 @@ _init:
     inx
     bne @clean
 
+    ; setup acia
+    jsr acia_init
+
+    ; setup via 
+    jsr via_init 
+
     ; offset stacks
     ldy #$FF
     ldx #$FF
@@ -134,16 +147,28 @@ _init:
 ;       YYYY [07-04]    IOS and YYYY == select chip 0-3
 ;       ZZZZ [03-00]    ports in chip
 ;
-; must adjust the address
+;   must adjust the address
+;
+;   adapted from http://forum.6502.org/
 ;
 ;---------------------------------------------------------------------
 ;
 ;   $C000-$C00F, reserved
 ;
+DEVS = $C000
 ;---------------------------------------------------------------------
-;   $C010, system CIA, select (R0 R1)
 ;
-CIA       =  $C010    ; The base address of the 6551 ACIA.
+;   $00, system mapped reserved
+;
+
+;---------------------------------------------------------------------
+;   $10, system CIA, select (R0 R1)
+; 
+;   uses a, s, x, y must be saved by caller
+;
+;-------------------------------------------------------------------------------
+
+CIA       =  DEVS+$10    ; The base address of the 6551 ACIA.
 CIA_DATA  =  CIA+0   ; Its data I/O register
 CIA_RX    =  CIA+0   ; Its data I/O register
 CIA_TX    =  CIA+0   ; Its data I/O register
@@ -151,91 +176,8 @@ CIA_STAT  =  CIA+1   ; Its  status  register
 CIA_COMM  =  CIA+2   ; Its command  register
 CIA_CTRL  =  CIA+3   ; Its control  register
 
-;---------------------------------------------------------------------
-;   $C020, system VIA,  select (R0 R1 R3 R4)
-;
-VIA0        =  $C020    ; The base address of the 6522 VIA.
-VIA0_PB     =  VIA0+0    ; Its port B address
-VIA0_PA     =  VIA0+1    ; Its port A address
-VIA0_DDRB   =  VIA0+2    ; Its data-direction register for port B
-VIA0_DDRA   =  VIA0+3    ; Its data-direction register for port A
-VIA0_T1CL   =  VIA0+4    ; Its timer-1 counter's low  byte
-VIA0_T1CH   =  VIA0+5    ; Its timer-1 counter's high byte
-VIA0_T1LL   =  VIA0+6    ; Its timer-1 latcher's low  byte
-VIA0_T1LH   =  VIA0+7    ; Its timer-1 latcher's high byte
-VIA0_T2CL   =  VIA0+8    ; Its timer-2 counter's low  byte
-VIA0_T2CH   =  VIA0+9    ; Its timer-2 counter's high byte
-VIA0_SR     =  VIA0+10   ; The shift register
-VIA0_ACR    =  VIA0+11   ; The auxiliary  control register
-VIA0_PCR    =  VIA0+12   ; The peripheral control register
-VIA0_IFR    =  VIA0+13   ; The interrupt  flag  register
-VIA0_IER    =  VIA0+14   ; The interrupt enable register
-VIA0_PAH    =  VIA0+15   ; Its port A address no handshake
-
-;---------------------------------------------------------------------
-;   $8030, user VIA,  select (R0 R1 R3 R4)
-;
-VIA1        =  $C030    ; The base address of the 6522 VIA.
-VIA1_PB     =  VIA1+0    ; Its port B address
-VIA1_PA     =  VIA1+1    ; Its port A address
-VIA1_DDRB   =  VIA1+2    ; Its data-direction register for port B
-VIA1_DDRA   =  VIA1+3    ; Its data-direction register for port A
-VIA1_T1CL   =  VIA1+4    ; Its timer-1 counter's low  byte
-VIA1_T1CH   =  VIA1+5    ; Its timer-1 counter's high byte
-VIA1_T1LL   =  VIA1+6    ; Its timer-1 latcher's low  byte
-VIA1_T1LH   =  VIA1+7    ; Its timer-1 latcher's high byte
-VIA1_T2CL   =  VIA1+8    ; Its timer-2 counter's low  byte
-VIA1_T2CH   =  VIA1+9    ; Its timer-2 counter's high byte
-VIA1_SR     =  VIA1+10   ; The shift register
-VIA1_ACR    =  VIA1+11   ; The auxiliary  control register
-VIA1_PCR    =  VIA1+12   ; The peripheral control register
-VIA1_IFR    =  VIA1+13   ; The interrupt  flag  register
-VIA1_IER    =  VIA1+14   ; The interrupt enable register
-VIA1_PAH    =  VIA1+15   ; Its port A address no handshake
-
-;---------------------------------------------------------------------
-;
-;   adapted from http://forum.6502.org/
-;
-;---------------------------------------------------------------------
-
-irq_isr:
-	; scan for via0
-scan_via0:
-	bit VIA0_IFR
-	bpl skip_via0
-	jsr service_via0
-skip_via0:
-
-scan_via1:
-	bit VIA1_IFR
-	bpl skip_via1
-	jsr service_via1
-skip_via1:
-
-ends_isr:
-	rti
-
-;	attend interrupt 
-service_via0:
-	pha
-	lda #$7F
-	sta VIA0_IFR;
-	pla
-	rti
-;	attend interrupt 
-service_via1:
-	pha
-	lda #$7F
-	sta VIA1_IFR;
-	pla
-	rti
-; 	default
-ret_isr:
-	rti
-
 ;-------------------------------------------------------------------------------
-;   acia_init, configures 19200,N,8,1
+;   acia_init, configures 19200,N,8,1 FIXED
 ;-------------------------------------------------------------------------------
 acia_init:
     pha			; Push A to stack
@@ -250,75 +192,140 @@ acia_init:
     rts
 
 ;-------------------------------------------------------------------------------
-;   acia_push, transmit a byte thru 6551
+;   acia_push, transmit a byte thru 6551, receive byte in a
 ;-------------------------------------------------------------------------------
-
 acia_push:
     pha
-    lda #$10 		
 ; wait while full
 @loop:
-    bit CIA_STAT     	
-    beq @loop
+    ldy #$FF
+@y_loop:    
+    ldx #$FF
+@x_loop:    
+    lda CIA_STAT
+    and #10
+    bne @put_char
+    dex
+    cpx #0
+    bne @x_loop
+    dey
+    cpy #0
+    bne @y_loop
+    clc
+    rts
 ; transmit
-    pla             	; Pull A from stack
+@put_char:
+    pla            	; Pull A from stack
     sta CIA_TX     	; Send A
-    ; delay about 521 us (why)
-    jsr delay_6551
+    sec
     rts
 
 ;-------------------------------------------------------------------------------
-;   acia_pull, receive a byte thru 6551
+;   acia_pull, receive a byte thru 6551, return byte in a, carry set on ok
 ;-------------------------------------------------------------------------------
 acia_pull:
-    lda #$08
 ; wait while empty
 @loop:
-    bit CIA_STAT	
-    beq @loop
+    ldy #$FF
+@y_loop:    
+    ldx #$FF
+@x_loop:    
+    lda CIA_STAT
+    and #8
+    bne @get_char
+    dex
+    cpx #0
+    bne @x_loop
+    dey
+    cpy #0
+    bne @y_loop
+    clc
+    rts
 ; receive
+@get_char:
     lda CIA_RX
+    sec
     rts
 
 ;-------------------------------------------------------------------------------
 ; Delay at least about 0.521 ms
-; zzzz must recalcule this 
-;	call, 6
-;	save, 13
-;	sets, 4
-;       loop, (2 + 3 + 2 + 3) * 68 * 1 + (68 + 1)
-;	load, 16
-;	return, 6
 ;-------------------------------------------------------------------------------
-delay_6551:
-;  call, 6
-; save, 3 + 2 + 3 + 2 + 3, 13 cyc
-    pha 
-    tya
-    pha
-    txa
-    pha
-
-@delay_loop: ; 2 + 2 
-    ldy   #1    ;Get delay value (clock rate in MHz 1 clock cycles)
-
-@delay_y:
-    ldx   #$6C    ; Seed X reg for 526 cyc
-
-@delay_x:
-    ; (2 + 3 + 2 + 3) * 68 * 1 + (68 + 1)
-    dex            ;Decrement low index
-    bne @delay_x   ;Loop back until done
-    dey            ;Decrease by one
-    bne @delay_y   ;Loop until done
-
-; load, 4 + 2 + 4 + 2 + 4, 16
-    pla
-    tax
-    pla
-    tay
-    pla
-; done, 6
+; 
+;   for a 0,9216 MHz, must be: 282 cycles, 282 - 48 = 234
+;   using 14 and 19 for delay loops
+;
+;	call, 6
+;	sets, 4
+;   loop, (2 + 3 + 2 + 3) * x * y
+;	return, 6
+;
+;-------------------------------------------------------------------------------
+acia_delay:
+@loop: 
+    ldy   #14  ; Get delay loop 
+@y_delay:
+    ldx   #19  ; Get delay loop
+@x_delay:
+    dex            
+    bne @x_delay   
+    dey            
+    bne @y_delay   
     rts       ; return
 
-;------------------------------------------------------------------------------
+;=====================================================================
+;
+;   $20, system VIA,  select (R0 R1 R3 R4)
+; 
+;   uses a, s, x, y must be saved by caller
+;
+;-------------------------------------------------------------------------------
+
+VIA        =  DEVS+$20    ; The base address of the 6522 VIA.
+VIA_PB     =  VIA+0    ; Its port B address
+VIA_PA     =  VIA+1    ; Its port A address
+VIA_DDRB   =  VIA+2    ; Its data-direction register for port B
+VIA_DDRA   =  VIA+3    ; Its data-direction register for port A
+VIA_T1CL   =  VIA+4    ; Its timer-1 counter's low  byte
+VIA_T1CH   =  VIA+5    ; Its timer-1 counter's high byte
+VIA_T1LL   =  VIA+6    ; Its timer-1 latcher's low  byte
+VIA_T1LH   =  VIA+7    ; Its timer-1 latcher's high byte
+VIA_T2CL   =  VIA+8    ; Its timer-2 counter's low  byte
+VIA_T2CH   =  VIA+9    ; Its timer-2 counter's high byte
+VIA_SR     =  VIA+10   ; The shift register
+VIA_ACR    =  VIA+11   ; The auxiliary  control register
+VIA_PCR    =  VIA+12   ; The peripheral control register
+VIA_IFR    =  VIA+13   ; The interrupt  flag  register
+VIA_IER    =  VIA+14   ; The interrupt enable register
+VIA_PAH    =  VIA+15   ; Its port A address no handshake
+
+;---------------------------------------------------------------------
+;
+;---------------------------------------------------------------------
+via_init:
+    rts
+
+;---------------------------------------------------------------------
+irq_isr:
+	; scan for via
+scan_via:
+	bit VIA_IFR
+	bpl skip_via
+	jsr service_via
+skip_via:
+
+ends_isr:
+	rti
+
+;	attend interrupt 
+service_via:
+	pha
+	lda #$7F
+	sta VIA_IFR;
+	pla
+	rti
+; 	default
+ret_isr:
+	rti
+
+;---------------------------------------------------------------------
+;---------------------------------------------------------------------

@@ -42,14 +42,17 @@
 ; identifiers
 .case +
 
-; enable 6502 mode
-.p02
-
 ; debug 
 .debuginfo +
 
-; enable C comments
+; enable features
+
 .feature c_comments
+
+.feature string_escapes 
+
+; enable 6502 mode
+.p02
 
 ;---------------------------------------------------------------------
 ; 
@@ -64,7 +67,7 @@
 
 ;   6502 hardware
     ZPAGE   = $000
-    STACK   = $100
+    SPAGE   = $100
 
 ;   logical flags, forth 83
     FALSE   = $0000

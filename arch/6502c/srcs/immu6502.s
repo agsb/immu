@@ -36,31 +36,47 @@
 ;
 .segment "ZEROPAGE"
 
-reserved:   .res 224, $00
+; generic use
+reserved:   .res $E0, $00
 
 ;---------------------------------------------------------------------
+;
 ; pseudo registers, page zero
+;
 lnk = $E0
 wrk = lnk + 2
-;
-tos = lnk + 4
-nos = lnk + 6
-;
-tmp1 = lnk + 8
-tmp2 = lnk + 10
+; lnk + 4
+; lnk + 6
+; lnk + 8
 ; copycat registers
-a_save = lnk + 12
-s_save = lnk + 13
-x_save = lnk + 14
-y_save = lnk + 15
-p_save = lnk + 16
-
+a_save = lnk + 10
+s_save = lnk + 11
+x_save = lnk + 12
+y_save = lnk + 13
+p_save = lnk + 14
+f_save = lnk + 15
+;
+; x is data stack index
+; y is return stack pointer
+; 
 ;---------------------------------------------------------------------
-;   system
-;   irq mask stuff
-irqnot = lnk + 20  ; pending
-irqcnt = lnk + 22  ; nested
-irqvec = lnk + 24  ; resolver
+;
+;  system bios reserved 16 bytes
+;  bios irq mask stuff
+;
+syst = $F0
+iqnot = syst + 2  ; pending
+iqcnt = syst + 4  ; nested
+iqvec = syst + 6  ; resolver
+iqhld = syst + 8  ; holder pointer
+; copycat registers
+iqa_save = syst + 10
+iqs_save = syst + 11
+iqx_save = syst + 12
+iqy_save = syst + 13
+iqp_save = syst + 14
+iqf_save = syst + 15
+;
 
 ;---------------------------------------------------------------------
 ; parameter stack, $0200, grows backwards 0x00 to 0xFF 
