@@ -56,7 +56,7 @@ messages:
 
     .asciiz "I really worry about everything going to the cloud.", "\n"
 
-    .asciiz "Everthing is about is, if, not, and, goto, label", "\n"
+    .asciiz "Everthing is about if, is, not, and, goto, label", "\n"
 
 
 

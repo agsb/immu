@@ -1,5 +1,13 @@
 # Notes for 6502 IMMU
 
+## 30/09/2023
+
+    Made new projet [6502toy](https://github.com/agsb/6502toy/), a minimal 6502 single board computer, for use with M.I.T.C. Forth.
+
+    Found some useful codes for excerpt to BIOS. A version [extended of Wozniac Monitor](https://gist.github.com/BigEd/2760560).
+
+    Refinning bios.s to include some useful routines, including tstc, getc, putc, tick,  
+
 ## 26/09/2023
 
     Clean cc65 compile for imu6502 !
