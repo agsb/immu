@@ -1,4 +1,3 @@
-
 ;---------------------------------------------------------------------
 ; /*
 ;  *  DISCLAIMER"
@@ -45,9 +44,9 @@ reserved:   .res $E0, $00
 ;
 lnk = $E0
 wrk = lnk + 2
-; lnk + 4
-; lnk + 6
-; lnk + 8
+; lnk + 4 free
+; lnk + 6 free
+; lnk + 8 free
 ; copycat registers
 a_save = lnk + 10
 s_save = lnk + 11
@@ -65,10 +64,10 @@ f_save = lnk + 15
 ;  bios irq mask stuff
 ;
 syst = $F0
-iqnot = syst + 2  ; pending
-iqcnt = syst + 4  ; nested
-iqvec = syst + 6  ; resolver
-iqhld = syst + 8  ; holder pointer
+iq_not = syst + 2  ; pending
+iq_cnt = syst + 4  ; nested
+iq_vec = syst + 6  ; resolver
+iq_clk = syst + 8  ; holder pointer
 ; copycat registers
 iqa_save = syst + 10
 iqs_save = syst + 11
@@ -77,6 +76,8 @@ iqy_save = syst + 13
 iqp_save = syst + 14
 iqf_save = syst + 15
 ;
+
+.segment "CODE"
 
 ;---------------------------------------------------------------------
 ; parameter stack, $0200, grows backwards 0x00 to 0xFF 
@@ -143,11 +144,13 @@ COLD:
     ldy #0
 
 WARM:
+
 TIME:
-WATCH:
 
 TURN:
+
 REST:
+
 QUIT:
 
 _main:

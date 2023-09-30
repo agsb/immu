@@ -40,8 +40,9 @@
 
 ;---------------------------------------------------------------------
 ;
-; adapted from 
+; some code adapted from 
 ; http://wilsonminesco.com/0-overhead_Forth_interrupts/
+; and 6502.org forum
 ;
 ;---------------------------------------------------------------------
 ; interrups stubs
@@ -54,35 +55,35 @@ _irq_init:
 
     ; save registers
     pha
-    tya
-    pha
     txa
     pha
-
+    
     ; copy sp to x
     tsx
-    inx     ; x
-    inx     ; y
-    inx     ; a
-    inx     ; p
-    lda $0100, x    ; load offset in stack
+    ; check from where
+    ;lda $104, x
+    ;sta return_to+0
+    ;lda $105, x
+    ;sta return_to+1
+    ; check if was a break
+    lda $0103, x    ; load offset in stack
     and #$10
     bne _irq_soft
     
 _irq_hard:
     
     ;
+    tya
+    pha
     ; do something somewhere sometime
-    ;
-
-    jmp _irq_return
+    pla
+    tay
+    ;jmp _irq_return
 
 _irq_return:
     ; load registers
     pla
     tax
-    pla
-    tay
     pla
 
     ; return 
@@ -91,11 +92,31 @@ _irq_return:
 _irq_soft:
 
     ;
+    tya
+    pha
     ; do something somewhere sometime
-    ;
-
+    pla
+    tay
     jmp _irq_return
     
+;---------------------------------------------------------------------
+;
+; clock tick
+;
+clock_setup:
+    lda #0
+    sta iq_clk+0
+    sta iq_clk+1
+    rts
+
+_irq_tick:
+    bit VIA_T1CL
+    inc iq_clk+0
+    bne @ends
+    inc iq_clk+1
+@ends:
+    rti
+
 ;---------------------------------------------------------------------
 ;
 ; reset stub
@@ -125,6 +146,9 @@ _init:
 
     ; setup via 
     jsr via_init 
+
+    ; setup clock
+    jsr clock_setup
 
     ; offset stacks
     ldy #$FF
@@ -181,6 +205,8 @@ CIA_CTRL  =  CIA+3   ; Its control  register
 ;-------------------------------------------------------------------------------
 acia_init:
     pha			; Push A to stack
+    lda #0
+    sta CIA_STAT
     ; %0001 1111 = 19200 baud, external receiver, 8 bit words, 1 stop bit
     lda #$1F     
     sta CIA_CTRL
@@ -203,7 +229,7 @@ acia_push:
     ldx #$FF
 @x_loop:    
     lda CIA_STAT
-    and #10
+    and #16
     bne @put_char
     dex
     cpx #0
