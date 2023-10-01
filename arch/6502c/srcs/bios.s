@@ -28,15 +28,74 @@
 ;
 ;---------------------------------------------------------------------
 ;
+;---------------------------------------------------------------------
+;
+;  system bios reserved 16 bytes
+;
+syst = $F0
+irq_lnk = syst + $0
+irq_not = syst + $2  ; pending
+irq_cnt = syst + $4  ; nested
+irq_vec = syst + $6  ; resolver
+irq_clk = syst + $8  ; holder pointer
+; copycat registers
+irq_a = syst + $a   ; accumulator
+irq_x = syst + $b   ; index X
+irq_y = syst + $c   ; index Y
+irq_s = syst + $d   ; stack 
+irq_p = syst + $e   ; status
+irq_f = syst + $f   ; break flag
+
+; from page three
+
+VECTORS = $0300    
+
+DEVICE0 = VECTORS + $00
+DEVICE1 = VECTORS + $02
+DEVICE2 = VECTORS + $04
+DEVICE3 = VECTORS + $06
+DEVICE4 = VECTORS + $08
+DEVICE5 = VECTORS + $0A
+DEVICE6 = VECTORS + $0C
+DEVICE7 = VECTORS + $0F
+
+SEECLCK = VECTORS + $EE
+TSTCHAR = VECTORS + $F0
+PUTCHAR = VECTORS + $F2
+GETCHAR = VECTORS + $F4
+MONITOR = VECTORS + $F6
+COPYCAT = VECTORS + $F8
+NMIVECT = VECTORS + $FA
+RSTVECT = VECTORS + $FC
+IRQVECT = VECTORS + $FE
+
+
+;.org $FF00
+.addr    DEVS+00
+.addr    DEVS+10    ; _cia_one   
+.addr    DEVS+20    ; _via_one   
+.addr    DEVS+30    ; _via_two   
+.addr    DEVS+40
+.addr    DEVS+50
+.addr    DEVS+60
+.addr    DEVS+70
+
+;.org $FFF0
 .segment "VECTORS"
 
-.addr    _nmi_init  ; NMI vector
-.addr    _init     ; Reset vector
-.addr    _irq_init  ; IRQ/BRK vector
+.addr monitor  ; f0
+.addr monitor  ; f2
+.addr monitor  ; f4
+.addr monitor  ; f6
+.addr copycat  ; f8
+.addr _jump_nmi  ; fa ROM NMI vector
+.addr _jump_rst  ; fc ROM Reset vector
+.addr _jump_irq  ; fe ROM IRQ/BRK vector
 
 ;---------------------------------------------------------------------
 ;
 .segment "ONCE"
+
 
 ;---------------------------------------------------------------------
 ;
@@ -45,82 +104,35 @@
 ; and 6502.org forum
 ;
 ;---------------------------------------------------------------------
-; interrups stubs
+; interrups stubs, easy way
+;   At boot, the $FF00 page is copied to $0300,
+;   with default values for devices and routines
+;   then all vectors could be changed and could
+;   be restored also.
 ;
-_nmi_init:
-    ; return
-    rti
 
-_irq_init:
+_jump_nmi:
+    jmp ($03FA)
 
-    ; save registers
-    pha
-    txa
-    pha
-    
-    ; copy sp to x
-    tsx
-    ; check from where
-    ;lda $104, x
-    ;sta return_to+0
-    ;lda $105, x
-    ;sta return_to+1
-    ; check if was a break
-    lda $0103, x    ; load offset in stack
-    and #$10
-    bne _irq_soft
-    
-_irq_hard:
-    
-    ;
-    tya
-    pha
-    ; do something somewhere sometime
-    pla
-    tay
-    ;jmp _irq_return
+_jump_irq:
+    jmp ($03FE)
 
-_irq_return:
-    ; load registers
-    pla
-    tax
-    pla
+_jump_rst:
+    jmp _rst_init
 
-    ; return 
-    rti
+; void nmi at boot
 
-_irq_soft:
-
-    ;
-    tya
-    pha
-    ; do something somewhere sometime
-    pla
-    tay
-    jmp _irq_return
-    
-;---------------------------------------------------------------------
-;
-; clock tick
-;
-clock_setup:
-    lda #0
-    sta iq_clk+0
-    sta iq_clk+1
-    rts
-
-_irq_tick:
-    bit VIA_T1CL
-    inc iq_clk+0
-    bne @ends
-    inc iq_clk+1
-@ends:
+nmi_init:
+irq_init:
     rti
 
 ;---------------------------------------------------------------------
 ;
 ; reset stub
 ;
+_rst_init:
+
+; real _init:
 _init:
     ; disable interrupts
     sei
@@ -128,38 +140,145 @@ _init:
     ; no BCD math
     cld
 
-    ; clear memory
-    lda #0
-    tax
+    ; copy default vector page
+    jsr copycat
 
-@clean: ; page zero, stack, return stack, parameter stack, buffers
-    sta $0000, x
-    sta $0100, x
-    sta $0200, x
-    sta $0300, x
-    sta $0400, x
-    inx
-    bne @clean
-
-    ; setup acia
+    ; setup acia one
     jsr acia_init
 
-    ; setup via 
+    ; setup via one
     jsr via_init 
+
+    ; setup via two 
+    ;lda #<(DEVS+20)
+    ;sta via_two+0
+    ;lda #>(DEVS+20)
+    ;sta via_two+1
+    ;jsr via_init 
 
     ; setup clock
     jsr clock_setup
 
-    ; offset stacks
-    ldy #$FF
+    ; enable interrupts
+    
+    lda #<_irq_init_easy
+    sta IRQVECT+0
+    lda #>_irq_init_easy
+    sta IRQVECT+1
+
+    ; stack: pull is decr, push is incr
     ldx #$FF
     txs
-
-    ; enable interrupts
-    cli
     
-    ;
+    ; there we go....
+    cli
     jsr _main
+
+    ; for safety
+    jmp _init
+
+;---------------------------------------------------------------------
+; copy default vector page
+; uses a, x
+;
+copycat:
+    sta irq_a
+    lda #$FF
+    tax
+@copy:    
+    lda $FF00, x
+    sta $0300, x
+    dex
+    bne @copy
+    rts
+
+;---------------------------------------------------------------------
+monitor:
+    rts
+
+;---------------------------------------------------------------------
+; real irq handler
+; easy minimal 
+
+_irq_init_easy:
+    sta irq_a
+    pla
+    pha
+    and #$10
+    bne _irq_soft_easy
+    
+_irq_hard_easy:
+    ;
+    ; from a hardware interrupt,
+    ; must pooling devices to decide 
+    ; which caller
+    ; do something somewhere sometime
+    ;
+    ; load registers and return
+    lda irq_a
+    rti
+
+_irq_soft_easy:
+    ;
+    ; from a BRK, a software interrupt
+    ; which always must be $00 $ZZ
+    ; 
+    ; the PC in stack minus one is the code $ZZ 
+    ; for what break was called.
+    ;
+    ; do something somewhere sometime
+    ;
+    ; load registers and return
+    lda irq_a
+    rti
+
+    
+;---------------------------------------------------------------------
+;   interrupts stubs, trampolines
+;
+_irq_handler:
+    cld
+
+_irq_save_registers:
+    lda irq_a
+    pha
+    txa
+    pha
+    tya
+    pha
+    ; fake jump indirect
+    lda #>(_irq_load_registers)
+    pha
+    lda #<(_irq_load_registers)
+    pha
+    rts
+
+_irq_load_registers:
+    pla
+    tay
+    pla
+    tax
+    pla
+    sta irq_a
+    rti
+
+;---------------------------------------------------------------------
+;
+; clock tick
+;
+clock_setup:
+    lda #0
+    sta irq_clk+0
+    sta irq_clk+1
+    rts
+
+_irq_tick:
+    bit VIA_T1CL
+    inc irq_clk+0
+    bne @ends
+    inc irq_clk+1
+@ends:
+    rti
 
 ;=====================================================================
 ;
@@ -219,6 +338,7 @@ acia_init:
 
 ;-------------------------------------------------------------------------------
 ;   acia_push, transmit a byte thru 6551, receive byte in a
+;   waits
 ;-------------------------------------------------------------------------------
 acia_push:
     pha
@@ -248,6 +368,7 @@ acia_push:
 
 ;-------------------------------------------------------------------------------
 ;   acia_pull, receive a byte thru 6551, return byte in a, carry set on ok
+;   waits
 ;-------------------------------------------------------------------------------
 acia_pull:
 ; wait while empty
@@ -271,6 +392,21 @@ acia_pull:
 @get_char:
     lda CIA_RX
     sec
+    rts
+
+;-------------------------------------------------------------------------------
+;   acia_pass, verify a 6551, carry set on yes
+;   no waits
+;-------------------------------------------------------------------------------
+acia_pass:
+; no wait
+@loop:
+    sec
+    lda CIA_STAT
+    and #8
+    bne @ends
+    clc
+@ends:    
     rts
 
 ;-------------------------------------------------------------------------------
@@ -320,7 +456,7 @@ VIA_T2CH   =  VIA+9    ; Its timer-2 counter's high byte
 VIA_SR     =  VIA+10   ; The shift register
 VIA_ACR    =  VIA+11   ; The auxiliary  control register
 VIA_PCR    =  VIA+12   ; The peripheral control register
-VIA_IFR    =  VIA+13   ; The interrupt  flag  register
+VIA_IFR    =  VIA+13   ; The interrupt flag register
 VIA_IER    =  VIA+14   ; The interrupt enable register
 VIA_PAH    =  VIA+15   ; Its port A address no handshake
 
@@ -354,4 +490,13 @@ ret_isr:
 	rti
 
 ;---------------------------------------------------------------------
+; if pool
+;
+;ISR:
+;    bit VIA1_STAT
+;    bmi service_via1
+;    bit VIA2_STAT
+;    bmi service_via2
+;    jmp service_acia
+
 ;---------------------------------------------------------------------

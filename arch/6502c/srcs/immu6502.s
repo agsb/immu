@@ -60,36 +60,22 @@ f_save = lnk + 15
 ; 
 ;---------------------------------------------------------------------
 ;
-;  system bios reserved 16 bytes
-;  bios irq mask stuff
-;
-syst = $F0
-iq_not = syst + 2  ; pending
-iq_cnt = syst + 4  ; nested
-iq_vec = syst + 6  ; resolver
-iq_clk = syst + 8  ; holder pointer
-; copycat registers
-iqa_save = syst + 10
-iqs_save = syst + 11
-iqx_save = syst + 12
-iqy_save = syst + 13
-iqp_save = syst + 14
-iqf_save = syst + 15
+;  system bios reserved 16 bytes at $F0
 ;
 
 .segment "CODE"
 
 ;---------------------------------------------------------------------
 ; parameter stack, $0200, grows backwards 0x00 to 0xFF 
-spz = $0200
+spz = $0400
 
 ;---------------------------------------------------------------------
 ; return stack, $0300, grows backwards 0x00 to 0xFF
-rpz = $0300
+rpz = $0500
 
 ;---------------------------------------------------------------------
 ; terminal input buffer, $0400, grows forwards
-tib0 = $0400
+tib0 = $0600
 tz = tib0 + TIB_SIZE
 
 ;---------------------------------------------------------------------

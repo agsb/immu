@@ -58,5 +58,7 @@ messages:
 
     .asciiz "Everthing is about if, is, not, and, goto, label", "\n"
 
+    .asciiz "We've got a problem, HAL.", "\n"
 
+    .asciiz "The Tao that is seen is not the true Tao", "\n"
 
