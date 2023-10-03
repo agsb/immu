@@ -1307,6 +1307,87 @@ HEADER "U/", "USLASH", F_LEAP + F_CORE, LEAF
 HEADER "UM/MOD", "UMMOD", F_LEAP + F_CORE, LEAF
     jmp USLASH
 
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.if 0
+;------------------------------------------------------
+; A FORTH UM/MOD for any 6502 by Michael T. Barry.
+                    ;
+; ( ud u1 -- u2 u3 )
+; ud is the 32-bit dividend.
+; u1 is the 16-bit divisor.
+; u2 is the 16-bit remainder.
+; u3 is the 16-bit quotient.
+; All values are unsigned.
+                    ;
+; Invalid results for quotient overflow or /0
+                    ;
+; 0,x and 1,x are TOS  ( divisor -- quotient )
+; 2,x and 3,x are NOS  ( dividend:H -- remainder )
+; 4,x and 5,x are 3OS  ( dividend:L --  )
+                    ;
+umslashmod:         ;
+    ldy #16         ; loop counter
+umsm2:              ;
+    asl 4,x         ; dividend:L is gradually replaced
+    rol 5,x         ;   with the quotient
+    rol 2,x         ; dividend:H is gradually replaced
+    rol 3,x         ;   with the remainder
+    bcs umsm3       ;
+    lda 2,x         ;
+    cmp 0,x         ; compare remainder to divisor
+    lda 3,x         ;
+    sbc 1,x         ;
+    bcc umsm4       ;
+umsm3:              ;
+    lda 2,x         ;
+    sbc 0,x         ; if (remainder >= divisor) then
+    sta 2,x         ;   update partial remainder
+    lda 3,x         ;
+    sbc 1,x         ;
+    sta 3,x         ;
+    inc 4,x         ;   and set low bit in quotient
+umsm4:              ;
+    dey             ;
+    bne umsm2       ; Loop until done
+    inx             ; Exit sequence:
+    inx             ;   DROP the divisor
+    jmp SWAP        ;   SWAP quotient and remainder
+                    ; (SWAP's machine code, not its CFA)
+;------------------- 44 bytes, not counting HEADER
+;-----------------------------------------------------;
+; var[x] /= var[x+2] (unsigned), {%} = remainder
+; var[x+2] of 0 produces {%} = var[x], var[x] = 65535
+; 39 bytes                                            ;
+div:
+    phy             ;
+    ldy  #16        ; loop counter
+    lda  #0         ;
+    sta  remn+1     ; {%} = 0
+div2:
+    asl  0,x        ; dividend gradually becomes
+    rol  1,x        ;   the quotient
+    rol             ; {%} gradually becomes the
+    rol  remn+1     ;   remainder
+    cmp  2,x        ;
+    pha             ;
+    lda  remn+1     ;
+    sbc  3,x        ; partial remainder >= divisor?
+    bcc  div3       ;
+    sta  remn+1     ;
+    pla             ;   yes: update the partial
+    sbc  2,x        ;     remainder and set the low
+    inc  0,x        ;     bit of partial quotient
+    .db  $c9        ;     "cmp #" naked op-code
+div3:
+    pla             ;
+    dey             ;
+    bne  div2       ; loop 16 times
+    sta  remn       ;
+    ply             ;
+    rts             ;
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.endif
+
 ;------------------------------------------------------------------------------
 ; ok ( w -- )
 ; does a real jump !!!
