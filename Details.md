@@ -36,7 +36,7 @@ Usually
 
   - parameters : is a list of references or a sequence of machine code
 
-## the classic indirect thread code
+## the Classic indirect thread code
 
 ```
 classic format
