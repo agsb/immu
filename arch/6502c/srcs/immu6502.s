@@ -31,14 +31,6 @@
 .include "macros.s"
 
 ;---------------------------------------------------------------------
-;   need page zero for indirect address
-;
-.segment "ZEROPAGE"
-
-; generic use
-reserved:   .res $E0, $00
-
-;---------------------------------------------------------------------
 ;
 ; pseudo registers, page zero
 ;
@@ -111,14 +103,6 @@ scr = tz + 36   ; screen number
 
 .P02
 
-;=====================================================================
-;
-; ??? bios must be a end of address
-;
-.include "bios.s"
-
-;=====================================================================
-;
 .segment "CODE"
 
 ;======================================================================
@@ -1307,6 +1291,29 @@ HEADER "U/", "USLASH", F_LEAP + F_CORE, LEAF
 HEADER "UM/MOD", "UMMOD", F_LEAP + F_CORE, LEAF
     jmp USLASH
 
+<<<<<<< HEAD
+;;------------------------------------------------------------------------------
+HEADER "LOG", "LOG", F_LEAP + F_CORE, LEAF 
+; http://forum.6502.org/viewtopic.php?t=1249
+;LOG_INPUT:  DFS  1
+;
+;
+;8BIT_LOG: STA  LOG_INPUT   ; Start with input in A, and get the base-2 log, scaled by 32.
+;          LDA  #11100000B  ; Init the integer part of the output.  Each 0 bit at the
+;                           ; left end of the input will decrement it by 1(00000).  (Taking
+;loop:     ASL  LOG_INPUT   ; the log of 0 is not allowed, so this won't reach -1.)
+;          BCS  exloop      ; If carry is set, we found it, so branch.  Otherwise,
+;          SBC  #011111B    ; decrement what will become the integer part of the answer.
+;          BRA  loop        ; Repeat the loop until we've found the first 1 bit.
+;                           ; (It's 011111B above instead of 100000B because C is clear.)
+;exloop:   LSR  LOG_INPUT   ; What's left of the input after finding and stripping off
+;          LSR  LOG_INPUT   ; the first 1 bit will be the fractional part of the answer.
+;          LSR  LOG_INPUT   ; but its high bit needs to be in bit 4's position, not 7's,
+;                           ; so shift it over three bit places.
+;          ORA  LOG_INPUT   ; Output is in A.
+;          RTS
+	jmp link_
+=======
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .if 0
 ;------------------------------------------------------
@@ -1388,6 +1395,7 @@ div3:
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .endif
 
+>>>>>>> ec6a7c8703111ba397ac96f6df1a0c32157bff51
 ;------------------------------------------------------------------------------
 ; ok ( w -- )
 ; does a real jump !!!
