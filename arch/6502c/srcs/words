@@ -84,6 +84,8 @@ main.s:HEADER "U*", "USTAR", F_LEAP + F_CORE, LEAF
 main.s:HEADER "UM*", "UMSTAR", F_LEAP + F_CORE, LEAF
 main.s:HEADER "U/", "USLASH", F_LEAP + F_CORE, LEAF
 main.s:HEADER "UM/MOD", "UMMOD", F_LEAP + F_CORE, LEAF
+main.s:HEADER "LOG", "LOG", F_LEAP + F_CORE, LEAF 
+main.s:;------------------- 44 bytes, not counting HEADER
 main.s:HEADER "JUMP", "JUMP", F_LEAP + F_CORE, LEAF 
 main.s:HEADER "ALIGNED", "ALIGNED", F_LEAP + F_CORE, LEAF
 main.s:HEADER "><", "NIBBLE", F_LEAP + F_CORE, LEAF

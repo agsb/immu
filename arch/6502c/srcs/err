@@ -1,0 +1,4 @@
+main.s:1294: Error: Unexpected trailing garbage characters
+main.s:1316: Error: Unexpected trailing garbage characters
+main.s:1387: Error: '.DB' is not a recognized control command
+main.s:1398: Error: Unexpected trailing garbage characters
