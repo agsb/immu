@@ -5,35 +5,104 @@
 ; All rights reserved.
 ; 
 ; Redistribution and use in source and binary forms, with or without
-; modification, are permitted provided that the following conditions are met:
+; modification, are permitted provided that the following conditions
+; are met:
 ; 
-; 1. Redistributions of source code must retain the above copyright notice, this
-;    list of conditions and the following disclaimer.
-; 2. Redistributions in binary form must reproduce the above copyright notice,
-;    this list of conditions and the following disclaimer in the documentation
-;    and/or other materials provided with the distribution.
+; 1. Redistributions of source code must retain the above copyright 
+;    notice, this list of conditions and the following disclaimer.
+;
+; 2. Redistributions in binary form must reproduce the above copyright
+;    notice, this list of conditions and the following disclaimer in 
+;    the documentation and/or other materials provided with the 
+;    distribution.
 ; 
-; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-; ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-; WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-; DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-; ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-; (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-; ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+; LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+; FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+; COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+; INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+; BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, LOSS
+; OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
+; AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+; LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
+; ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+; POSSIBILITY OF SUCH DAMAGE.
+;---------------------------------------------------------------------
 
-; ---------------------------------------------------------------------
+;--------------------------------------------------------
+;
+;  ca65 assembler specifics
+;
+;--------------------------------------------------------
+
+; identifiers
+
+.case +
+
+; enable features
+
+.feature c_comments
+
+.feature string_escapes
+
+.feature org_per_seg
+
+.feature dollar_is_pc
+
+.feature pc_assignment
+
+; enable 6502 mode
+
+.p02
+
+;---------------------------------------------------------------------
+;    constants
+FALSE = 0
+TRUE = 1
+
+STACKSIZE = $30
+TERMINAL  = $100
+
+;---------------------------------------------------------------------
 ; Forth like functions
 ; to keep code safe by not using "fall throught".
 ; uses A, Y, X caller must saves.
 ; needs 2 levels of hardware stack
 ; uses 4 bytes in page zero as temporary, TOS and NOS
 ; uses 6 bytes in memory for internal use
-; ---------------------------------------------------------------------
+;---------------------------------------------------------------------
+.segment "ZERO"
 
-; ---------------------------------------------------------------------
+* = $F0
+
+dat_indx:   .byte $0
+ret_indx:   .byte $0
+
+lnk:    .word $0
+tos:    .word $0
+nos:    .word $0
+wrk:    .word $0
+tmp:    .word $0
+
+;---------------------------------------------------------------------
+.segment "CODE"
+
+tib:
+.res TERMINAL, $0
+
+; could be at page zero, less code, less cycles
+
+.res STACKSIZE, $0
+dat_zero: .word $0
+
+.res STACKSIZE, $0
+ret_zero: .word $0
+
+;---------------------------------------------------------------------
+.segment "ONCE"
+
+;---------------------------------------------------------------------
 ;   data stack stuff
 
 keep_: ; to push
@@ -68,7 +137,6 @@ pull_:
     sta tos + 1
     jmp lose_
 
-.ifdef FULL_STACK_CODES
 push2_:
     ldx dat_indx
     lda nos + 0
@@ -81,9 +149,7 @@ push2_:
     sta dat_zero - 1, x
     jsr keep_
     jmp keep_
-.endif
 
-take2:
 pull2_:
     ldx dat_indx
     lda dat_zero + 0, x
@@ -360,7 +426,7 @@ decr_:
     ; rts
     jmp link_
 
-jump_:
+goto_:
     ldx dat_indx
     lda dat_zero + 1,x
     pha
@@ -371,7 +437,7 @@ jump_:
 
 addto_:
     jsr pull2_
-    ldy #NUL
+    ldy #0
     clc
     lda (tos), y
     adc nos + 0
@@ -385,7 +451,7 @@ addto_:
 
 subto_:
     jsr pull2_
-    ldy #NUL
+    ldy #0
     sec
     lda (tos), y
     sbc nos + 0
@@ -400,30 +466,34 @@ subto_:
 ;----------------------------------------------------------------------
 ;   return stack stuff
 
+rpush:
 rpush_:
-    ldx dat_indx
+    ldx ret_indx
     lda tos + 0
     sta ret_zero - 2, x
     lda tos + 1
     sta ret_zero - 1, x
     dex
     dex
-    stx dat_indx
+    stx ret_indx
     rts
 
+rpull:
 rpull_:
-    ldx dat_indx
+    ldx ret_indx
     lda ret_zero + 0, x
     sta tos + 0
     lda ret_zero + 1, x
     sta tos + 1
     inx
     inx
-    stx dat_indx
+    stx ret_indx
     rts
 
+;----------------------------------------------------------------------
+
 rshow_:
-    ldx dat_indx
+    ldx ret_indx
     lda ret_zero + 0, x
     sta tos + 0
     lda ret_zero + 1, x
@@ -432,17 +502,46 @@ rshow_:
     ; rts
     jmp link_
 
-r2s_:
+r2d_:
     jsr rpull_
     jsr push_
     ; rts
     jmp link_
 
-s2r_:
+d2r_:
     jsr pull_
     jsr rpush_
     ; rts
     jmp link_
+
+stkis_:
+    sta tos + 0
+    lda #0
+    sta tos + 1
+    jsr spush
+    jmp link_
+
+dat2t_:
+    lda dat_indx
+    bcc stkis_
+
+ret2t_:
+    lda ret_indx
+    bcc stkis_
+
+t2dat_:
+    jsr spull
+    lda tos + 0
+    sta dat_indx
+    jmp link_
+
+t2ret_:
+    jsr spull
+    lda tos + 0
+    sta ret_indx
+    jmp link_
+
+;----------------------------------------------------------------------
 
 ;----------------------------------------------------------------------
 ; prepare for mult or divd
@@ -459,7 +558,7 @@ opin:
     lda dat_zero + 3, x
     sta tmp + 1
     ; clear results
-    lda #NUL
+    lda #0
     sta tos + 0
     sta tos + 1
     sta nos + 0
@@ -556,4 +655,87 @@ slv:
     bit @ends
 @ends:
     rts
+
+;----------------------------------------------------------------------
+;
+;   Forth stuff:
+;   ATT: KEEP THE WORDS AT BRANCH OFFSETS (-127 to +127) or COLAPSE
+;
+; tos and nos are NOT keeped, all operations are by offsets
+; lnk MUST be preserved and reserved for those routines
+;
+; HEADER "ENDS", "ENDS", F_LEAP, LEAF
+unnest_:  ; aka semis:
+    ; pull from return stack
+    ldx ret_indx
+    lda ret_zero + 0, x
+    sta tos + 0
+    lda ret_zero + 1, x
+    sta tos + 1
+    inx
+    inx
+    stx ret_indx
+
+next_:
+    ; as is, classic ITC from fig-forth 6502
+    ; does not need compare low byte
+    ; save index
+    ldx ret_indx
+    ldy #0
+    lda (tos), y
+    sta lnk + 0
+    ldy #1
+    lda (tos), y
+    sta lnk + 1
+    ; load index
+
+    ; pointer to next reference
+    ; CELL is 2 bytes
+    clc
+    inc tos + 0
+    inc tos + 0
+    bne @end
+    inc tos + 1
+@end:
+
+leaf_:
+    ; in MICT, all leafs start with NULL 0x0000
+    ; in 6502, none code at page zero
+    ; then just compare high byte
+    lda #0
+    cmp lnk + 1
+    beq jump_
+
+nest_:   
+    ; aka docol
+    ; push into return stack
+    ldx ret_indx
+    lda tos + 0
+    sta ret_zero - 2, x
+    lda tos + 1
+    sta ret_zero - 1, x
+    dex
+    dex
+    stx ret_indx
+
+link_:
+    ; next reference
+    lda lnk + 0
+    sta tos + 0
+    lda lnk + 1
+    sta tos + 1
+    jmp next_
+
+jump_:
+    ; pull link from return stack
+    ldx ret_indx
+    lda ret_zero + 0, x
+    sta lnk + 0
+    lda ret_zero + 1, x
+    sta lnk + 1
+    inx
+    inx
+    stx ret_indx
+    ; do the jump
+    jmp (tos)
 
