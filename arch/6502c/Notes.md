@@ -1,5 +1,13 @@
 # Notes for 6502 IMMU
 
+## 30/10/2023
+
+    Made a excursion for make a MINT-6502, good improvements on forth package
+    using stacks at zero page indexed by X and 24 deep level. Extra routines for
+    print numbers and parse for table of references. Good original Z80 code
+
+    Return to 6502toy in november 2023. The bios is need for forth SBC.
+
 ## 30/09/2023
 
     Made new projet [6502toy](https://github.com/agsb/6502toy/), a minimal 6502 single board computer, for use with M.I.T.C. Forth.
