@@ -1,5 +1,7 @@
 # immu
 
+_01/05/2024 I'm on vacancy for refresh some ideas_
+
 An implementation of Forth with inner interpreter using minimal indirect thread code and a dictionary made of machine independent vocabularies. 
   
 _Only the inner interpreter and vocabularies related to systems, drives and primitives are machine dependent._
