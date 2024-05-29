@@ -42,6 +42,14 @@ For mixed code, not really a good practice ( in schedule )
 
         :code ;code ( for inline assembler )
         
+### mixed 
+
+Need a primitive word to allow create new primitives. Something for 'jump to following address' and for 'resume to compound mode', two words.
+
+In Fig-Forth was ;CODE and must be the last piece in a compound word. What about if need be in the middle ?
+
+'Jump-to-following address' is: HERE CELL CELL + + THEN
+
 ## Working
 
 I'm requesting for comments about immu, an minimal indirect thread code for forth. 
