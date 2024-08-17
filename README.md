@@ -10,15 +10,15 @@ An implementation of Forth with inner interpreter using minimal indirect thread 
   
 _Only the inner interpreter and vocabularies related to systems, drives and primitives are machine dependent._
 
-The minimal  thread code [MTC](https://github.com/agsb/immu/blob/main/The%20words%20in%20MITC%20Forth%20en.pdf) gives to Forth inner interpreter the decision of when use "push and pull" or "jump and link".
+The Minimal Thread Code  gives to Forth inner interpreter the decision of when use "push and pull" or "jump and link".
 
 More information in [Details](https://github.com/agsb/immu/blob/main/Details.md)
 
 In 2023, the immu Forth was splitted for ISAs: 6502, Atmega328, and RiscV. 
 
-In september, 2023, a better code for MITC was born, using deep-first search.
+In september, 2023, a better code for MTC was born, using deep-first search.
 
-see a presentation at [the words in MITC](https://github.com/agsb/immu/blob/main/The%20words%20in%20MITC%20Forth%20en.pdf)
+See a presentation at [the words in MTC](https://github.com/agsb/immu/blob/main/The%20words%20in%20MITC%20Forth%20en.pdf)
 
 ## Go Slow
 
@@ -52,11 +52,11 @@ Need a primitive word to allow create new primitives. Something for 'jump to fol
 
 In Fig-Forth was ;CODE and must be the last piece in a compound word. What about if need be in the middle ?
 
-'Jump-to-following address' is: HERE CELL CELL + + THEN
+'Jump-to-following address' is: POSTPONE BRANCH , HERE CELL CELL + + , 
 
 ## Working
 
-I'm requesting for comments about immu, an minimal indirect thread code for forth. 
+I'm requesting for comments about immu and Minimal Thread Code for Forth. 
 
 I welcome your patience.
 
