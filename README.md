@@ -26,7 +26,7 @@ Ideally Forth was two types of words, **primitives**, aka leafs, that does not r
 
 Usually leafs are CPU/MCU ISA dependents.
 
-For now, immu just does the MITC and primitives: 
+For now, immu just does the MTC and primitives: 
 
         FALSE TRUE AND OR XOR SHR SHL NEGATE INVERT
         0= 0< = < + - UM+ U< U* (UM*) U/ (UM/MOD)
