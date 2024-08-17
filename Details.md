@@ -1,3 +1,8 @@
+
+
+_ this file is a stub under revision_
+
+
 # An immutable Forth
 
  An implementation of Forth with inner interpreter using **minimal indirect thread code** and a dictionary made of machine independent vocabularies. 
