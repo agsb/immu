@@ -2,7 +2,7 @@
 
 _18/08/2024 I'm doing a full review of those files and MTC_
 
-    See [milliforth-6502](https://github/agsb/milliforth-6502)
+See [milliforth-6502](https://github/agsb/milliforth-6502)
 
 _01/05/2024 I'm on vacancy for refresh some ideas_
 
@@ -10,7 +10,7 @@ An implementation of Forth with inner interpreter using minimal indirect thread 
   
 _Only the inner interpreter and vocabularies related to systems, drives and primitives are machine dependent._
 
-The minimal indirect thread code [MITC](https://github.com/agsb/immu/blob/main/The%20words%20in%20MITC%20Forth%20en.pdf) gives to Forth inner interpreter the decision of when use "push and pull" or "jump and link".
+The minimal  thread code [MTC](https://github.com/agsb/immu/blob/main/The%20words%20in%20MITC%20Forth%20en.pdf) gives to Forth inner interpreter the decision of when use "push and pull" or "jump and link".
 
 More information in [Details](https://github.com/agsb/immu/blob/main/Details.md)
 
