@@ -5,10 +5,14 @@ _ this file is a stub under revision_
 
 # An immutable Forth
 
- An implementation of Forth with inner interpreter using **minimal indirect thread code** and a dictionary made of machine independent vocabularies. 
+ An implementation of Forth with inner interpreter using thread code and a dictionary made of machine independent vocabularies. 
   
  Only the inner interpreter and vocabularies related to systems, drives and primitives are machine dependent. 
   
+ Really ? I took me 2 years to understand that all Forth are like this.
+
+ So I conceived the minimal thread code for inner interpreter.
+
 ## the inner interpreter
   
   _“ : NEXT IP )+ W MOV W )+ ) JMP ; Now Forth was complete. And I knew it.”, Charles H. Moore, “Forth - The Early Years”_
@@ -29,107 +33,108 @@ The dictionary is a table, with a linked list of vocabularies, with linked lists
 
 Ideally, there are only two types of words,
 
-  - Compounds, _that contains only references of words_ , and
+  - Primitives, _that contains machine code without calls_  and
 
-  - Primitives, _that contains only machine code without calls_ .
+  - Compounds, _that contains references of words_ .
 
 Usually
 
-  - _code-word_ : is NEST (DOCOLON) for compound or DOCODE for primitives
+  - _code-word_ : is NEST (DOCOL) for compound or DOCODE for primitives (with ITC)
     
-  - _last-word_ : is UNNEST (SEMIS) for compound or EXIT for primitives
+  - _last-word_ : is UNNEST (SEMIS) for compound or jump exit for primitives
 
   - parameters : is a list of references or a sequence of machine code
 
-## the classic indirect thread code
+## the direct thread code
 
 ```
 classic format
 
 defword:  ; a NEST and a UNNEST in all compound words
-+------+---+---+---+---+---+---+---+---+------+------+-------+--------+
-| LINK | 6 | D | O | U | B | L | E | 0 | NEST | DUP  | PLUS  | UNNEST |
-+------+---+---+---+---+---+---+---+---+------+------+-------+--------+
++------+---+---+---+---+---+---+---+---+-----------+-----+------+--------+
+| LINK | 6 | D | O | U | B | L | E | 0 | call NEST | DUP | PLUS | UNNEST |
++------+---+---+---+---+---+---+---+---+-----------+-----+------+--------+
 
-defcode:  ; a self reference and a EXIT (macro NEXT) in all primitives
-+------+---+---+---+---+---------+-self--+-------+-------+------+
-| LINK | 3 | D | U | P | to self | code  | code  | code  | EXIT |
-+------+---+---+---+---+---------+-------+-------+-------+------+
-```
-
-The operations of a **classic indirect thread code** inner interpreter, in non optimized pseudo code, are :
+defcode:  ; a EXIT (macro NEXT) in all primitives
++------+---+---+---+---+------+------+------+------+------+
+| LINK | 3 | D | U | P | code | code | code | code | EXIT |
++------+---+---+---+---+------+------+------+------+------+
 
 ```
+
+The operations of a **classic indirect thread code** inner interpreter,
+    in non optimized pseudo code, are :
+
+```
+UNNEST: (aka EXIT, SEMIS, at end of words)
+  Pull IP from call stack
+  // Jump to NEXT
+
 NEXT: 
   Fetch the address pointed by IP onto WR
   Increment IP by address size 
-  Jump to WR
+  Jump to address in WR
 
 NEST: (aka ENTER, DOCOLON, at start of words)
-  Push IP onto call stack
-  Set IP to point to the first address of the called routine
-  Execute NEXT
-
-UNNEST: (aka EXIT, SEMIS, at end of words)
-  Pull IP from call stack
-  Execute NEXT
+  Push IP onto return stack
+  Pop IP
+  Jump to NEXT
 
 EXIT: ( at end of code )
-  Execute NEXT
+  Jump to NEXT
+
 ```
 
 All compound words, does two jumps and a call with return.
 
-All primitive words does three jumps.
+the pointer IP must be preserved between calls.
 
-Also in optimized codes, NEXT is executed two times, and is placed between UNNEST and NEST.
+## A proposal for **minimal thread code**   
 
-the IP register must be preserved between calls.
-
-## A proposal for **minimal indirect thread code**   
-
-_"Forth is free to reinvent the wheel, and I think that is a marvelous concept. No one should ever be afraid to reinvent the wheel, and we do it every day.", Chuck Moore, https://www.youtube.com/watch?v=xoyDNIcnpgc&t=9051s_
+_"Forth is free to reinvent the wheel, and I think that is a marvelous concept. 
+No one should ever be afraid to reinvent the wheel, and we do it every day.", 
+Chuck Moore, https://www.youtube.com/watch?v=xoyDNIcnpgc&t=9051s_
 
 ```
 proposed format
 
-defword:  ; only a ENDS,
-+-------+---+---+---+---+---+---+---+---+-----+------+------+
-| LINK  | 6 | D | O | U | B | L | E | 0 | DUP | PLUS | ENDS |    
-+-------+---+---+---+---+---+---+---+---+-----+------+------+
+defword:  ; no need call NEST at first,
++-------+---+---+---+---+---+---+---+---+-----+------+--------+
+| LINK  | 6 | D | O | U | B | L | E | 0 | DUP | PLUS | UNNEST |    
++-------+---+---+---+---+---+---+---+---+-----+------+--------+
        
-defcode:  ; a NULL and a jump link:
-+-------+---+---+---+---+------+------+------+------+------------+
-| LINK  | 3 | D | U | P | NULL | code | code | code | jump link: |
-+-------+---+---+---+---+------+------+-------+-----+------------+
+defcode:  ;
++-------+---+---+---+---+------+------+------+------------+
+| LINK  | 3 | D | U | P | code | code | code | jump link: |
++-------+---+---+---+---+------+-------+-----+------------+
 ```
 
-The operations of a **minimal indirect thread code** inner interpreter, in non optimized pseudo code, are :
+The operations of a **minimal thread code** inner interpreter, 
+    in non optimized pseudo code, are :
 
 ```
+UNNEST: 
+  Pull IP from return stack
+  // Jump to NEXT
+
 NEXT: 
   Fetch the address pointed by IP onto WR  
   Increment IP by address size
-  if WR is NULL, then Execute JUMP
-  else Execute NEST
+
+PICK:
+  if WR is bellow INIT then Jump to JUMP
+  // else Execute NEST
 
 NEST: 
-  Push IP onto call stack
+  Push IP onto return stack
   Copy WR to IP
-  Execute NEXT
-
-UNNEST: 
-  Pull IP from call stack
-  Execute NEXT
+  Jump to NEXT
 
 JUMP:
-  Pull WR from call stack
-  Jump to address in IP
-
-LINK:
-  Copy WR to IP
-  Execute NEXT
+  Jump to address in WR
   
+INIT: // start of compound words at dictionary
+
 ```
 
 **_"Explain all that", said the Mock Turtle.“, Lewis Carol, "Alice's Adventures in Wonderland"_**
@@ -142,7 +147,7 @@ Uses jump and link, as modern RISC-V processors does.
 
 Does just a compare per Forth word, to decide if executes a NEST or a JUMP.
 
-The pointer IP do not need be preserved. The pointer WR, as link register, must be reserved.
+The pointer IP need be preserved. 
 
 ## More with less 
 
@@ -151,16 +156,19 @@ _"An interpreter can be reduced to a switch-case structure contained within a lo
 Also, JUMP could be extended, with pseudo op-codes as Token Threaded Code (TTC), for more “inner functions”, as a inline lookup table:
 
 ```
-if WR greater than LAST_VM_CODE, then Execute NEST
-else 
-Increment IP by address size, 
+...
+if WR bellow INIT, then Jump to JUMP
+...
+
+JUMP:
+
 case WR of
   0x00    jump to IP, 
   0x01    jump to IP+(IP), aka (do_does, or tail recursion)
   0x02    push IP onto data stack, aka (do_variable)
   0x03    push (IP) onto data stack, aka (do_constant)
   etc.    All Executes as "inline", no calls
-Execute Link
+
 ```
 
 ## the New Dictionary
@@ -203,15 +211,24 @@ In _dependent vocabularies_ :
         
 ## Conclusion
 
-I see Forth as a model of the RNA-DNA type. The inner interpreter acts as RNA and vocabularies acts as DNA. 
+I see Forth as a model of the RNA-DNA type. 
 
-It consumes information and produces transformations. The primitives words act as extended ACTUG proteines.
+The inner interpreter acts as RNA and vocabularies acts as DNA. 
 
-Some information produces recipes, sequences of algorithms encoded by references to routines, that change the information. Like real protein sequences.
+It consumes information and produces transformations. 
 
-And it can grow, incorporating these recipes and maybe, perhaps, creating recipes as well.
+The primitives words act as extended ACTUG proteines.
 
-The proposed small change for **extended indirect thread code** allows these compiled recipes to be shared as executables inside Forth virtual machines.
+Some information produces recipes, sequences of algorithms encoded 
+by references to routines, that change the information. 
+
+Like real protein sequences.
+
+And it can grow, incorporating these recipes and maybe, 
+perhaps, creating recipes as well.
+
+The proposed small change for **minimal thread code** allows these 
+compiled recipes to be shared as executables inside Forth virtual machines.
 
 ## **and that could be an immu( )table Forth.**
 
@@ -222,7 +239,7 @@ basic RISCV, Using R32I, 32 bits cell,
 Minimal Indirect Thread Code
 s5, RP, return stack, grows downwards
 s6, IP, aka instruction pointer
-s9, Wr, aka link pointer
+s9, WR, aka link pointer
 zero, is always zero
 
 header is a macro, does the Forth dictionary header
@@ -233,7 +250,7 @@ all primitive words ends with jump _link
 
 */
 
-header "ENDS","ends"
+header "EXIT","exit"
     .word 0x0    
 _unnest: ; pull
     lw s6, 0(s5)
@@ -244,20 +261,17 @@ _next: ; cast
     lw s9, 0 (s6)
     addi s6, s6, CELL
 
-    beq s9, zero, _jump
+_pick:
+    bmi s9, INIT, _jump
     ; jal zero _nest
     
 _nest: ; push  
     addi s5, s5, -1*CELL
     sw s6, 0(s5)
-
-_link: ; link
     add s6, s9, zero
     jal zero, _next
     
 _jump:  ; jump
-    lw s6, 0(s5)
-    addi s5, s5, CELL
     jalr zero, s9, 0
 
 ```  
