@@ -149,6 +149,7 @@
     CR_     =   13    ; ascci carriage return ^M
     LF_     =   10    ; ascii line feed ^J
     BS_     =    8    ; ascii backspace ^H
+    HT_     =    9    ; ascii tabulation ^T  
 
     BL_     =   32    ; ascii space
     QT_     =   34    ; ascii double quotes \"
@@ -190,10 +191,7 @@ hcount .set 0          ; Initialize the counter
 
 H0000 = 0
 
-.macro HEADER name, label, flags, leaf
-.ifblank leaf
-    .out " No leaf "
-.endif
+.macro HEADER name, label, flags
 .ifblank flags
     .out " No flags "
 .endif
@@ -212,11 +210,7 @@ makelabel "is_", label
     .byte .strlen(name) + ( F_RESERVED | flags ) + 0
     .byte name
     ; .align 1, $20, but no need PAD
-;   all primitives (leafs) must start with NULL
-.ifnblank leaf 
-    .word NULL
-.endif 
-;   6502 cpu is byte unit .align 1, $00  
+    ; 6502 cpu is byte unit .align 1, $00  
 makelabel "", label
 
 .endmacro
