@@ -86,6 +86,10 @@ MCUCR = 0x35
 
 ;----------------------------------------------------------------------
 ;
+;   proto BIOS handler
+;
+;----------------------------------------------------------------------
+;
 ; code segment, flash
 ;
 .section .text
@@ -94,7 +98,7 @@ MCUCR = 0x35
 
 ;----------------------------------------------------------------------
 ;
-; classic interrup vector table
+; classic interrupt vector table
 ;
 ;----------------------------------------------------------------------
 
@@ -219,9 +223,11 @@ GOOD:
 
 ;----------------------------------------------------------------------
 ;
-;   do not use r0 and r1 are scratch registers used in spm, mul, des, etc
+;   do not use r0 and r1, both are scratch registers used in internal
+;   processor routines spm, mul, des, etc
 ;
-;   generic:
+;----------------------------------------------------------------------
+;   generics:
 ;   r2 , save_SREG
 ;   r3 , offset prescale timer0
 ;   r4 , counter each 1ms low byte
@@ -234,9 +240,13 @@ GOOD:
 ;   256 - 125 = 131 ; offset for miliseconds
 ;   plus 12 cycles inside routine
 ;
-;   ticks counts till 65 seconds
+;   ticks could count till 65 seconds
 ;
 ;   60000 is EA60 aka 1 minute
+;
+;   when take t1 and t2 at less than 30 secs interval
+;
+;       dt = t2 - t1; dt += (dt < 0) ? 60 : 0;    
 ;
 ; interrupt routine
 TIM0_OVF:
@@ -262,15 +272,16 @@ TIM0_ADJ:
 
 ;----------------------------------------------------------------------
 ;
-;   do not use r0 and r1 are scratch registers used in spm, mul, des, etc
-;
+;   r6 is always _zero_  except when ...
+;   
 HALT:
     nop
     sei
-    ldi r16, 0x80 ; Enable sleep mode
-    out MCUCR, r16
+    ldi r6, 0x80   ; Enable sleep mode
+    out MCUCR, r6
     sleep           ; Put MCU in sleep mode
     rjmp RESET
 
+;----------------------------------------------------------------------
 
 

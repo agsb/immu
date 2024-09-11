@@ -1,6 +1,9 @@
 # immu
 
+    __MOST OF CONTENTS IS OUTDATED__
+
 _18/08/2024 I'm doing a full review of those files and MTC_
+
 
 See [milliforth-6502](https://github/agsb/milliforth-6502)
 

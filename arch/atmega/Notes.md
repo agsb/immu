@@ -4,10 +4,7 @@
 
     for now, doing 6502 stuff and review of how do MITC and primitives
 
-    see github.com/agsb/f2u
+ ### the MTC inner interpreter
 
- ### the MITC inner interpreter
-
-   R> >R R@ must use the second cell at return stack to load/save values
  
  

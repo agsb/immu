@@ -79,7 +79,6 @@ routines for flush flash memory
 ;   copy one flash page from flash address fa to sram address sa
 ;
 HEADER "(load_flash)", "LDFLASH"
-    NOOP
 
     ; origin in ps
 
@@ -112,7 +111,7 @@ HEADER "(load_flash)", "LDFLASH"
 
     pspull tos_low, tos_high
 
-    POON
+    NEXT
 
 ;----------------------------------------------------------------------
 ;
@@ -121,7 +120,6 @@ HEADER "(load_flash)", "LDFLASH"
 ;   registers exposed are used for optiboot compiled with gcc
 ;
 HEADER "(save_flash)", "SVFLASH"
-    NOOP
 
     ; destin
 
@@ -192,7 +190,7 @@ HEADER "(save_flash)", "SVFLASH"
     ; clean house
     rspull psp_low, psp_high
     pspull tos_low, tos_high
-    POON
+    NEXT
 
 ;----------------------------------------------------------------------
 ;

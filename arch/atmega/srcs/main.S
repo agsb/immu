@@ -67,8 +67,6 @@ TIB0:	.space TIB_SIZE, 0x0
 ; Stacks
 SPZ:    .space STACK_SIZE, 0x0
 SP0 = .
-PSZ:    .space STACK_SIZE, 0x0
-PS0 = .
 RSZ:    .space STACK_SIZE, 0x0
 RS0 = .
 
